@@ -13,7 +13,7 @@ const legendColor: Record<ShowType, string> = {
 export const ScheduleSection = () => {
   return (
     <Section id="schedule">
-      <VStack gap="10">
+      <VStack gap="10" w="full">
         <SectionTitle
           eyebrow="Horarios"
           title="¿Cuándo nos sintonizas?"

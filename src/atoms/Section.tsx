@@ -1,4 +1,4 @@
-import { Box, Container, type BoxProps } from "@chakra-ui/react";
+import { Box, type BoxProps } from "@chakra-ui/react";
 
 interface SectionProps extends BoxProps {
   id: string;
@@ -10,14 +10,15 @@ export const Section = ({ id, children, ...props }: SectionProps) => {
       as="section"
       id={id}
       position="relative"
+      w="full"
       py={{ base: "16", md: "24" }}
       px={{ base: "5", md: "8" }}
       scrollMarginTop="80px"
       {...props}
     >
-      <Container maxW="1200px" px="0">
+      <Box maxW="1200px" w="full" mx="auto">
         {children}
-      </Container>
+      </Box>
     </Box>
   );
 };

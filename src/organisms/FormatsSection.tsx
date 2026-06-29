@@ -7,7 +7,7 @@ import { formats } from "../data/shows";
 export const FormatsSection = () => {
   return (
     <Section id="formats" bg="bg.muted">
-      <VStack gap="12">
+      <VStack gap="12" w="full">
         <SectionTitle
           eyebrow="Formatos"
           title="Dos formas de meterse en problemas"

@@ -6,7 +6,7 @@ import { values } from "../data/shows";
 export const AboutSection = () => {
   return (
     <Section id="about">
-      <VStack gap="8">
+      <VStack gap="8" w="full">
         <SectionTitle
           eyebrow="El show"
           title="Lo que pasa cuando primero se actúa y después se piensa"

@@ -7,7 +7,7 @@ import { platforms } from "../data/shows";
 export const PlatformsSection = () => {
   return (
     <Section id="platforms">
-      <VStack gap="10">
+      <VStack gap="10" w="full">
         <SectionTitle
           eyebrow="Dónde ver"
           title="Sintonízanos donde quieras"

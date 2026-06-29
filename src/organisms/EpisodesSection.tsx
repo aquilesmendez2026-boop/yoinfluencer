@@ -7,7 +7,7 @@ import { episodes } from "../data/shows";
 export const EpisodesSection = () => {
   return (
     <Section id="episodes" bg="bg.muted">
-      <VStack gap="10">
+      <VStack gap="10" w="full">
         <SectionTitle
           eyebrow="Episodios"
           title="Lo último que se nos fue de las manos"
