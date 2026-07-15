@@ -1,0 +1,11 @@
+version = 0.1
+
+# Nota: en local despliega con  sam deploy --profile nitalmal
+# En CI (GitHub Actions) las credenciales vienen por OIDC (sin profile).
+[default.deploy.parameters]
+stack_name = "nitalmal-backend"
+region = "us-east-2"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+disable_rollback = false

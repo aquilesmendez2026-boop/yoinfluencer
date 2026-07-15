@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Button, Flex, HStack, IconButton, Link, Stack } from "@chakra-ui/react";
 import { Menu, X } from "lucide-react";
 import { Logo } from "../atoms/Logo";
+import { AuthButton } from "../molecules/AuthButton";
 
 const navLinks = [
   { label: "El show", href: "#about" },
@@ -78,6 +79,7 @@ export const Navbar = () => {
           >
             Ver en vivo
           </Button>
+          <AuthButton />
         </HStack>
 
         {/* Mobile toggle */}
@@ -131,6 +133,7 @@ export const Navbar = () => {
           >
             Ver en vivo
           </Button>
+          <AuthButton full />
         </Stack>
       )}
     </Box>

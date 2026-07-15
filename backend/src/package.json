@@ -1,0 +1,6 @@
+{
+  "name": "nitalmal-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Lambda del API de nitalmal. Usa AWS SDK v3 provisto por el runtime de Lambda."
+}

@@ -1,0 +1,50 @@
+name: Deploy backend (SAM)
+
+# Despliega el backend automáticamente al hacer push a main
+# cuando cambian archivos de backend/. Autenticación por OIDC
+# (sin llaves de AWS guardadas en GitHub).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write # requerido para OIDC
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Instalar SAM CLI
+        uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: SAM build
+        working-directory: backend
+        run: sam build
+
+      - name: SAM deploy
+        working-directory: backend
+        run: >
+          sam deploy
+          --stack-name nitalmal-backend
+          --region us-east-2
+          --resolve-s3
+          --capabilities CAPABILITY_IAM
+          --no-confirm-changeset
+          --no-fail-on-empty-changeset

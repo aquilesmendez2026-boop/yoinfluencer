@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Backend de nitalmal — API protegida con Firebase (Google login) como bearer token.
+  API Gateway HTTP API + JWT Authorizer + Lambda + DynamoDB.
+
+Parameters:
+  FirebaseProjectId:
+    Type: String
+    Default: nitanmal-a75de
+    Description: Project ID del Firebase de nitalmal (issuer/audience del JWT).
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: nodejs22.x
+    Architectures:
+      - arm64
+
+Resources:
+  # ── API HTTP con validación del Firebase ID token (bearer) ──
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Auth:
+        Authorizers:
+          FirebaseAuth:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer: !Sub "https://securetoken.google.com/${FirebaseProjectId}"
+              audience:
+                - !Ref FirebaseProjectId
+        DefaultAuthorizer: FirebaseAuth
+      CorsConfiguration:
+        AllowOrigins:
+          - "*"
+        AllowHeaders:
+          - authorization
+          - content-type
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+
+  # ── Tabla de usuarios / miembros ──
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-usuarios
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+
+  # ── Lambda del API ──
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: nitalmal-api
+      Handler: index.handler
+      CodeUri: src/
+      Environment:
+        Variables:
+          TABLE_USERS: !Ref UsersTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UsersTable
+      Events:
+        Me:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /me
+            Method: GET
+
+Outputs:
+  ApiUrl:
+    Description: URL base del API (usar en VITE_API_URL del frontend)
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  UsersTableName:
+    Value: !Ref UsersTable
