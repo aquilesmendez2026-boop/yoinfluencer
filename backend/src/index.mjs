@@ -21,10 +21,12 @@ const EPISODIOS = process.env.TABLE_EPISODIOS;
 const DESCARGAS = process.env.TABLE_DESCARGAS;
 const PREGUNTAS = process.env.TABLE_PREGUNTAS;
 const CONFIG = process.env.TABLE_CONFIG;
+const PRODUCCION = process.env.TABLE_PRODUCCION;
 const AVATARS_BUCKET = process.env.AVATARS_BUCKET;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 
 const TYPES = ["stream", "charla", "especial"];
+const STAGES = ["idea", "guion", "grabacion", "edicion", "programado", "publicado"];
 const ROLES = ["miembro", "participante", "admin"];
 const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono"];
 
@@ -452,6 +454,60 @@ export const handler = async (event) => {
     const { Item } = await ddb.send(new GetCommand({ TableName: NOTAS, Key: { id } }));
     if (Item && Item.createdByUserId !== userId && role !== "admin") return json(403, { error: "Solo el autor o admin" });
     await ddb.send(new DeleteCommand({ TableName: NOTAS, Key: { id } }));
+    return json(200, { ok: true });
+  }
+
+  // ══════════ PRODUCCIÓN (pipeline de episodios) ══════════
+  if (route === "GET /produccion") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    const { Items } = await ddb.send(new ScanCommand({ TableName: PRODUCCION }));
+    const items = (Items ?? []).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+    return json(200, { produccion: items });
+  }
+  if (route === "POST /produccion") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const titulo = String(body.titulo ?? "").trim();
+    if (!titulo) return json(400, { error: "Falta el título" });
+    const stage = STAGES.includes(body.stage) ? body.stage : "idea";
+    const item = {
+      id: randomUUID(),
+      titulo: titulo.slice(0, 160),
+      descripcion: String(body.descripcion ?? "").slice(0, 2000),
+      responsable: String(body.responsable ?? "").slice(0, 80),
+      fecha: String(body.fecha ?? ""),
+      stage,
+      createdByUserId: userId,
+      createdByName: name || email,
+      createdAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: PRODUCCION, Item: item }));
+    return json(201, { item });
+  }
+  if (route === "PUT /produccion/{id}") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    const id = event.pathParameters?.id;
+    const body = parseBody(event);
+    if (!id || !body) return json(400, { error: "Datos inválidos" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: PRODUCCION, Key: { id } }));
+    if (!Item) return json(404, { error: "No existe" });
+    const updated = {
+      ...Item,
+      titulo: body.titulo != null ? String(body.titulo).slice(0, 160) : Item.titulo,
+      descripcion: body.descripcion != null ? String(body.descripcion).slice(0, 2000) : Item.descripcion,
+      responsable: body.responsable != null ? String(body.responsable).slice(0, 80) : Item.responsable,
+      fecha: body.fecha != null ? String(body.fecha) : Item.fecha,
+      stage: STAGES.includes(body.stage) ? body.stage : Item.stage,
+    };
+    await ddb.send(new PutCommand({ TableName: PRODUCCION, Item: updated }));
+    return json(200, { item: updated });
+  }
+  if (route === "DELETE /produccion/{id}") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    const id = event.pathParameters?.id;
+    if (!id) return json(400, { error: "Falta id" });
+    await ddb.send(new DeleteCommand({ TableName: PRODUCCION, Key: { id } }));
     return json(200, { ok: true });
   }
 

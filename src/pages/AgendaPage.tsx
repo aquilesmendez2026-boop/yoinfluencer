@@ -21,6 +21,7 @@ import { CalendarDays, MapPin, Plus, Trash2, ShieldAlert, User as UserIcon } fro
 import { GlassPanel } from "../atoms/GlassPanel";
 import { AppHeader } from "../organisms/AppHeader";
 import { MonthCalendar } from "../organisms/MonthCalendar";
+import { ProduccionBoard } from "../organisms/ProduccionBoard";
 import { QuestionsPanel } from "../organisms/QuestionsPanel";
 import { useAuth } from "../providers/AuthProvider";
 import type { Evento } from "../services/events";
@@ -164,10 +165,15 @@ export const AgendaPage = () => {
 
           <Tabs.Root defaultValue="reuniones" variant="line">
             <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
+              <Tabs.Trigger value="produccion" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Producción</Tabs.Trigger>
               <Tabs.Trigger value="reuniones" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Reuniones</Tabs.Trigger>
               <Tabs.Trigger value="notas" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Notas e ideas</Tabs.Trigger>
               <Tabs.Trigger value="buzon" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Buzón</Tabs.Trigger>
             </Tabs.List>
+
+            <Tabs.Content value="produccion" pt="8">
+              <ProduccionBoard />
+            </Tabs.Content>
 
             <Tabs.Content value="reuniones" pt="8">
               <Grid templateColumns={{ base: "1fr", lg: "360px 1fr" }} gap="6" alignItems="start">

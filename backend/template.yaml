@@ -147,6 +147,19 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
+  # ── Pipeline de producción de episodios ──
+  ProduccionTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-produccion
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
   # ── Config del sitio (estado "en vivo", etc.) ──
   ConfigTable:
     Type: AWS::DynamoDB::Table
@@ -188,6 +201,7 @@ Resources:
           TABLE_DESCARGAS: !Ref DescargasTable
           TABLE_PREGUNTAS: !Ref PreguntasTable
           TABLE_CONFIG: !Ref ConfigTable
+          TABLE_PRODUCCION: !Ref ProduccionTable
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
       Policies:
@@ -207,6 +221,8 @@ Resources:
             TableName: !Ref PreguntasTable
         - DynamoDBCrudPolicy:
             TableName: !Ref ConfigTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ProduccionTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
         - S3CrudPolicy:
@@ -398,6 +414,30 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /suscripcion/cancelar
             Method: POST
+        ListProduccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /produccion
+            Method: GET
+        CreateProduccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /produccion
+            Method: POST
+        UpdateProduccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /produccion/{id}
+            Method: PUT
+        DeleteProduccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /produccion/{id}
+            Method: DELETE
 
 Outputs:
   ApiUrl:
