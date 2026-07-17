@@ -3,7 +3,7 @@ import {
   Badge, Box, Button, Center, Flex, Heading, HStack, IconButton, Input, Link, Spinner, Switch, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import {
-  ChevronDown, ChevronUp, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, Calendar, FileText, Eye,
+  ChevronRight, ArrowLeft, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, Calendar, FileText, Eye,
 } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import {
@@ -18,7 +18,23 @@ const fp = {
   _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
 };
 
-// ── Fila de una etapa dentro de un episodio ──
+const hechas = (item: ProduccionItem) => STAGES.filter((s) => item.stages[s.key]?.done).length;
+// Etapa actual = primera no terminada; si están todas listas → "Terminado".
+const etapaActual = (item: ProduccionItem) => {
+  const pend = STAGES.find((s) => !item.stages[s.key]?.done);
+  return pend ?? { key: "publicado" as Stage, label: "Terminado", color: "brandGreen.500" };
+};
+
+// Barra de 6 puntos con el color de cada etapa terminada.
+const Progreso = ({ item }: { item: ProduccionItem }) => (
+  <HStack gap="1">
+    {STAGES.map((s) => (
+      <Box key={s.key} h="6px" flex="1" borderRadius="full" bg={item.stages[s.key]?.done ? s.color : "bg.elevated"} />
+    ))}
+  </HStack>
+);
+
+// ── Fila de una etapa (detalle) ──
 const StageRow = ({
   meta, data, onSave,
 }: {
@@ -53,20 +69,20 @@ const StageRow = ({
     } catch { /* noop */ } finally { setUploading(false); if (fileRef.current) fileRef.current.value = ""; }
   };
 
-  const save = () => {
-    onSave({ responsable, fecha, contenido, archivoKey, archivoNombre, done });
-    setEditing(false);
-  };
-
+  const save = () => { onSave({ responsable, fecha, contenido, archivoKey, archivoNombre, done }); setEditing(false); };
   const asignada = data.responsable || data.contenido || data.archivoNombre;
 
   return (
-    <Box borderLeft="3px solid" borderColor={meta.color} bg="bg.muted" borderRadius="md" p="3">
+    <Box borderLeft="3px solid" borderColor={meta.color} bg="bg.muted" borderRadius="md" p="3.5">
       <Flex justify="space-between" align="center" gap="2" wrap="wrap">
         <HStack gap="2" minW="0">
-          <Box w="8px" h="8px" borderRadius="full" bg={meta.color} flexShrink="0" />
+          <Box w="9px" h="9px" borderRadius="full" bg={meta.color} flexShrink="0" />
           <Text fontWeight="800" fontSize="sm" fontFamily="heading">{meta.label}</Text>
-          {data.done && <Box color="brandGreen.400" title="Hecho"><Check size={15} /></Box>}
+          {data.done && (
+            <Badge bg="rgba(34,197,94,0.15)" color="brandGreen.400" border="1px solid" borderColor="rgba(34,197,94,0.4)" borderRadius="full" px="2">
+              <HStack gap="1"><Check size={10} /><Text fontSize="0.6rem" fontWeight="700">LISTA</Text></HStack>
+            </Badge>
+          )}
         </HStack>
         {!editing && (
           <HStack gap="1">
@@ -121,7 +137,7 @@ const StageRow = ({
               )}
             </HStack>
             <HStack gap="2">
-              <Text fontSize="xs" color="fg.subtle">Hecho</Text>
+              <Text fontSize="xs" color="fg.subtle">¿Lista?</Text>
               <Switch.Root checked={done} onCheckedChange={(e) => setDone(e.checked)} colorPalette="green" size="sm">
                 <Switch.HiddenInput /><Switch.Control><Switch.Thumb /></Switch.Control>
               </Switch.Root>
@@ -139,45 +155,40 @@ const StageRow = ({
   );
 };
 
-// ── Tarjeta de un episodio (colapsable) ──
-const EpisodeCard = ({
-  item, onStageSave, onDelete,
-}: {
-  item: ProduccionItem;
-  onStageSave: (stage: Stage, data: Partial<StageData>) => void;
-  onDelete: () => void;
-}) => {
-  const [open, setOpen] = useState(false);
-  const hechas = STAGES.filter((s) => item.stages[s.key]?.done).length;
-
+// ── Card resumen de un episodio ──
+const EpisodeSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOpen: () => void; onDelete: () => void }) => {
+  const act = etapaActual(item);
+  const n = hechas(item);
+  const resp = item.stages[act.key]?.responsable;
+  const terminado = n === STAGES.length;
   return (
-    <GlassPanel p={{ base: "4", md: "5" }}>
-      <Flex justify="space-between" align="center" gap="3">
-        <HStack gap="3" minW="0" cursor="pointer" onClick={() => setOpen((v) => !v)} flex="1">
-          <IconButton aria-label="Expandir" size="xs" variant="ghost" color="fg.subtle">
-            {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </IconButton>
-          <Text fontWeight="700" lineClamp={1}>{item.titulo}</Text>
-          <Badge bg="bg.elevated" color={hechas === STAGES.length ? "brandGreen.400" : "fg.muted"} borderRadius="full" px="2.5" fontSize="0.65rem" flexShrink="0">
-            {hechas}/{STAGES.length} etapas
-          </Badge>
-        </HStack>
-        <IconButton aria-label="Eliminar" size="xs" variant="ghost" color="fg.subtle" onClick={onDelete} _hover={{ color: "red.400", bg: "rgba(239,68,68,0.1)" }}><Trash2 size={16} /></IconButton>
-      </Flex>
-
-      {open && (
-        <VStack align="stretch" gap="2.5" mt="4">
-          {STAGES.map((meta) => (
-            <StageRow key={meta.key} meta={meta} data={item.stages[meta.key]} onSave={(d) => onStageSave(meta.key, d)} />
-          ))}
-        </VStack>
-      )}
+    <GlassPanel interactive p={{ base: "4", md: "5" }} cursor="pointer" onClick={onOpen}>
+      <VStack align="stretch" gap="3">
+        <Flex justify="space-between" align="start" gap="3">
+          <VStack align="start" gap="2" minW="0">
+            <Text fontWeight="700" lineClamp={1}>{item.titulo}</Text>
+            <HStack gap="2" flexWrap="wrap">
+              <Badge bg="bg.elevated" color={terminado ? "brandGreen.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="0.5">
+                <HStack gap="1.5"><Box w="7px" h="7px" borderRadius="full" bg={act.color} /><Text fontSize="0.7rem" fontWeight="700">{terminado ? "Terminado" : `En ${act.label}`}</Text></HStack>
+              </Badge>
+              <Text fontSize="xs" color="fg.subtle">{n}/{STAGES.length} listas</Text>
+              {!terminado && resp && <Text fontSize="xs" color="fg.subtle">· {resp}</Text>}
+            </HStack>
+          </VStack>
+          <HStack gap="1" flexShrink="0">
+            <IconButton aria-label="Eliminar" size="xs" variant="ghost" color="fg.subtle" onClick={(e) => { e.stopPropagation(); onDelete(); }} _hover={{ color: "red.400", bg: "rgba(239,68,68,0.1)" }}><Trash2 size={16} /></IconButton>
+            <Box color="fg.subtle"><ChevronRight size={20} /></Box>
+          </HStack>
+        </Flex>
+        <Progreso item={item} />
+      </VStack>
     </GlassPanel>
   );
 };
 
 export const ProduccionBoard = () => {
   const [items, setItems] = useState<ProduccionItem[] | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [idea, setIdea] = useState("");
   const [saving, setSaving] = useState(false);
@@ -192,6 +203,7 @@ export const ProduccionBoard = () => {
       const it = await createProduccion({ titulo, idea });
       setItems((p) => [...(p ?? []), it]);
       setTitulo(""); setIdea("");
+      setSelected(it.id);
     } catch { /* noop */ } finally { setSaving(false); }
   };
 
@@ -203,17 +215,48 @@ export const ProduccionBoard = () => {
   };
   const remove = async (id: string) => {
     setItems((p) => (p ?? []).filter((i) => i.id !== id));
+    if (selected === id) setSelected(null);
     deleteProduccion(id).catch(() => {});
   };
 
+  const current = items?.find((i) => i.id === selected) ?? null;
+
+  // ── Vista detalle de un episodio ──
+  if (current) {
+    const act = etapaActual(current);
+    const terminado = hechas(current) === STAGES.length;
+    return (
+      <VStack align="stretch" gap="6">
+        <Button onClick={() => setSelected(null)} alignSelf="start" size="sm" variant="ghost" color="fg.muted" _hover={{ color: "brand.primary" }}>
+          <ArrowLeft size={16} style={{ marginRight: "6px" }} /> Volver a la lista
+        </Button>
+        <VStack align="start" gap="3">
+          <Heading size="lg" fontWeight="900">{current.titulo}</Heading>
+          <HStack gap="3" flexWrap="wrap">
+            <Badge bg="bg.elevated" color={terminado ? "brandGreen.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="1">
+              <HStack gap="1.5"><Box w="8px" h="8px" borderRadius="full" bg={act.color} /><Text fontWeight="700" fontSize="sm">{terminado ? "Terminado" : `En ${act.label}`}</Text></HStack>
+            </Badge>
+            <Text fontSize="sm" color="fg.subtle">{hechas(current)}/{STAGES.length} etapas listas</Text>
+          </HStack>
+          <Box w="full" maxW="md"><Progreso item={current} /></Box>
+        </VStack>
+        <VStack align="stretch" gap="2.5">
+          {STAGES.map((meta) => (
+            <StageRow key={meta.key} meta={meta} data={current.stages[meta.key]} onSave={(d) => stageSave(current.id, meta.key, d)} />
+          ))}
+        </VStack>
+      </VStack>
+    );
+  }
+
+  // ── Vista lista ──
   return (
     <VStack align="stretch" gap="6">
       <VStack align="start" gap="1">
         <Heading size="lg" fontWeight="800">Pipeline de producción</Heading>
-        <Text color="fg.muted" fontSize="sm">Cada episodio tiene sus etapas. Asigna responsable y fecha, deja tu planilla y adjunta archivos para que el siguiente continúe.</Text>
+        <Text color="fg.muted" fontSize="sm">Cada episodio es una card: entra para ver su desarrollo, responsables y planillas por etapa.</Text>
       </VStack>
 
-      {/* Crear episodio */}
       <GlassPanel p={{ base: "4", md: "5" }}>
         <VStack as="form" onSubmit={add} align="stretch" gap="3">
           <Input placeholder="Título del episodio" value={titulo} onChange={(e) => setTitulo(e.target.value)} {...fp} size="md" />
@@ -224,7 +267,6 @@ export const ProduccionBoard = () => {
         </VStack>
       </GlassPanel>
 
-      {/* Lista de episodios */}
       {items === null ? (
         <Center py="10"><Spinner color="brand.primary" size="lg" /></Center>
       ) : items.length === 0 ? (
@@ -232,7 +274,7 @@ export const ProduccionBoard = () => {
       ) : (
         <VStack align="stretch" gap="3">
           {items.map((it) => (
-            <EpisodeCard key={it.id} item={it} onStageSave={(stage, d) => stageSave(it.id, stage, d)} onDelete={() => remove(it.id)} />
+            <EpisodeSummary key={it.id} item={it} onOpen={() => setSelected(it.id)} onDelete={() => remove(it.id)} />
           ))}
         </VStack>
       )}
