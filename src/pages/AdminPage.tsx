@@ -20,6 +20,7 @@ import { GlassPanel } from "../atoms/GlassPanel";
 import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { AppHeader } from "../organisms/AppHeader";
 import { EventForm } from "../organisms/EventForm";
+import { UsersManager } from "../organisms/UsersManager";
 import { MonthCalendar, typeColor } from "../organisms/MonthCalendar";
 import { useAuth } from "../providers/AuthProvider";
 import { showTypeLabels } from "../data/shows";
@@ -219,6 +220,10 @@ export const AdminPage = () => {
               </GlassPanel>
             </VStack>
           </Grid>
+
+          <Box h="1px" bg="border.subtle" my="2" />
+
+          <UsersManager />
         </VStack>
       </Container>
     </Box>

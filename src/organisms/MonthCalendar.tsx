@@ -24,9 +24,10 @@ interface MonthCalendarProps {
   events: Evento[];
   selected: string | null;
   onSelect: (date: string) => void;
+  showLegend?: boolean;
 }
 
-export const MonthCalendar = ({ events, selected, onSelect }: MonthCalendarProps) => {
+export const MonthCalendar = ({ events, selected, onSelect, showLegend = true }: MonthCalendarProps) => {
   const today = new Date();
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() });
   const todayStr = dateStr(today.getFullYear(), today.getMonth(), today.getDate());
@@ -128,6 +129,7 @@ export const MonthCalendar = ({ events, selected, onSelect }: MonthCalendarProps
       </Grid>
 
       {/* Leyenda */}
+      {showLegend && (
       <Flex mt="4" gap="4" flexWrap="wrap" fontSize="xs" color="fg.muted">
         {(Object.keys(showTypeLabels) as ShowType[]).map((t) => (
           <HStack key={t} gap="1.5">
@@ -140,6 +142,7 @@ export const MonthCalendar = ({ events, selected, onSelect }: MonthCalendarProps
           <Text>Premium</Text>
         </HStack>
       </Flex>
+      )}
     </Box>
   );
 };

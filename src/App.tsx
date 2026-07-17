@@ -7,6 +7,7 @@ import { AccountPage } from "./pages/AccountPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { EpisodesPage } from "./pages/EpisodesPage";
+import { AgendaPage } from "./pages/AgendaPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./providers/AuthProvider";
 
@@ -39,6 +40,7 @@ const AppRoutes = () => {
       <Route path="/configuracion" element={<SettingsPage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/episodios" element={<EpisodesPage />} />
+      <Route path="/agenda" element={<AgendaPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

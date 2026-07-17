@@ -1,6 +1,6 @@
 import { Box, Button, Image, Menu, Portal, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard } from "lucide-react";
+import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
 /**
@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout, isAdmin, profile } = useAuth();
+  const { user, loading, login, logout, isAdmin, isParticipant, profile } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -115,6 +115,13 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               <Settings size={16} />
               Configuración
             </Menu.Item>
+
+            {isParticipant && (
+              <Menu.Item value="agenda" onClick={() => navigate("/agenda")} {...itemStyle} color="brand.primary">
+                <CalendarClock size={16} />
+                Agenda del equipo
+              </Menu.Item>
+            )}
 
             {isAdmin && (
               <Menu.Item value="admin" onClick={() => navigate("/admin")} {...itemStyle} color="brand.primary">

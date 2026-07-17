@@ -82,6 +82,32 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
+  # ── Agenda de reuniones del equipo (participantes) ──
+  ReunionesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-reuniones
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Notas / ideas del equipo ──
+  NotasTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-notas
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
   # ── Lambda del API ──
   ApiFunction:
     Type: AWS::Serverless::Function
@@ -93,12 +119,18 @@ Resources:
         Variables:
           TABLE_USERS: !Ref UsersTable
           TABLE_EVENTS: !Ref EventsTable
+          TABLE_REUNIONES: !Ref ReunionesTable
+          TABLE_NOTAS: !Ref NotasTable
           AVATARS_BUCKET: !Ref AvatarsBucket
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
         - DynamoDBCrudPolicy:
             TableName: !Ref EventsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ReunionesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotasTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
       Events:
@@ -138,6 +170,54 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /eventos/{id}
             Method: DELETE
+        ListReuniones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /reuniones
+            Method: GET
+        CreateReunion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /reuniones
+            Method: POST
+        DeleteReunion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /reuniones/{id}
+            Method: DELETE
+        ListNotas:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /notas
+            Method: GET
+        CreateNota:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /notas
+            Method: POST
+        DeleteNota:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /notas/{id}
+            Method: DELETE
+        ListUsuarios:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /usuarios
+            Method: GET
+        SetUsuarioRole:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /usuarios/{id}/role
+            Method: PUT
 
 Outputs:
   ApiUrl:
