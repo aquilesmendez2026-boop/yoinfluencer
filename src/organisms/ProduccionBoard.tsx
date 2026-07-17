@@ -3,7 +3,7 @@ import {
   Badge, Box, Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, Link, NativeSelect, Spinner, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import {
-  ChevronRight, ChevronDown, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, UserPlus, Clock, FileText, Eye, AlertTriangle, ListChecks, CheckCircle2, Circle, History,
+  ChevronRight, ChevronDown, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, UserPlus, Clock, CalendarPlus, FileText, Eye, AlertTriangle, ListChecks, CheckCircle2, Circle, History, Inbox, RotateCcw,
 } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { ApiError } from "../services/api";
@@ -86,6 +86,29 @@ const reqStats = (template: StageTemplate | undefined, values: Record<string, Fi
   const req = (template?.fields ?? []).filter((f) => f.required);
   const ok = req.filter((f) => isFilled(f, values?.[f.key])).length;
   return { req, ok, total: req.length };
+};
+
+// ── Cambiar estado directo desde la card (excepto aprobada, que pasa por "Marcar lista") ──
+const EstadoControl = ({ data, onSave }: { data: StageData; onSave: (d: Partial<StageData>) => Promise<void> }) => {
+  const [open, setOpen] = useState(false);
+  const em = estadoMeta(data.estado);
+  if (!open) {
+    return (
+      <Badge as="button" bg="bg.elevated" color={em.color} borderRadius="full" px="2.5" py="1" fontSize="0.6rem" fontWeight="700" cursor="pointer" onClick={(e) => { e.stopPropagation(); setOpen(true); }} _hover={{ borderColor: "border.neon" }} border="1px solid" borderColor="transparent">
+        <HStack gap="1">{em.label}<ChevronDown size={10} /></HStack>
+      </Badge>
+    );
+  }
+  return (
+    <Box minW="130px" onClick={(e) => e.stopPropagation()}>
+      <NativeSelect.Root size="xs">
+        <NativeSelect.Field defaultValue={data.estado} onChange={(e) => { onSave({ estado: e.target.value as Estado }).catch(() => {}); setOpen(false); }} {...fp}>
+          {ESTADOS.filter((s) => s.key !== "aprobada").map((s) => <option key={s.key} value={s.key} style={{ background: "#161626" }}>{s.label}</option>)}
+        </NativeSelect.Field>
+        <NativeSelect.Indicator />
+      </NativeSelect.Root>
+    </Box>
+  );
 };
 
 // ── Asignar responsable directo desde la card ──
@@ -240,10 +263,31 @@ const StageCollapsed = ({ meta, data, equipo, template, onOpen, onSave }: {
   );
 };
 
+// ── Panel de la entrega recibida de la etapa anterior (handoff) ──
+const RecibidoPanel = ({ prev }: { prev: { label: string; data: StageData; template?: StageTemplate } }) => {
+  const [open, setOpen] = useState(true);
+  const campos = (prev.template?.fields ?? []).filter((f) => isFilled(f, prev.data.values?.[f.key]));
+  if (campos.length === 0) return null;
+  return (
+    <Box bg="rgba(34,211,238,0.05)" border="1px solid" borderColor="rgba(34,211,238,0.2)" borderRadius="md" p="3">
+      <Flex justify="space-between" align="center" cursor="pointer" onClick={() => setOpen((v) => !v)}>
+        <HStack gap="1.5" color="brand.primary"><Inbox size={13} /><Text fontSize="xs" fontWeight="700" textTransform="uppercase">Recibido de {prev.label}</Text></HStack>
+        <ChevronDown size={14} color="var(--chakra-colors-fg-subtle)" style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
+      </Flex>
+      {open && (
+        <VStack align="stretch" gap="2.5" mt="2.5">
+          {campos.map((f) => <FieldRead key={f.key} field={f} value={prev.data.values?.[f.key]} />)}
+        </VStack>
+      )}
+    </Box>
+  );
+};
+
 // ── Etapa expandida (activa / abierta) ──
-const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
+const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse }: {
   meta: { key: Stage; label: string; color: string };
   data: StageData; equipo: Miembro[]; template?: StageTemplate;
+  prev?: { label: string; data: StageData; template?: StageTemplate } | null;
   onSave: (d: Partial<StageData>) => Promise<void>; onCollapse: () => void;
 }) => {
   const [editing, setEditing] = useState(false);
@@ -258,15 +302,18 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
   const [gate, setGate] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [discardOffer, setDiscardOffer] = useState(false);
+  const [confirmReopen, setConfirmReopen] = useState(false);
 
   const lista = estaLista(data);
-  const em = estadoMeta(data.estado);
   const rel = relFecha(data.fecha, lista);
   const fields = template?.fields ?? [];
   const { req, ok: reqOk, total: reqTotal } = reqStats(template, data.values);
   const faltan = reqTotal - reqOk;
   const subHechas = (data.subtareas ?? []).filter((s) => s.hecha).length;
+  const subAbiertas = (data.subtareas ?? []).filter((s) => !s.hecha).length;
   const filledOpt = fields.filter((f) => !f.required && isFilled(f, data.values?.[f.key]));
+  const hayEntrega = reqOk > 0 || filledOpt.length > 0;
   const entrega = siguienteLabel(meta.key);
   const historial = data.historial ?? [];
 
@@ -291,12 +338,15 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
 
   const markReady = async () => {
     setMarking(true); setGate(null);
-    try { await onSave({ estado: "aprobada" }); }
-    catch (e) {
+    try {
+      await onSave({ estado: "aprobada" });
+      if (subAbiertas > 0) setDiscardOffer(true); // ofrecer descartar sub-tareas abiertas
+    } catch (e) {
       if (e instanceof ApiError && e.status === 400 && Array.isArray(e.body?.faltantes)) setGate(e.body.faltantes);
     } finally { setMarking(false); }
   };
-  const reopen = () => { onSave({ estado: "en_progreso" }).catch(() => {}); };
+  const descartarAbiertas = () => { onSave({ subtareas: (data.subtareas ?? []).filter((s) => s.hecha) }).catch(() => {}); setDiscardOffer(false); };
+  const reopen = () => { setConfirmReopen(false); onSave({ estado: "en_progreso" }).catch(() => {}); };
 
   const toggleSub = (id: string) => onSave({ subtareas: (data.subtareas ?? []).map((s) => (s.id === id ? { ...s, hecha: !s.hecha } : s)) }).catch(() => {});
   const addQuick = () => {
@@ -310,13 +360,15 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
     <Box borderLeft="3px solid" borderColor={lista ? "brandGreen.500" : meta.color} bg="bg.muted" borderRadius="md" p="4" boxShadow={lista ? undefined : "0 0 0 1px rgba(34,211,238,0.12)"}>
       {/* Header */}
       <Flex justify="space-between" align="center" gap="2" wrap="wrap">
-        <HStack gap="2" minW="0" flexWrap="wrap" cursor="pointer" onClick={onCollapse}>
-          <ChevronDown size={16} color="var(--chakra-colors-fg-subtle)" />
+        <HStack gap="2" minW="0" flexWrap="wrap">
+          <Box cursor="pointer" onClick={onCollapse} display="inline-flex"><ChevronDown size={16} color="var(--chakra-colors-fg-subtle)" /></Box>
           <Box w="10px" h="10px" borderRadius="full" bg={lista ? "#22c55e" : meta.color} />
-          <Heading size="sm" fontWeight="900">{meta.label}</Heading>
-          {lista ? <ListaBadge /> : <Badge bg="bg.elevated" color={em.color} borderRadius="full" px="2" fontSize="0.6rem" fontWeight="700">{em.label}</Badge>}
-          {rel && (
+          <Heading size="sm" fontWeight="900" cursor="pointer" onClick={onCollapse}>{meta.label}</Heading>
+          {lista ? <ListaBadge /> : <EstadoControl data={data} onSave={onSave} />}
+          {rel ? (
             <HStack gap="1" color={rel.tone} fontSize="xs"><Clock size={12} /><Text fontWeight="600">{rel.text}</Text></HStack>
+          ) : !lista && (
+            <Button size="xs" variant="ghost" color="fg.subtle" onClick={startEdit} _hover={{ color: "brand.primary" }} px="1"><CalendarPlus size={12} style={{ marginRight: "3px" }} />Sin fecha</Button>
           )}
         </HStack>
         <HStack gap="1">
@@ -325,7 +377,7 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
           )}
           {!editing && (
             <Button size="xs" variant="ghost" color="fg.muted" onClick={startEdit} _hover={{ color: "brand.primary" }}>
-              {fields.length > 0 && filledOpt.length + reqOk > 0 ? <><Pencil size={13} style={{ marginRight: "4px" }} />Editar planilla</> : <><FileText size={13} style={{ marginRight: "4px" }} />Llenar planilla</>}
+              <Pencil size={13} style={{ marginRight: "4px" }} />{hayEntrega ? "Editar planilla" : "Llenar planilla"}
             </Button>
           )}
         </HStack>
@@ -333,6 +385,9 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
 
       {!editing ? (
         <VStack align="stretch" gap="3" mt="3">
+          {/* Entrega recibida de la etapa anterior (handoff, en lectura) */}
+          {prev && <RecibidoPanel prev={prev} />}
+
           {/* Responsable + Entrega a */}
           <HStack gap="6" flexWrap="wrap" align="center">
             <HStack gap="2" align="center">
@@ -353,16 +408,16 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
                 <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase">Requisitos</Text>
                 <Text fontSize="xs" fontWeight="700" color={reqOk === reqTotal ? "brandGreen.400" : "fg.subtle"}>{reqOk}/{reqTotal}</Text>
               </Flex>
-              <HStack gap="1" mb="2">
-                {req.map((f) => <Box key={f.key} h="4px" flex="1" borderRadius="full" bg={isFilled(f, data.values?.[f.key]) ? "brandGreen.500" : "bg.elevated"} />)}
-              </HStack>
+              <Box h="6px" bg="bg.elevated" borderRadius="full" overflow="hidden" mb="2">
+                <Box h="full" w={`${reqTotal ? Math.round((reqOk / reqTotal) * 100) : 0}%`} bg="brandGreen.500" borderRadius="full" transition="width .25s" />
+              </Box>
               <VStack align="stretch" gap="1">
                 {req.map((f) => {
                   const done = isFilled(f, data.values?.[f.key]);
                   return (
                     <HStack key={f.key} gap="2" fontSize="xs" cursor="pointer" onClick={startEdit}>
                       {done ? <CheckCircle2 size={14} color="#22c55e" /> : <Circle size={14} color="var(--chakra-colors-fg-subtle)" />}
-                      <Text color={done ? "fg.subtle" : "fg.muted"} textDecoration={done ? "line-through" : "none"}>{f.label}</Text>
+                      <Text color={done ? "fg.subtle" : "fg.muted"}>{f.label}</Text>
                     </HStack>
                   );
                 })}
@@ -371,12 +426,12 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
           )}
 
           {/* Planilla completa (incluye campos opcionales llenos) */}
-          {(reqOk > 0 || filledOpt.length > 0) && (
+          {fields.length > 0 && (
             <Box>
-              <Button size="xs" variant="ghost" color={showPlanilla ? "brand.primary" : "fg.subtle"} onClick={() => setShowPlanilla((v) => !v)} px="0" _hover={{ color: "brand.primary" }}>
-                <Eye size={13} style={{ marginRight: "4px" }} /> {showPlanilla ? "Ocultar" : "Ver"} entrega
+              <Button size="xs" variant="ghost" disabled={!hayEntrega} color={showPlanilla ? "brand.primary" : "fg.subtle"} onClick={() => setShowPlanilla((v) => !v)} px="0" _hover={{ color: "brand.primary" }} opacity={hayEntrega ? 1 : 0.4}>
+                <Eye size={13} style={{ marginRight: "4px" }} /> {hayEntrega ? (showPlanilla ? "Ocultar entrega" : "Ver entrega") : "Sin entrega aún"}
               </Button>
-              {showPlanilla && (
+              {showPlanilla && hayEntrega && (
                 <VStack align="stretch" gap="2.5" bg="bg.canvas" borderRadius="md" p="3" mt="1">
                   {fields.map((f) => <FieldRead key={f.key} field={f} value={data.values?.[f.key]} />)}
                 </VStack>
@@ -430,18 +485,43 @@ const StageExpanded = ({ meta, data, equipo, template, onSave, onCollapse }: {
             </Box>
           )}
 
+          {/* Oferta de descartar sub-tareas abiertas al aprobar */}
+          {discardOffer && lista && subAbiertas > 0 && (
+            <Box bg="bg.canvas" border="1px solid" borderColor="border.subtle" borderRadius="md" p="2.5">
+              <Flex justify="space-between" align="center" gap="2" flexWrap="wrap">
+                <Text fontSize="xs" color="fg.muted">Quedaron {subAbiertas} sub-tarea{subAbiertas > 1 ? "s" : ""} sin marcar.</Text>
+                <HStack gap="1">
+                  <Button size="xs" variant="ghost" color="fg.subtle" onClick={() => setDiscardOffer(false)}>Dejarlas</Button>
+                  <Button size="xs" variant="outline" borderColor="border.subtle" color="red.300" onClick={descartarAbiertas} _hover={{ borderColor: "red.400" }}>Descartarlas</Button>
+                </HStack>
+              </Flex>
+            </Box>
+          )}
+
           {/* Acción principal */}
           <Flex justify="end" align="center" gap="3" pt="1">
             {lista ? (
-              <Button size="sm" variant="ghost" color="fg.subtle" onClick={reopen} _hover={{ color: "neon.amber" }}>Reabrir etapa</Button>
+              confirmReopen ? (
+                <HStack gap="2">
+                  <Text fontSize="xs" color="fg.muted">¿Reabrir? Invalida el handoff.</Text>
+                  <Button size="xs" variant="ghost" color="fg.subtle" onClick={() => setConfirmReopen(false)}>No</Button>
+                  <Button size="xs" variant="outline" borderColor="rgba(245,158,11,0.4)" color="neon.amber" onClick={reopen} _hover={{ borderColor: "neon.amber" }}><RotateCcw size={12} style={{ marginRight: "4px" }} />Sí, reabrir</Button>
+                </HStack>
+              ) : (
+                <Button size="sm" variant="ghost" color="fg.subtle" onClick={() => setConfirmReopen(true)} _hover={{ color: "neon.amber" }}><RotateCcw size={14} style={{ marginRight: "5px" }} />Reabrir etapa</Button>
+              )
             ) : (
               <>
                 {faltan > 0 && <Text fontSize="xs" color="fg.subtle">faltan {faltan} requisito{faltan > 1 ? "s" : ""}</Text>}
-                <Button size="sm" loading={marking} disabled={faltan > 0} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700"
-                  backgroundImage={faltan > 0 ? "none" : "linear-gradient(135deg, #22c55e 0%, #22d3ee 100%)"}
-                  bg={faltan > 0 ? "bg.elevated" : undefined} opacity={faltan > 0 ? 0.5 : 1} onClick={markReady} _hover={{ opacity: faltan > 0 ? 0.5 : 0.92 }}>
-                  <Check size={15} style={{ marginRight: "5px" }} /> Marcar lista
-                </Button>
+                {faltan > 0 ? (
+                  <Button size="sm" disabled borderRadius="lg" bg="bg.elevated" color="fg.muted" fontWeight="700" opacity={0.4} cursor="not-allowed" _hover={{}} _disabled={{ opacity: 0.4 }}>
+                    <Check size={15} style={{ marginRight: "5px" }} /> Marcar lista
+                  </Button>
+                ) : (
+                  <Button size="sm" loading={marking} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22c55e 0%, #22d3ee 100%)" onClick={markReady} _hover={{ opacity: 0.92 }}>
+                    <Check size={15} style={{ marginRight: "5px" }} /> Marcar lista
+                  </Button>
+                )}
               </>
             )}
           </Flex>
@@ -623,9 +703,10 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
           <Box w="full" maxW="md"><Progreso item={current} /></Box>
         </VStack>
         <VStack align="stretch" gap="2">
-          {STAGES.map((meta) => (
+          {STAGES.map((meta, i) => (
             expanded === meta.key ? (
               <StageExpanded key={meta.key} meta={meta} data={current.stages[meta.key]} equipo={equipo} template={plantillas?.[meta.key]}
+                prev={i > 0 ? { label: STAGES[i - 1].label, data: current.stages[STAGES[i - 1].key], template: plantillas?.[STAGES[i - 1].key] } : null}
                 onSave={(d) => stageSave(current.id, meta.key, d)} onCollapse={() => setExpanded(null)} />
             ) : (
               <StageCollapsed key={meta.key} meta={meta} data={current.stages[meta.key]} equipo={equipo} template={plantillas?.[meta.key]}
