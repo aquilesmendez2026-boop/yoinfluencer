@@ -426,6 +426,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /produccion
             Method: POST
+        ProduccionUpload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /produccion-upload
+            Method: POST
         UpdateProduccion:
           Type: HttpApi
           Properties:

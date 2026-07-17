@@ -457,34 +457,73 @@ export const handler = async (event) => {
     return json(200, { ok: true });
   }
 
-  // ══════════ PRODUCCIÓN (pipeline de episodios) ══════════
+  // ══════════ PRODUCCIÓN (episodios con etapas) ══════════
+  const emptyStage = () => ({ responsable: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", done: false });
+
+  // Agrega archivoUrl (URL firmada) a las etapas que tienen archivo adjunto.
+  async function withStageUrls(item) {
+    if (!item?.stages) return item;
+    for (const s of STAGES) {
+      const st = item.stages[s];
+      if (st?.archivoKey && FILES_BUCKET) {
+        try {
+          const nombre = String(st.archivoNombre || "archivo").replace(/"/g, "");
+          st.archivoUrl = await getSignedUrl(
+            s3,
+            new GetObjectCommand({ Bucket: FILES_BUCKET, Key: st.archivoKey, ResponseContentDisposition: `attachment; filename="${nombre}"` }),
+            { expiresIn: 3600 }
+          );
+        } catch { /* omitir */ }
+      }
+    }
+    return item;
+  }
+
   if (route === "GET /produccion") {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const { Items } = await ddb.send(new ScanCommand({ TableName: PRODUCCION }));
     const items = (Items ?? []).sort((a, b) => String(a.createdAt).localeCompare(String(b.createdAt)));
-    return json(200, { produccion: items });
+    const produccion = await Promise.all(items.map((i) => withStageUrls(i)));
+    return json(200, { produccion });
   }
+
+  if (route === "POST /produccion-upload") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    if (!FILES_BUCKET) return json(500, { error: "Almacenamiento no configurado" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const safe = String(body.filename || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+    const key = `produccion/${randomUUID()}-${safe}`;
+    const uploadUrl = await getSignedUrl(
+      s3,
+      new PutObjectCommand({ Bucket: FILES_BUCKET, Key: key, ContentType: body.contentType || "application/octet-stream" }),
+      { expiresIn: 600 }
+    );
+    return json(200, { uploadUrl, key });
+  }
+
   if (route === "POST /produccion") {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const titulo = String(body.titulo ?? "").trim();
     if (!titulo) return json(400, { error: "Falta el título" });
-    const stage = STAGES.includes(body.stage) ? body.stage : "idea";
+    const idea = String(body.idea ?? "").slice(0, 4000);
+    const stages = {};
+    for (const s of STAGES) stages[s] = emptyStage();
+    stages.idea = { responsable: name || email, fecha: "", contenido: idea, archivoKey: "", archivoNombre: "", done: Boolean(idea) };
     const item = {
       id: randomUUID(),
       titulo: titulo.slice(0, 160),
-      descripcion: String(body.descripcion ?? "").slice(0, 2000),
-      responsable: String(body.responsable ?? "").slice(0, 80),
-      fecha: String(body.fecha ?? ""),
-      stage,
+      stages,
       createdByUserId: userId,
       createdByName: name || email,
       createdAt: new Date().toISOString(),
     };
     await ddb.send(new PutCommand({ TableName: PRODUCCION, Item: item }));
-    return json(201, { item });
+    return json(201, { item: await withStageUrls(item) });
   }
+
   if (route === "PUT /produccion/{id}") {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const id = event.pathParameters?.id;
@@ -492,21 +531,35 @@ export const handler = async (event) => {
     if (!id || !body) return json(400, { error: "Datos inválidos" });
     const { Item } = await ddb.send(new GetCommand({ TableName: PRODUCCION, Key: { id } }));
     if (!Item) return json(404, { error: "No existe" });
-    const updated = {
-      ...Item,
-      titulo: body.titulo != null ? String(body.titulo).slice(0, 160) : Item.titulo,
-      descripcion: body.descripcion != null ? String(body.descripcion).slice(0, 2000) : Item.descripcion,
-      responsable: body.responsable != null ? String(body.responsable).slice(0, 80) : Item.responsable,
-      fecha: body.fecha != null ? String(body.fecha) : Item.fecha,
-      stage: STAGES.includes(body.stage) ? body.stage : Item.stage,
-    };
+    const stages = { ...(Item.stages ?? {}) };
+    if (STAGES.includes(body.stage) && body.stageData) {
+      const cur = stages[body.stage] ?? emptyStage();
+      const d = body.stageData;
+      stages[body.stage] = {
+        responsable: d.responsable != null ? String(d.responsable).slice(0, 80) : (cur.responsable ?? ""),
+        fecha: d.fecha != null ? String(d.fecha) : (cur.fecha ?? ""),
+        contenido: d.contenido != null ? String(d.contenido).slice(0, 4000) : (cur.contenido ?? ""),
+        archivoKey: d.archivoKey != null ? String(d.archivoKey) : (cur.archivoKey ?? ""),
+        archivoNombre: d.archivoNombre != null ? String(d.archivoNombre).slice(0, 160) : (cur.archivoNombre ?? ""),
+        done: d.done != null ? Boolean(d.done) : Boolean(cur.done),
+      };
+    }
+    const updated = { ...Item, titulo: body.titulo != null ? String(body.titulo).slice(0, 160) : Item.titulo, stages };
     await ddb.send(new PutCommand({ TableName: PRODUCCION, Item: updated }));
-    return json(200, { item: updated });
+    return json(200, { item: await withStageUrls(updated) });
   }
+
   if (route === "DELETE /produccion/{id}") {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: PRODUCCION, Key: { id } }));
+    if (Item?.stages && FILES_BUCKET) {
+      for (const s of STAGES) {
+        const k = Item.stages[s]?.archivoKey;
+        if (k) { try { await s3.send(new DeleteObjectCommand({ Bucket: FILES_BUCKET, Key: k })); } catch { /* omitir */ } }
+      }
+    }
     await ddb.send(new DeleteCommand({ TableName: PRODUCCION, Key: { id } }));
     return json(200, { ok: true });
   }
