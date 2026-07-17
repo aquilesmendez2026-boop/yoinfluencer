@@ -12,6 +12,7 @@ import {
   HStack,
   IconButton,
   Spinner,
+  Tabs,
   Text,
   VStack,
 } from "@chakra-ui/react";
@@ -20,6 +21,8 @@ import { GlassPanel } from "../atoms/GlassPanel";
 import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { AppHeader } from "../organisms/AppHeader";
 import { EventForm } from "../organisms/EventForm";
+import { EpisodesManager } from "../organisms/EpisodesManager";
+import { DownloadsManager } from "../organisms/DownloadsManager";
 import { UsersManager } from "../organisms/UsersManager";
 import { MonthCalendar, typeColor } from "../organisms/MonthCalendar";
 import { useAuth } from "../providers/AuthProvider";
@@ -112,15 +115,22 @@ export const AdminPage = () => {
               </Text>
             </HStack>
             <Heading as="h1" size={{ base: "2xl", md: "3xl" }} fontWeight="900" letterSpacing="tighter">
-              Programación de shows
+              Gestión del podcast
             </Heading>
-            <Text color="fg.muted" maxW="2xl">
-              Crea los eventos que transmitirás y míralos en el calendario del mes.
-            </Text>
           </VStack>
 
-          <Grid templateColumns={{ base: "1fr", lg: "380px 1fr" }} gap="6" alignItems="start">
-            {/* Formulario */}
+          <Tabs.Root defaultValue="shows" variant="line">
+            <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
+              {["shows", "episodios", "descargas", "usuarios"].map((v) => (
+                <Tabs.Trigger key={v} value={v} color="fg.muted" fontWeight="600" textTransform="capitalize" _selected={{ color: "brand.primary" }}>
+                  {v}
+                </Tabs.Trigger>
+              ))}
+            </Tabs.List>
+
+            <Tabs.Content value="shows" pt="8">
+              <Grid templateColumns={{ base: "1fr", lg: "380px 1fr" }} gap="6" alignItems="start">
+                {/* Formulario */}
             <GlassPanel p={{ base: "6", md: "7" }}>
               <Heading size="md" mb="5">
                 Nuevo evento
@@ -219,11 +229,19 @@ export const AdminPage = () => {
                 )}
               </GlassPanel>
             </VStack>
-          </Grid>
+              </Grid>
+            </Tabs.Content>
 
-          <Box h="1px" bg="border.subtle" my="2" />
-
-          <UsersManager />
+            <Tabs.Content value="episodios" pt="8">
+              <EpisodesManager />
+            </Tabs.Content>
+            <Tabs.Content value="descargas" pt="8">
+              <DownloadsManager />
+            </Tabs.Content>
+            <Tabs.Content value="usuarios" pt="8">
+              <UsersManager />
+            </Tabs.Content>
+          </Tabs.Root>
         </VStack>
       </Container>
     </Box>

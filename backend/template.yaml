@@ -108,6 +108,56 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
+  # ── Episodios (gestionados desde el panel) ──
+  EpisodiosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-episodios
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Descargas (metadatos; archivos en S3) ──
+  DescargasTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-descargas
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Preguntas / buzón del público ──
+  PreguntasTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-preguntas
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Bucket privado para las descargas de la zona miembros ──
+  FilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "nitalmal-archivos-${AWS::AccountId}"
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [PUT, GET, HEAD]
+            AllowedOrigins: ["*"]
+            AllowedHeaders: ["*"]
+
   # ── Lambda del API ──
   ApiFunction:
     Type: AWS::Serverless::Function
@@ -121,7 +171,11 @@ Resources:
           TABLE_EVENTS: !Ref EventsTable
           TABLE_REUNIONES: !Ref ReunionesTable
           TABLE_NOTAS: !Ref NotasTable
+          TABLE_EPISODIOS: !Ref EpisodiosTable
+          TABLE_DESCARGAS: !Ref DescargasTable
+          TABLE_PREGUNTAS: !Ref PreguntasTable
           AVATARS_BUCKET: !Ref AvatarsBucket
+          FILES_BUCKET: !Ref FilesBucket
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -131,8 +185,16 @@ Resources:
             TableName: !Ref ReunionesTable
         - DynamoDBCrudPolicy:
             TableName: !Ref NotasTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EpisodiosTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DescargasTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref PreguntasTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
+        - S3CrudPolicy:
+            BucketName: !Ref FilesBucket
       Events:
         Me:
           Type: HttpApi
@@ -218,6 +280,78 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /usuarios/{id}/role
             Method: PUT
+        ListEpisodios:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /episodios
+            Method: GET
+        CreateEpisodio:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /episodios
+            Method: POST
+        UpdateEpisodio:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /episodios/{id}
+            Method: PUT
+        DeleteEpisodio:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /episodios/{id}
+            Method: DELETE
+        ListDescargas:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /descargas
+            Method: GET
+        DescargaUpload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /descargas-upload
+            Method: POST
+        CreateDescarga:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /descargas
+            Method: POST
+        DeleteDescarga:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /descargas/{id}
+            Method: DELETE
+        CreatePregunta:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /preguntas
+            Method: POST
+        ListPreguntas:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /preguntas
+            Method: GET
+        UpdatePregunta:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /preguntas/{id}
+            Method: PUT
+        DeletePregunta:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /preguntas/{id}
+            Method: DELETE
 
 Outputs:
   ApiUrl:

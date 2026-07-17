@@ -6,6 +6,7 @@ import { FormatsSection } from "../organisms/FormatsSection";
 import { ScheduleSection } from "../organisms/ScheduleSection";
 import { EpisodesSection } from "../organisms/EpisodesSection";
 import { PlatformsSection } from "../organisms/PlatformsSection";
+import { BuzonSection } from "../organisms/BuzonSection";
 import { Footer } from "../organisms/Footer";
 import { ProfileNudge } from "../molecules/ProfileNudge";
 
@@ -19,6 +20,7 @@ export const HomePage = () => {
       <FormatsSection />
       <ScheduleSection />
       <EpisodesSection />
+      <BuzonSection />
       <PlatformsSection />
       <Footer />
     </Box>

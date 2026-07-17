@@ -20,6 +20,7 @@ import { CalendarDays, MapPin, Plus, Trash2, Lightbulb, ShieldAlert, User as Use
 import { GlassPanel } from "../atoms/GlassPanel";
 import { AppHeader } from "../organisms/AppHeader";
 import { MonthCalendar } from "../organisms/MonthCalendar";
+import { QuestionsPanel } from "../organisms/QuestionsPanel";
 import { useAuth } from "../providers/AuthProvider";
 import type { Evento } from "../services/events";
 import {
@@ -265,6 +266,9 @@ export const AgendaPage = () => {
               </Grid>
             )}
           </VStack>
+
+          {/* ── BUZÓN DEL PÚBLICO ── */}
+          <QuestionsPanel />
         </VStack>
       </Container>
     </Box>
