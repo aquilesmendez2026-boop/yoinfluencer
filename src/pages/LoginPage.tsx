@@ -16,6 +16,24 @@ import { authErrorMessage } from "../services/authErrors";
 
 type Mode = "login" | "register" | "forgot";
 
+// Estilo compartido de los inputs (con padding interno correcto).
+const inputProps = {
+  size: "lg" as const,
+  borderRadius: "xl",
+  bg: "bg.muted",
+  border: "1px solid",
+  borderColor: "border.subtle",
+  px: "4",
+  color: "fg.default",
+  _placeholder: { color: "fg.subtle" },
+  _hover: { borderColor: "border.neon" },
+  _focusVisible: {
+    borderColor: "brand.primary",
+    boxShadow: "0 0 0 1px #22d3ee",
+    outline: "none",
+  },
+};
+
 export const LoginPage = () => {
   const { login, loginWithEmail, registerWithEmail, resetPassword } = useAuth();
 
@@ -114,11 +132,8 @@ export const LoginPage = () => {
             placeholder="Nombre"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            size="lg"
-            borderRadius="xl"
-            bg="bg.muted"
-            borderColor="border.subtle"
             required
+            {...inputProps}
           />
         )}
 
@@ -127,11 +142,8 @@ export const LoginPage = () => {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          size="lg"
-          borderRadius="xl"
-          bg="bg.muted"
-          borderColor="border.subtle"
           required
+          {...inputProps}
         />
 
         {mode !== "forgot" && (
@@ -141,12 +153,9 @@ export const LoginPage = () => {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              size="lg"
-              borderRadius="xl"
-              bg="bg.muted"
-              borderColor="border.subtle"
-              pr="12"
               required
+              pr="12"
+              {...inputProps}
             />
             <Button
               position="absolute"
@@ -195,10 +204,12 @@ export const LoginPage = () => {
           size="xl"
           h="14"
           borderRadius="xl"
+          border="none"
           color="fg.inverted"
           fontWeight="700"
           backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
           _hover={{ opacity: 0.92, boxShadow: "neon" }}
+          _focusVisible={{ outline: "none", boxShadow: "neon" }}
           transition="all 0.3s"
           loading={submitting}
         >
@@ -233,7 +244,7 @@ export const LoginPage = () => {
               onClick={handleGoogle}
               type="button"
               disabled={submitting}
-              _hover={{ borderColor: "border.neon" }}
+              _hover={{ borderColor: "border.neon", bg: "bg.elevated" }}
               transition="all 0.3s"
             >
               <LogIn size={20} style={{ marginRight: "8px" }} />
@@ -270,13 +281,8 @@ export const LoginPage = () => {
       bg="bg.canvas"
       color="fg.default"
       direction={{ base: "column", md: "row" }}
-      align="center"
-      justify="center"
       position="relative"
       overflow="hidden"
-      px={{ base: "5", md: "10" }}
-      py={{ base: "10", md: "0" }}
-      gap={{ base: "10", md: "8" }}
     >
       <BackgroundBlobs />
 
@@ -285,51 +291,58 @@ export const LoginPage = () => {
         <Logo fontSize="xl" />
       </Box>
 
-      {/* Hero izquierdo */}
+      {/* Mitad izquierda: hero centrado */}
       <Flex
         flex="1"
-        direction="column"
+        align="center"
         justify="center"
-        align={{ base: "center", md: "start" }}
-        textAlign={{ base: "center", md: "left" }}
-        maxW={{ md: "lg" }}
+        px={{ base: "6", md: "10" }}
+        py={{ base: "24", md: "10" }}
         zIndex="1"
-        pt={{ base: "10", md: "0" }}
       >
-        <Heading
-          as="h1"
-          fontSize={{ base: "5xl", md: "6xl", lg: "7xl" }}
-          fontWeight="900"
-          letterSpacing="tighter"
-          lineHeight="0.95"
-        >
-          <Box as="span" color="fg.default">
-            NI TAN{" "}
-          </Box>
-          <Box
-            as="span"
-            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-            backgroundClip="text"
-            color="transparent"
+        <VStack align="center" textAlign="center" gap="6" maxW="md">
+          <Heading
+            as="h1"
+            fontSize={{ base: "5xl", md: "6xl", lg: "7xl" }}
+            fontWeight="900"
+            letterSpacing="tighter"
+            lineHeight="0.95"
           >
-            MAL
-          </Box>
-        </Heading>
-        <Box
-          borderLeft={{ md: "3px solid" }}
-          borderColor={{ md: "brand.primary" }}
-          pl={{ md: "5" }}
-          mt="6"
-        >
+            <Box as="span" color="fg.default">
+              NI TAN{" "}
+            </Box>
+            <Box
+              as="span"
+              backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+              backgroundClip="text"
+              color="transparent"
+            >
+              MAL
+            </Box>
+          </Heading>
+          <Box
+            h="3px"
+            w="72px"
+            borderRadius="full"
+            backgroundImage="linear-gradient(90deg, #22d3ee 0%, #d946ef 100%)"
+          />
           <Text fontSize={{ base: "md", md: "lg" }} color="fg.muted" maxW="sm">
             Entra a la comunidad: episodios exclusivos, detrás de cámaras y
             descargables solo para miembros.
           </Text>
-        </Box>
+        </VStack>
       </Flex>
 
-      {/* Tarjeta de login derecha */}
-      <Flex flex="1" justify="center" align="center" w="full" zIndex="1">
+      {/* Mitad derecha: tarjeta centrada */}
+      <Flex
+        flex="1"
+        align="center"
+        justify="center"
+        px={{ base: "6", md: "10" }}
+        pb={{ base: "16", md: "10" }}
+        pt={{ base: "0", md: "10" }}
+        zIndex="1"
+      >
         {card}
       </Flex>
     </Flex>
