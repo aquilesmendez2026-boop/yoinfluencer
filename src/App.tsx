@@ -6,6 +6,7 @@ import { MembersPage } from "./pages/MembersPage";
 import { AccountPage } from "./pages/AccountPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
+import { EpisodesPage } from "./pages/EpisodesPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./providers/AuthProvider";
 
@@ -37,6 +38,7 @@ const AppRoutes = () => {
       <Route path="/cuenta" element={<AccountPage />} />
       <Route path="/configuracion" element={<SettingsPage />} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/episodios" element={<EpisodesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

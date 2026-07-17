@@ -120,6 +120,50 @@ export const episodes: Episode[] = [
     duration: "1h 02m",
     premium: true,
   },
+  {
+    number: 9,
+    title: "El día que casi nos echan del bar",
+    description:
+      "Una salida tranquila que se salió de control. Nombres cambiados para proteger a los culpables.",
+    duration: "1h 08m",
+  },
+  {
+    number: 8,
+    title: "Ranking de las peores citas",
+    description:
+      "Cada uno trae su peor historia romántica. El jurado no perdona.",
+    duration: "52m",
+    premium: true,
+  },
+  {
+    number: 7,
+    title: "Nadie en esta mesa sabe jugar póker",
+    description:
+      "Apostamos cosas que no deberíamos y aprendimos por qué el casino siempre gana.",
+    duration: "1h 05m",
+  },
+  {
+    number: 6,
+    title: "Confesiones a las 4 AM",
+    description:
+      "Cuando el trago suelta la lengua salen los secretos que nadie pidió escuchar.",
+    duration: "1h 21m",
+    premium: true,
+  },
+  {
+    number: 5,
+    title: "El torneo de FIFA que terminó mal",
+    description:
+      "Un campeonato amistoso entre amigos. Amistoso duró exactamente dos partidos.",
+    duration: "49m",
+  },
+  {
+    number: 4,
+    title: "Historias de trabajo que no creerías",
+    description:
+      "Renuncias épicas, jefes imposibles y la vez que uno durmió en la oficina.",
+    duration: "1h 11m",
+  },
 ];
 
 // Plataformas donde escuchar / ver (enlaces placeholder)
