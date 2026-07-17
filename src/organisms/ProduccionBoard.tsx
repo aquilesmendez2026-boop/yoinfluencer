@@ -64,6 +64,7 @@ const StageRow = ({ meta, data, equipo, onSave }: {
   const [estado, setEstado] = useState<Estado>(data.estado);
   const [subtareas, setSubtareas] = useState<Subtarea[]>(data.subtareas ?? []);
   const [nuevaSub, setNuevaSub] = useState("");
+  const [quick, setQuick] = useState("");
   const [archivoKey, setArchivoKey] = useState(data.archivoKey ?? "");
   const [archivoNombre, setArchivoNombre] = useState(data.archivoNombre ?? "");
   const [uploading, setUploading] = useState(false);
@@ -94,6 +95,13 @@ const StageRow = ({ meta, data, equipo, onSave }: {
     const next = (data.subtareas ?? []).map((s) => (s.id === id ? { ...s, hecha: !s.hecha } : s));
     onSave({ subtareas: next });
   };
+  // Agregar una subtarea al instante (sin entrar a editar)
+  const addQuick = () => {
+    if (!quick.trim()) return;
+    onSave({ subtareas: [...(data.subtareas ?? []), { id: uid(), texto: quick.trim(), hecha: false }] });
+    setQuick("");
+  };
+  const removeSub = (id: string) => onSave({ subtareas: (data.subtareas ?? []).filter((s) => s.id !== id) });
 
   const em = estadoMeta(data.estado);
   const overdue = isOverdue(data);
@@ -141,16 +149,21 @@ const StageRow = ({ meta, data, equipo, onSave }: {
             {(data.subtareas ?? []).length > 0 && <HStack gap="1" color="fg.subtle"><ListChecks size={12} /><Text>{subHechas}/{data.subtareas.length}</Text></HStack>}
           </HStack>
 
-          {(data.subtareas ?? []).length > 0 && (
-            <VStack align="stretch" gap="1" mt="1">
-              {data.subtareas.map((s) => (
-                <Checkbox.Root key={s.id} checked={s.hecha} onCheckedChange={() => toggleSub(s.id)} size="sm">
+          <VStack align="stretch" gap="1" mt="1">
+            {(data.subtareas ?? []).map((s) => (
+              <HStack key={s.id} gap="2">
+                <Checkbox.Root checked={s.hecha} onCheckedChange={() => toggleSub(s.id)} size="sm">
                   <Checkbox.HiddenInput /><Checkbox.Control />
                   <Checkbox.Label fontSize="xs" color={s.hecha ? "fg.subtle" : "fg.muted"} textDecoration={s.hecha ? "line-through" : "none"}>{s.texto}</Checkbox.Label>
                 </Checkbox.Root>
-              ))}
-            </VStack>
-          )}
+                <IconButton aria-label="Quitar" size="xs" variant="ghost" color="fg.subtle" ml="auto" onClick={() => removeSub(s.id)} _hover={{ color: "red.400" }}><X size={11} /></IconButton>
+              </HStack>
+            ))}
+            <HStack gap="1">
+              <Input size="xs" placeholder="+ agregar sub-tarea" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQuick(); } }} bg="bg.canvas" border="1px solid" borderColor="border.subtle" borderRadius="md" color="fg.default" px="2.5" _focusVisible={{ borderColor: "brand.primary", outline: "none" }} />
+              <IconButton aria-label="Agregar" size="xs" variant="ghost" color="brand.primary" onClick={addQuick}><Plus size={15} /></IconButton>
+            </HStack>
+          </VStack>
 
           {showPlanilla && (
             <VStack align="stretch" gap="2" bg="bg.canvas" borderRadius="md" p="3" mt="1">
@@ -282,6 +295,13 @@ export const ProduccionBoard = () => {
     listProduccion().then(setItems).catch(() => setItems([]));
     getEquipo().then(setEquipo).catch(() => setEquipo([]));
   }, []);
+
+  // Refresco automático de la lista (no mientras se ve/edita un detalle).
+  useEffect(() => {
+    if (selected !== null) return;
+    const id = setInterval(() => { listProduccion().then(setItems).catch(() => {}); }, 20000);
+    return () => clearInterval(id);
+  }, [selected]);
 
   const add = async (e: FormEvent) => {
     e.preventDefault();

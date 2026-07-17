@@ -7,7 +7,12 @@ import { listPreguntas, setPreguntaAnswered, deletePregunta, type Pregunta } fro
 export const QuestionsPanel = () => {
   const [preguntas, setPreguntas] = useState<Pregunta[] | null>(null);
 
-  useEffect(() => { listPreguntas().then(setPreguntas).catch(() => setPreguntas([])); }, []);
+  useEffect(() => {
+    const load = () => listPreguntas().then(setPreguntas).catch(() => setPreguntas((prev) => prev ?? []));
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const toggle = async (p: Pregunta) => {
     const answered = !p.answered;

@@ -15,7 +15,10 @@ export const NotificationBell = () => {
   const [notis, setNotis] = useState<Notificacion[]>([]);
 
   useEffect(() => {
-    listNotificaciones().then(setNotis).catch(() => setNotis([]));
+    const load = () => listNotificaciones().then(setNotis).catch(() => {});
+    load();
+    const id = setInterval(load, 20000);
+    return () => clearInterval(id);
   }, []);
 
   const unread = notis.filter((n) => !n.leida).length;
