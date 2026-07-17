@@ -26,20 +26,64 @@ export interface Subtarea {
   hecha: boolean;
 }
 
+// ── Plantillas tipadas ──
+export type FieldType = "texto" | "texto-largo" | "fecha" | "numero" | "select" | "checkbox" | "url" | "file";
+
+export interface TemplateField {
+  key: string;
+  label: string;
+  type: FieldType;
+  required: boolean;
+  options?: string[];
+}
+
+export interface StageTemplate {
+  version: number;
+  entrega: string;
+  fields: TemplateField[];
+}
+
+export type Plantillas = Record<Stage, StageTemplate>;
+
+/** Valor de un campo tipo `file` guardado en values. */
+export interface FileValue {
+  archivoKey: string;
+  archivoNombre: string;
+  archivoUrl?: string;
+}
+
+/** Valor de un campo tipado: string | number | boolean | FileValue. */
+export type FieldValue = string | number | boolean | FileValue | null | undefined;
+
+export interface HistItem {
+  de: Estado;
+  a: Estado;
+  porUserId: string;
+  porNombre: string;
+  cuando: string;
+}
+
 export interface StageData {
   responsable: string;
   responsableId?: string;
   fecha: string;
-  contenido: string;
-  archivoKey?: string;
-  archivoNombre?: string;
-  archivoUrl?: string;
   estado: Estado;
   subtareas: Subtarea[];
   done: boolean;
+  values: Record<string, FieldValue>;
+  templateVersion?: number;
+  historial?: HistItem[];
+  // Compat (adjunto legacy a nivel de etapa)
+  archivoKey?: string;
+  archivoNombre?: string;
+  archivoUrl?: string;
+  contenido?: string;
 }
 
 export const estaLista = (st?: StageData) => st?.estado === "aprobada" || !!st?.done;
+
+export const getPlantillas = () =>
+  apiFetch<{ plantillas: Plantillas }>("/plantillas").then((r) => r.plantillas);
 
 export interface ProduccionItem {
   id: string;
@@ -49,7 +93,7 @@ export interface ProduccionItem {
   stages: Record<Stage, StageData>;
 }
 
-const emptyStage = (): StageData => ({ responsable: "", responsableId: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", estado: "pendiente", subtareas: [], done: false });
+const emptyStage = (): StageData => ({ responsable: "", responsableId: "", fecha: "", estado: "pendiente", subtareas: [], done: false, values: {}, historial: [] });
 
 /** Rellena etapas faltantes por seguridad (items antiguos o incompletos). */
 export function normalizeStages(item: ProduccionItem): ProduccionItem {
@@ -62,6 +106,8 @@ export function normalizeStages(item: ProduccionItem): ProduccionItem {
       ...cur,
       estado: cur.estado ?? (cur.done ? "aprobada" : "pendiente"),
       subtareas: Array.isArray(cur.subtareas) ? cur.subtareas : [],
+      values: cur.values && typeof cur.values === "object" ? cur.values : {},
+      historial: Array.isArray(cur.historial) ? cur.historial : [],
     };
   }
   return { ...item, stages };

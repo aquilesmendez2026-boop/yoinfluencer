@@ -434,6 +434,12 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /suscripcion/cancelar
             Method: POST
+        ListPlantillas:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /plantillas
+            Method: GET
         ListProduccion:
           Type: HttpApi
           Properties:

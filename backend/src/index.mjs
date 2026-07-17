@@ -31,6 +31,110 @@ const TYPES = ["stream", "charla", "especial"];
 const STAGES = ["idea", "guion", "grabacion", "edicion", "programado", "publicado"];
 const STAGE_LABELS = { idea: "Idea", guion: "Guion", grabacion: "Grabación", edicion: "Edición", programado: "Programado", publicado: "Publicado" };
 const ESTADOS = ["pendiente", "en_progreso", "en_revision", "aprobada"];
+
+// ── Plantillas tipadas por etapa (contrato de entrega) ──
+// Cada etapa entrega campos TIPADOS que consume la etapa siguiente. La "Definición
+// de Hecho" (Definition of Done) exige que todos los campos `required` estén completos
+// antes de pasar a "aprobada" — se valida en el backend (fuente de verdad).
+// Tipos: texto | texto-largo | fecha | numero | select | checkbox | url | file
+const FIELD_TYPES = ["texto", "texto-largo", "fecha", "numero", "select", "checkbox", "url", "file"];
+const STAGE_TEMPLATES = {
+  idea: {
+    version: 1,
+    entrega: "Para el guionista",
+    fields: [
+      { key: "tema", label: "Tema central", type: "texto", required: true },
+      { key: "tipo", label: "Tipo de episodio", type: "select", required: true, options: ["Entrevista", "Debate", "Solo", "Especial"] },
+      { key: "angulo", label: "Ángulo / enfoque", type: "texto-largo", required: true },
+      { key: "invitado", label: "Invitado propuesto", type: "texto", required: false },
+      { key: "referencias", label: "Referencias / links", type: "texto-largo", required: false },
+    ],
+  },
+  guion: {
+    version: 1,
+    entrega: "Para quien graba",
+    fields: [
+      { key: "gancho", label: "Gancho de apertura", type: "texto-largo", required: true },
+      { key: "bloques", label: "Estructura por bloques", type: "texto-largo", required: true },
+      { key: "duracion", label: "Duración estimada (min)", type: "numero", required: false },
+      { key: "documento", label: "Guion (documento)", type: "file", required: true },
+    ],
+  },
+  grabacion: {
+    version: 1,
+    entrega: "Para el editor",
+    fields: [
+      { key: "fecha_grab", label: "Fecha de grabación", type: "fecha", required: true },
+      { key: "lugar", label: "Lugar / estudio", type: "texto", required: false },
+      { key: "crudo", label: "Audio/video crudo", type: "file", required: true },
+      { key: "notas_edicion", label: "Notas para edición", type: "texto-largo", required: false },
+    ],
+  },
+  edicion: {
+    version: 1,
+    entrega: "Para quien programa",
+    fields: [
+      { key: "master", label: "Master final (audio/video)", type: "file", required: true },
+      { key: "duracion_final", label: "Duración final (min)", type: "numero", required: false },
+      { key: "notas", label: "Notas de la edición", type: "texto-largo", required: false },
+    ],
+  },
+  programado: {
+    version: 1,
+    entrega: "Para publicar",
+    fields: [
+      { key: "titulo_pub", label: "Título de publicación", type: "texto", required: true },
+      { key: "descripcion", label: "Descripción / show notes", type: "texto-largo", required: true },
+      { key: "fecha_pub", label: "Fecha de publicación", type: "fecha", required: true },
+      { key: "portada", label: "Portada / miniatura", type: "file", required: false },
+      { key: "plataformas", label: "Plataformas (Spotify, YouTube…)", type: "texto", required: false },
+    ],
+  },
+  publicado: {
+    version: 1,
+    entrega: "Cierre",
+    fields: [
+      { key: "url_youtube", label: "Enlace YouTube", type: "url", required: false },
+      { key: "url_spotify", label: "Enlace Spotify", type: "url", required: false },
+      { key: "publicado_ok", label: "Confirmar publicado", type: "checkbox", required: true },
+    ],
+  },
+};
+const isFileField = (stage, key) => (STAGE_TEMPLATES[stage]?.fields ?? []).some((f) => f.key === key && f.type === "file");
+
+// Normaliza/valida un valor según el tipo del campo. Devuelve el valor saneado.
+function sanitizeFieldValue(type, raw) {
+  switch (type) {
+    case "numero": {
+      if (raw === "" || raw == null) return "";
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : "";
+    }
+    case "checkbox":
+      return Boolean(raw);
+    case "file":
+      // { archivoKey, archivoNombre }
+      if (raw && typeof raw === "object" && raw.archivoKey) {
+        return { archivoKey: String(raw.archivoKey), archivoNombre: String(raw.archivoNombre ?? "archivo").slice(0, 160) };
+      }
+      return null;
+    default:
+      return String(raw ?? "").slice(0, 4000);
+  }
+}
+// ¿El valor cuenta como "completo" para un campo requerido?
+function fieldFilled(type, val) {
+  if (type === "checkbox") return val === true;
+  if (type === "numero") return val !== "" && val != null && Number.isFinite(Number(val));
+  if (type === "file") return !!(val && val.archivoKey);
+  return typeof val === "string" && val.trim() !== "";
+}
+// Devuelve las etiquetas de campos requeridos que faltan para aprobar la etapa.
+function faltantesParaAprobar(stage, values) {
+  const tpl = STAGE_TEMPLATES[stage];
+  if (!tpl) return [];
+  return tpl.fields.filter((f) => f.required && !fieldFilled(f.type, values?.[f.key])).map((f) => f.label);
+}
 const ROLES = ["miembro", "participante", "admin"];
 const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono"];
 
@@ -482,25 +586,40 @@ export const handler = async (event) => {
   }
 
   // ══════════ PRODUCCIÓN (episodios con etapas) ══════════
-  const emptyStage = () => ({ responsable: "", responsableId: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", estado: "pendiente", subtareas: [], done: false });
+  const emptyStage = (stage) => ({
+    responsable: "", responsableId: "", fecha: "", estado: "pendiente", subtareas: [], done: false,
+    values: {}, templateVersion: STAGE_TEMPLATES[stage]?.version ?? 1, historial: [],
+  });
 
-  // Agrega archivoUrl (URL firmada) a las etapas que tienen archivo adjunto.
+  const signedGetUrl = (key, nombre) => getSignedUrl(
+    s3,
+    new GetObjectCommand({ Bucket: FILES_BUCKET, Key: key, ResponseContentDisposition: `attachment; filename="${String(nombre || "archivo").replace(/"/g, "")}"` }),
+    { expiresIn: 3600 }
+  );
+
+  // Agrega archivoUrl (URL firmada) a los campos tipo `file` de cada etapa.
   async function withStageUrls(item) {
-    if (!item?.stages) return item;
+    if (!item?.stages || !FILES_BUCKET) return item;
     for (const s of STAGES) {
       const st = item.stages[s];
-      if (st?.archivoKey && FILES_BUCKET) {
-        try {
-          const nombre = String(st.archivoNombre || "archivo").replace(/"/g, "");
-          st.archivoUrl = await getSignedUrl(
-            s3,
-            new GetObjectCommand({ Bucket: FILES_BUCKET, Key: st.archivoKey, ResponseContentDisposition: `attachment; filename="${nombre}"` }),
-            { expiresIn: 3600 }
-          );
-        } catch { /* omitir */ }
+      if (!st) continue;
+      // Campos tipados tipo `file` dentro de values.
+      for (const [k, v] of Object.entries(st.values ?? {})) {
+        if (isFileField(s, k) && v && v.archivoKey) {
+          try { v.archivoUrl = await signedGetUrl(v.archivoKey, v.archivoNombre); } catch { /* omitir */ }
+        }
+      }
+      // Compat: adjunto legacy a nivel de etapa.
+      if (st.archivoKey) {
+        try { st.archivoUrl = await signedGetUrl(st.archivoKey, st.archivoNombre); } catch { /* omitir */ }
       }
     }
     return item;
+  }
+
+  if (route === "GET /plantillas") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    return json(200, { plantillas: STAGE_TEMPLATES, tipos: FIELD_TYPES });
   }
 
   if (route === "GET /produccion") {
@@ -534,8 +653,9 @@ export const handler = async (event) => {
     if (!titulo) return json(400, { error: "Falta el título" });
     const idea = String(body.idea ?? "").slice(0, 4000);
     const stages = {};
-    for (const s of STAGES) stages[s] = emptyStage();
-    stages.idea = { responsable: name || email, fecha: "", contenido: idea, archivoKey: "", archivoNombre: "", done: Boolean(idea) };
+    for (const s of STAGES) stages[s] = emptyStage(s);
+    // El brief inicial mapea al campo "tema" de la etapa Idea (contrato tipado).
+    stages.idea = { ...emptyStage("idea"), responsable: name || email, responsableId: userId, values: idea ? { tema: idea } : {} };
     const item = {
       id: randomUUID(),
       titulo: titulo.slice(0, 160),
@@ -559,21 +679,51 @@ export const handler = async (event) => {
     let notiAsignar = null;
     let notiHandoff = null;
     if (STAGES.includes(body.stage) && body.stageData) {
-      const cur = stages[body.stage] ?? emptyStage();
+      const cur = { ...emptyStage(body.stage), ...(stages[body.stage] ?? {}) };
       const d = body.stageData;
       const estado = ESTADOS.includes(d.estado) ? d.estado : (cur.estado ?? "pendiente");
       const subtareas = Array.isArray(d.subtareas)
         ? d.subtareas.slice(0, 60).map((t) => ({ id: String(t.id ?? randomUUID()).slice(0, 40), texto: String(t.texto ?? "").slice(0, 300), hecha: Boolean(t.hecha) }))
         : (cur.subtareas ?? []);
+
+      // Fusiona valores tipados según la plantilla de la etapa (ignora claves desconocidas).
+      const tpl = STAGE_TEMPLATES[body.stage];
+      const values = { ...(cur.values ?? {}) };
+      if (d.values && typeof d.values === "object") {
+        for (const f of tpl.fields) {
+          if (Object.prototype.hasOwnProperty.call(d.values, f.key)) {
+            values[f.key] = sanitizeFieldValue(f.type, d.values[f.key]);
+          }
+        }
+      }
+
+      // ── Gate de Definición de Hecho: no se puede aprobar con campos requeridos vacíos ──
+      if (estado === "aprobada" && cur.estado !== "aprobada") {
+        const faltan = faltantesParaAprobar(body.stage, values);
+        if (faltan.length > 0) {
+          return json(400, {
+            error: "No se puede aprobar: faltan campos obligatorios de la plantilla.",
+            faltantes: faltan,
+            stage: body.stage,
+          });
+        }
+      }
+
+      // ── Historial auditado de transiciones de estado ──
+      const historial = Array.isArray(cur.historial) ? cur.historial.slice(-49) : [];
+      if (estado !== cur.estado) {
+        historial.push({ de: cur.estado ?? "pendiente", a: estado, porUserId: userId, porNombre: name || email, cuando: new Date().toISOString() });
+      }
+
       const newStage = {
         responsable: d.responsable != null ? String(d.responsable).slice(0, 80) : (cur.responsable ?? ""),
         responsableId: d.responsableId != null ? String(d.responsableId).slice(0, 60) : (cur.responsableId ?? ""),
         fecha: d.fecha != null ? String(d.fecha) : (cur.fecha ?? ""),
-        contenido: d.contenido != null ? String(d.contenido).slice(0, 4000) : (cur.contenido ?? ""),
-        archivoKey: d.archivoKey != null ? String(d.archivoKey) : (cur.archivoKey ?? ""),
-        archivoNombre: d.archivoNombre != null ? String(d.archivoNombre).slice(0, 160) : (cur.archivoNombre ?? ""),
         estado,
         subtareas,
+        values,
+        templateVersion: tpl.version,
+        historial,
         done: estado === "aprobada",
       };
       stages[body.stage] = newStage;
@@ -605,10 +755,15 @@ export const handler = async (event) => {
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: PRODUCCION, Key: { id } }));
     if (Item?.stages && FILES_BUCKET) {
+      const keys = [];
       for (const s of STAGES) {
-        const k = Item.stages[s]?.archivoKey;
-        if (k) { try { await s3.send(new DeleteObjectCommand({ Bucket: FILES_BUCKET, Key: k })); } catch { /* omitir */ } }
+        const st = Item.stages[s];
+        if (st?.archivoKey) keys.push(st.archivoKey);
+        for (const [k, v] of Object.entries(st?.values ?? {})) {
+          if (isFileField(s, k) && v?.archivoKey) keys.push(v.archivoKey);
+        }
       }
+      for (const key of keys) { try { await s3.send(new DeleteObjectCommand({ Bucket: FILES_BUCKET, Key: key })); } catch { /* omitir */ } }
     }
     await ddb.send(new DeleteCommand({ TableName: PRODUCCION, Key: { id } }));
     return json(200, { ok: true });

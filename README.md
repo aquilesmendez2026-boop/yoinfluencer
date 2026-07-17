@@ -86,12 +86,19 @@ completo a través de **6 etapas**:
 En **cada etapa** se puede:
 - Asignar un **responsable** (elegido del equipo) y una **fecha límite**.
 - Definir su **estado**: Pendiente → En progreso → En revisión → **Aprobada** (aviso verde **LISTA**).
+- Completar una **planilla de entrega tipada**: cada etapa tiene un formulario con **campos
+  definidos** (texto, fecha, número, selección, enlace, casilla y **archivos**) — no texto libre —
+  pensado según lo que necesita **la etapa siguiente** para continuar.
 - Crear una **checklist de sub-tareas** (con plantillas típicas por etapa).
-- Dejar una **planilla** (lo que esa persona entrega) y **adjuntar archivos** (guion.pdf, audio, etc.).
 - Ver un aviso **ATRASADA** si la fecha venció y la etapa no está lista.
 
-Así cada encargado toma su etapa **viendo exactamente lo que dejó el anterior**, y el trabajo
-fluye sin perderse en chats.
+**Definición de Hecho (Definition of Done):** una etapa **no puede pasar a "Aprobada"** si le
+faltan campos obligatorios de su planilla. Esta regla se **valida en el servidor**, así que el
+contrato de entrega siempre se cumple. Además, cada **cambio de estado queda auditado** (quién,
+qué y cuándo) en un historial visible por etapa.
+
+Así cada encargado toma su etapa **viendo exactamente lo que dejó el anterior** en un formato
+estructurado, y el trabajo fluye sin perderse en chats.
 
 ### 💼 Mi trabajo
 Una vista personal (**"Mi trabajo"** en el menú) que reúne **todas las etapas asignadas a ti**
