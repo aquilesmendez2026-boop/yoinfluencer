@@ -8,6 +8,7 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { EpisodesPage } from "./pages/EpisodesPage";
 import { AgendaPage } from "./pages/AgendaPage";
+import { MiTrabajoPage } from "./pages/MiTrabajoPage";
 import { PremiumPage } from "./pages/PremiumPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -44,6 +45,7 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/episodios" element={<EpisodesPage />} />
       <Route path="/agenda" element={<AgendaPage />} />
+      <Route path="/mi-trabajo" element={<MiTrabajoPage />} />
       <Route path="/premium" element={<PremiumPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -91,7 +91,13 @@ En **cada etapa** se puede:
 - Ver un aviso **ATRASADA** si la fecha venció y la etapa no está lista.
 
 Así cada encargado toma su etapa **viendo exactamente lo que dejó el anterior**, y el trabajo
-fluye sin perderse en chats. Hay un filtro **"Solo mis etapas"** para enfocarse en lo propio.
+fluye sin perderse en chats.
+
+### 💼 Mi trabajo
+Una vista personal (**"Mi trabajo"** en el menú) que reúne **todas las etapas asignadas a ti**
+a través de **todos los episodios**, ordenadas por fecha límite y con aviso **ATRASADA** cuando
+corresponde. Cada fila enlaza directo al episodio en su etapa. Así cada integrante ve de un
+vistazo qué le toca, sin tener que abrir episodio por episodio.
 
 ### 📆 Agenda de reuniones
 Calendario del mes con las reuniones del equipo: fecha, hora, lugar/enlace y notas.

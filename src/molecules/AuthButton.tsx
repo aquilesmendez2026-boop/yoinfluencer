@@ -1,6 +1,6 @@
 import { Box, Button, Image, Menu, Portal, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock, Crown } from "lucide-react";
+import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock, Crown, Briefcase } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
 /**
@@ -122,6 +122,13 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               <Settings size={16} />
               Configuración
             </Menu.Item>
+
+            {isParticipant && (
+              <Menu.Item value="mi-trabajo" onClick={() => navigate("/mi-trabajo")} {...itemStyle} color="brand.primary">
+                <Briefcase size={16} />
+                Mi trabajo
+              </Menu.Item>
+            )}
 
             {isParticipant && (
               <Menu.Item value="agenda" onClick={() => navigate("/agenda")} {...itemStyle} color="brand.primary">

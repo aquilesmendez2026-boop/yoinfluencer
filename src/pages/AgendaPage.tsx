@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Box,
   Button,
@@ -50,6 +50,10 @@ const fieldProps = {
 export const AgendaPage = () => {
   const { role, isParticipant } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const epParam = searchParams.get("ep") ?? undefined;
+  const defaultTab = ["produccion", "reuniones", "notas", "buzon"].includes(tabParam ?? "") ? tabParam! : "reuniones";
 
   const [reuniones, setReuniones] = useState<Reunion[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
@@ -163,7 +167,7 @@ export const AgendaPage = () => {
             </Heading>
           </VStack>
 
-          <Tabs.Root defaultValue="reuniones" variant="line">
+          <Tabs.Root defaultValue={defaultTab} variant="line">
             <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
               <Tabs.Trigger value="produccion" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Producción</Tabs.Trigger>
               <Tabs.Trigger value="reuniones" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Reuniones</Tabs.Trigger>
@@ -172,7 +176,7 @@ export const AgendaPage = () => {
             </Tabs.List>
 
             <Tabs.Content value="produccion" pt="8">
-              <ProduccionBoard />
+              <ProduccionBoard openEpisodeId={epParam} />
             </Tabs.Content>
 
             <Tabs.Content value="reuniones" pt="8">

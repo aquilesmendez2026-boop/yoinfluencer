@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  Badge, Box, Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, Link, NativeSelect, Spinner, Switch, Text, Textarea, VStack,
+  Badge, Box, Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, Link, NativeSelect, Spinner, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import {
   ChevronRight, ArrowLeft, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, Calendar, FileText, Eye, AlertTriangle, ListChecks,
 } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
-import { useAuth } from "../providers/AuthProvider";
 import { getEquipo, type Miembro } from "../services/equipo";
 import {
   listProduccion, createProduccion, updateStage, deleteProduccion, uploadProduccionArchivo, estaLista,
@@ -280,21 +279,28 @@ const EpisodeSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOp
   );
 };
 
-export const ProduccionBoard = () => {
-  const { profile } = useAuth();
-  const myId = profile?.userId;
+export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = {}) => {
   const [items, setItems] = useState<ProduccionItem[] | null>(null);
   const [equipo, setEquipo] = useState<Miembro[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [titulo, setTitulo] = useState("");
   const [idea, setIdea] = useState("");
   const [saving, setSaving] = useState(false);
-  const [soloMias, setSoloMias] = useState(false);
+  const openedRef = useRef(false);
 
   useEffect(() => {
     listProduccion().then(setItems).catch(() => setItems([]));
     getEquipo().then(setEquipo).catch(() => setEquipo([]));
   }, []);
+
+  // Deep-link: abre automáticamente el episodio indicado (una sola vez).
+  useEffect(() => {
+    if (openedRef.current || !openEpisodeId || !items) return;
+    if (items.some((i) => i.id === openEpisodeId)) {
+      setSelected(openEpisodeId);
+      openedRef.current = true;
+    }
+  }, [openEpisodeId, items]);
 
   // Refresco automático de la lista (no mientras se ve/edita un detalle).
   useEffect(() => {
@@ -349,10 +355,6 @@ export const ProduccionBoard = () => {
     );
   }
 
-  const visibles = soloMias && myId
-    ? (items ?? []).filter((i) => STAGES.some((s) => i.stages[s.key]?.responsableId === myId))
-    : items;
-
   return (
     <VStack align="stretch" gap="6">
       <VStack align="start" gap="1">
@@ -370,20 +372,13 @@ export const ProduccionBoard = () => {
         </VStack>
       </GlassPanel>
 
-      <Flex justify="end" align="center" gap="2">
-        <Text fontSize="sm" color="fg.muted">Solo mis etapas</Text>
-        <Switch.Root checked={soloMias} onCheckedChange={(e) => setSoloMias(e.checked)} colorPalette="cyan" size="sm">
-          <Switch.HiddenInput /><Switch.Control><Switch.Thumb /></Switch.Control>
-        </Switch.Root>
-      </Flex>
-
       {items === null ? (
         <Center py="10"><Spinner color="brand.primary" size="lg" /></Center>
-      ) : (visibles ?? []).length === 0 ? (
-        <Text color="fg.subtle" fontSize="sm">{soloMias ? "No tienes etapas asignadas." : "Aún no hay episodios en producción. Crea el primero."}</Text>
+      ) : (items ?? []).length === 0 ? (
+        <Text color="fg.subtle" fontSize="sm">Aún no hay episodios en producción. Crea el primero.</Text>
       ) : (
         <VStack align="stretch" gap="3">
-          {(visibles ?? []).map((it) => (
+          {(items ?? []).map((it) => (
             <EpisodeSummary key={it.id} item={it} onOpen={() => setSelected(it.id)} onDelete={() => remove(it.id)} />
           ))}
         </VStack>
