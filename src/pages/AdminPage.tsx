@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { Trash2, CalendarDays, ShieldAlert } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
+import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { AppHeader } from "../organisms/AppHeader";
 import { EventForm } from "../organisms/EventForm";
 import { MonthCalendar, typeColor } from "../organisms/MonthCalendar";
@@ -169,9 +170,16 @@ export const AdminPage = () => {
                             {e.time}
                           </Text>
                           <VStack align="start" gap="0" minW="0">
-                            <Text fontWeight="600" fontSize="sm" lineClamp={1}>
-                              {e.title}
-                            </Text>
+                            <HStack gap="1.5" minW="0">
+                              {e.premium && (
+                                <Box color="amber.300" flexShrink="0" display="flex">
+                                  <WhiskyGlass size={14} />
+                                </Box>
+                              )}
+                              <Text fontWeight="600" fontSize="sm" lineClamp={1}>
+                                {e.title}
+                              </Text>
+                            </HStack>
                             {e.description && (
                               <Text fontSize="xs" color="fg.subtle" lineClamp={1}>
                                 {e.description}

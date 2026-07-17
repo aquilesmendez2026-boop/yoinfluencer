@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Box, Flex, Grid, HStack, IconButton, Text, VStack } from "@chakra-ui/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { ShowType } from "../data/shows";
+import { WhiskyGlass } from "../atoms/WhiskyGlass";
+import { showTypeLabels, type ShowType } from "../data/shows";
 import type { Evento } from "../services/events";
 
 const WEEKDAYS = ["L", "M", "M", "J", "V", "S", "D"];
@@ -104,21 +105,41 @@ export const MonthCalendar = ({ events, selected, onSelect }: MonthCalendarProps
               >
                 {day}
               </Text>
-              <HStack gap="0.5" minH="6px">
-                {dayEvents.slice(0, 3).map((e) => (
-                  <Box
-                    key={e.id}
-                    w="5px"
-                    h="5px"
-                    borderRadius="full"
-                    bg={isSelected ? "white" : typeColor[e.type]}
-                  />
-                ))}
+              <HStack gap="1" minH="12px" align="center">
+                {dayEvents.slice(0, 3).map((e) =>
+                  e.premium ? (
+                    <Box key={e.id} display="flex" color={isSelected ? "white" : "amber.300"}>
+                      <WhiskyGlass size={12} />
+                    </Box>
+                  ) : (
+                    <Box
+                      key={e.id}
+                      w="5px"
+                      h="5px"
+                      borderRadius="full"
+                      bg={isSelected ? "white" : typeColor[e.type]}
+                    />
+                  )
+                )}
               </HStack>
             </VStack>
           );
         })}
       </Grid>
+
+      {/* Leyenda */}
+      <Flex mt="4" gap="4" flexWrap="wrap" fontSize="xs" color="fg.muted">
+        {(Object.keys(showTypeLabels) as ShowType[]).map((t) => (
+          <HStack key={t} gap="1.5">
+            <Box w="7px" h="7px" borderRadius="full" bg={typeColor[t]} />
+            <Text>{showTypeLabels[t]}</Text>
+          </HStack>
+        ))}
+        <HStack gap="1.5" color="amber.300">
+          <WhiskyGlass size={13} />
+          <Text>Premium</Text>
+        </HStack>
+      </Flex>
     </Box>
   );
 };
