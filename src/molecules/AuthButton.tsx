@@ -1,6 +1,6 @@
 import { Box, Button, Image, Menu, Portal, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star } from "lucide-react";
+import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
 /**
@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout } = useAuth();
+  const { user, loading, login, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -114,6 +114,13 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               <Settings size={16} />
               Configuración
             </Menu.Item>
+
+            {isAdmin && (
+              <Menu.Item value="admin" onClick={() => navigate("/admin")} {...itemStyle} color="brand.primary">
+                <LayoutDashboard size={16} />
+                Panel admin
+              </Menu.Item>
+            )}
 
             <Menu.Separator borderColor="border.subtle" my="1" />
 

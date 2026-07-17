@@ -16,10 +16,14 @@ import {
   type User,
 } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
+import { apiFetch } from "../services/api";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
+  /** Rol del usuario (desde el backend). null mientras carga. */
+  role: string | null;
+  isAdmin: boolean;
   login: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   registerWithEmail: (
@@ -38,6 +42,7 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -46,6 +51,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     return unsubscribe;
   }, []);
+
+  // Al iniciar sesión, obtiene el rol del backend (registra al usuario en /me).
+  useEffect(() => {
+    if (!user) {
+      setRole(null);
+      return;
+    }
+    setRole(null);
+    apiFetch<{ user?: { role?: string } }>("/me")
+      .then((data) => setRole(data.user?.role ?? "miembro"))
+      .catch(() => setRole("miembro"));
+  }, [user]);
 
   const login = async () => {
     await signInWithPopup(auth, googleProvider);
@@ -84,6 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         loading,
+        role,
+        isAdmin: role === "admin",
         login,
         loginWithEmail,
         registerWithEmail,
