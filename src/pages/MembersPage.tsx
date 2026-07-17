@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Badge, Box, Center, Container, Flex, Heading, HStack, Link, SimpleGrid, Spinner, Text, VStack,
+  Badge, Box, Button, Center, Container, Flex, Heading, HStack, Link, SimpleGrid, Spinner, Text, VStack,
 } from "@chakra-ui/react";
-import { Download, Lock, Play, FileText, Image as ImageIcon, Music, File } from "lucide-react";
+import { Download, Lock, Play, FileText, Image as ImageIcon, Music, File, Crown } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { SectionTitle } from "../atoms/SectionTitle";
@@ -23,7 +24,8 @@ const typeLabel: Record<DownloadType, string> = {
 };
 
 export const MembersPage = () => {
-  const { user, profile, role } = useAuth();
+  const { user, profile, role, isPremium } = useAuth();
+  const navigate = useNavigate();
   const [descargas, setDescargas] = useState<Descarga[] | null>(null);
 
   const firstName = profile?.apodo || user?.displayName?.split(" ")[0] || "crack";
@@ -55,12 +57,34 @@ export const MembersPage = () => {
             <Text fontSize={{ base: "md", md: "lg" }} color="fg.muted" maxW="2xl">
               Contenido que no verás en las plataformas públicas y descargables solo para la comunidad.
             </Text>
-            {role && (
-              <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.neon" borderRadius="full" px="3" py="1" textTransform="capitalize">
-                Rol: {role}
-              </Badge>
-            )}
+            <HStack gap="3">
+              {role && (
+                <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.neon" borderRadius="full" px="3" py="1" textTransform="capitalize">
+                  Rol: {role}
+                </Badge>
+              )}
+              {isPremium && (
+                <Badge bg="rgba(245,158,11,0.15)" color="amber.300" border="1px solid" borderColor="rgba(245,158,11,0.4)" borderRadius="full" px="3" py="1">
+                  <HStack gap="1"><Crown size={12} /><Text>Premium</Text></HStack>
+                </Badge>
+              )}
+            </HStack>
           </VStack>
+
+          {!isPremium && (
+            <Flex gap="4" align="center" justify="space-between" wrap="wrap" p="5" borderRadius="2xl" bg="rgba(245,158,11,0.1)" border="1px solid" borderColor="rgba(245,158,11,0.35)">
+              <HStack gap="3" color="amber.200">
+                <Crown size={26} />
+                <Box>
+                  <Text fontWeight="700" color="fg.default">Desbloquea todo con Premium</Text>
+                  <Text fontSize="sm" color="fg.muted">Descargas premium, episodios exclusivos y sin anuncios.</Text>
+                </Box>
+              </HStack>
+              <Button onClick={() => navigate("/premium")} borderRadius="full" px="6" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #f59e0b, #d946ef)" _hover={{ opacity: 0.92 }}>
+                Hazte Premium
+              </Button>
+            </Flex>
+          )}
 
           {/* Contenido exclusivo */}
           <VStack align="stretch" gap="8">
@@ -112,25 +136,40 @@ export const MembersPage = () => {
                             </Text>
                           </VStack>
                         </HStack>
-                        <Link
-                          href={d.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          display="inline-flex"
-                          alignItems="center"
-                          gap="2"
-                          borderRadius="full"
-                          px="5"
-                          py="2"
-                          color="fg.inverted"
-                          fontWeight="700"
-                          fontSize="sm"
-                          backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-                          _hover={{ opacity: 0.9, transform: "translateY(-1px)", textDecoration: "none" }}
-                          transition="all 0.3s"
-                        >
-                          <Download size={16} /> Descargar
-                        </Link>
+                        {d.premium && !isPremium ? (
+                          <Button
+                            onClick={() => navigate("/premium")}
+                            size="sm"
+                            borderRadius="full"
+                            px="5"
+                            variant="outline"
+                            borderColor="rgba(245,158,11,0.5)"
+                            color="amber.300"
+                            _hover={{ bg: "rgba(245,158,11,0.1)" }}
+                          >
+                            <Lock size={15} style={{ marginRight: "6px" }} /> Premium
+                          </Button>
+                        ) : (
+                          <Link
+                            href={d.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            display="inline-flex"
+                            alignItems="center"
+                            gap="2"
+                            borderRadius="full"
+                            px="5"
+                            py="2"
+                            color="fg.inverted"
+                            fontWeight="700"
+                            fontSize="sm"
+                            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+                            _hover={{ opacity: 0.9, transform: "translateY(-1px)", textDecoration: "none" }}
+                            transition="all 0.3s"
+                          >
+                            <Download size={16} /> Descargar
+                          </Link>
+                        )}
                       </Flex>
                     </GlassPanel>
                   );

@@ -12,6 +12,9 @@ export interface Profile {
   avatarKey?: string;
   /** Foto propia (URL firmada de S3), si el usuario subió una. */
   photoURL?: string;
+  /** Plan de membresía: "free" | "premium". */
+  plan?: string;
+  premiumSince?: string;
 }
 
 export interface ProfileInput {

@@ -28,6 +28,8 @@ interface AuthContextValue {
   isAdmin: boolean;
   /** Participante del podcast (o admin): acceso a la agenda del equipo. */
   isParticipant: boolean;
+  /** Miembro premium (por pago) o admin. */
+  isPremium: boolean;
   refreshProfile: () => Promise<void>;
   login: () => Promise<void>;
   loginWithEmail: (email: string, password: string) => Promise<void>;
@@ -104,6 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: profile?.role ?? null,
         isAdmin: profile?.role === "admin",
         isParticipant: profile?.role === "participante" || profile?.role === "admin",
+        isPremium: profile?.plan === "premium" || profile?.role === "admin",
         refreshProfile,
         login,
         loginWithEmail,

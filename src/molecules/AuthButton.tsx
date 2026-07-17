@@ -1,6 +1,6 @@
 import { Box, Button, Image, Menu, Portal, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock } from "lucide-react";
+import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock, Crown } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
 /**
@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout, isAdmin, isParticipant, profile } = useAuth();
+  const { user, loading, login, logout, isAdmin, isParticipant, isPremium, profile } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -106,6 +106,13 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               )}
             </Box>
             <Menu.Separator borderColor="border.subtle" my="1" />
+
+            {!isPremium && (
+              <Menu.Item value="premium" onClick={() => navigate("/premium")} {...itemStyle} color="amber.300">
+                <Crown size={16} />
+                Hazte Premium
+              </Menu.Item>
+            )}
 
             <Menu.Item value="perfil" onClick={() => navigate("/cuenta")} {...itemStyle}>
               <UserIcon size={16} />

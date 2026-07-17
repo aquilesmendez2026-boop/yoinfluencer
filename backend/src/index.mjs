@@ -77,9 +77,9 @@ export const handler = async (event) => {
         TableName: USERS,
         Key: { userId },
         UpdateExpression:
-          "SET email = :e, #n = :n, lastLogin = :t, createdAt = if_not_exists(createdAt, :t), #r = if_not_exists(#r, :role)",
-        ExpressionAttributeNames: { "#n": "name", "#r": "role" },
-        ExpressionAttributeValues: { ":e": email, ":n": name, ":t": now, ":role": "miembro" },
+          "SET email = :e, #n = :n, lastLogin = :t, createdAt = if_not_exists(createdAt, :t), #r = if_not_exists(#r, :role), #p = if_not_exists(#p, :plan)",
+        ExpressionAttributeNames: { "#n": "name", "#r": "role", "#p": "plan" },
+        ExpressionAttributeValues: { ":e": email, ":n": name, ":t": now, ":role": "miembro", ":plan": "free" },
       })
     );
     const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
@@ -128,6 +128,49 @@ export const handler = async (event) => {
       { expiresIn: 300 }
     );
     return json(200, { uploadUrl, key, contentType });
+  }
+
+  // ══════════ SUSCRIPCIÓN (MercadoPago — MOCK) ══════════
+  // Estructura pensada para reemplazar el mock por el SDK real de MercadoPago:
+  //  - /preferencia  → hoy devuelve datos simulados; en real crea una "preference".
+  //  - /pagar        → hoy marca premium al instante; en real lo hace el webhook
+  //                    de MercadoPago tras verificar el pago aprobado.
+  const PLAN_PRECIO = { amount: 4990, currency: "CLP", plan: "premium" };
+
+  if (route === "POST /suscripcion/preferencia") {
+    return json(200, {
+      preferenceId: `mock-${randomUUID()}`,
+      ...PLAN_PRECIO,
+      mock: true,
+    });
+  }
+  if (route === "POST /suscripcion/pagar") {
+    // MOCK: aquí, en producción, se validaría el pago con MercadoPago.
+    const now = new Date().toISOString();
+    await ddb.send(
+      new UpdateCommand({
+        TableName: USERS,
+        Key: { userId },
+        UpdateExpression: "SET #p = :premium, premiumSince = if_not_exists(premiumSince, :t)",
+        ExpressionAttributeNames: { "#p": "plan" },
+        ExpressionAttributeValues: { ":premium": "premium", ":t": now },
+      })
+    );
+    const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
+    return json(200, { user: await withAvatarUrl(Item), mock: true });
+  }
+  if (route === "POST /suscripcion/cancelar") {
+    await ddb.send(
+      new UpdateCommand({
+        TableName: USERS,
+        Key: { userId },
+        UpdateExpression: "SET #p = :free REMOVE premiumSince",
+        ExpressionAttributeNames: { "#p": "plan" },
+        ExpressionAttributeValues: { ":free": "free" },
+      })
+    );
+    const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
+    return json(200, { user: await withAvatarUrl(Item) });
   }
 
   // ══════════ EVENTOS ══════════

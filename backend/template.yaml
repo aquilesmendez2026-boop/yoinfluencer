@@ -380,6 +380,24 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /live
             Method: PUT
+        SuscripcionPreferencia:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /suscripcion/preferencia
+            Method: POST
+        SuscripcionPagar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /suscripcion/pagar
+            Method: POST
+        SuscripcionCancelar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /suscripcion/cancelar
+            Method: POST
 
 Outputs:
   ApiUrl:

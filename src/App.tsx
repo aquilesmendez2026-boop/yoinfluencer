@@ -8,6 +8,8 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { EpisodesPage } from "./pages/EpisodesPage";
 import { AgendaPage } from "./pages/AgendaPage";
+import { PremiumPage } from "./pages/PremiumPage";
+import { CheckoutPage } from "./pages/CheckoutPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./providers/AuthProvider";
 
@@ -26,7 +28,8 @@ const AppRoutes = () => {
   if (!user) {
     return (
       <Routes>
-        <Route path="/login" element={<LoginPage />} />        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -41,6 +44,8 @@ const AppRoutes = () => {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/episodios" element={<EpisodesPage />} />
       <Route path="/agenda" element={<AgendaPage />} />
+      <Route path="/premium" element={<PremiumPage />} />
+      <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
