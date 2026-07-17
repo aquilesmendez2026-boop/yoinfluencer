@@ -92,6 +92,8 @@ export interface Episode {
   title: string;
   description: string;
   duration: string;
+  /** Marca el episodio como exclusivo para miembros (se muestra con el vaso de whisky). */
+  premium?: boolean;
 }
 
 export const episodes: Episode[] = [
@@ -101,6 +103,7 @@ export const episodes: Episode[] = [
     description:
       "Una partida normal, una apuesta nada normal y una noche que nadie va a olvidar.",
     duration: "1h 14m",
+    premium: true,
   },
   {
     number: 11,
@@ -115,6 +118,7 @@ export const episodes: Episode[] = [
     description:
       "Intentamos batir un récord mundial sin dormir. Spoiler: no lo logramos, pero valió la pena.",
     duration: "1h 02m",
+    premium: true,
   },
 ];
 

@@ -57,7 +57,10 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
           borderColor="border.neon"
           bg="bg.surface"
           color="fg.default"
+          pl="2"
+          pr="3"
           w={full ? "full" : undefined}
+          justifyContent={full ? "start" : undefined}
           _hover={{ boxShadow: "neon", transform: "translateY(-1px)" }}
           transition="all 0.3s"
         >
@@ -107,7 +110,7 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               <UserIcon size={16} />
               Perfil
             </Menu.Item>
-            <Menu.Item value="config" onClick={() => navigate("/cuenta#config")} {...itemStyle}>
+            <Menu.Item value="config" onClick={() => navigate("/configuracion")} {...itemStyle}>
               <Settings size={16} />
               Configuración
             </Menu.Item>
