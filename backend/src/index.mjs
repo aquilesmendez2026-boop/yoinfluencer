@@ -87,7 +87,7 @@ export const handler = async (event) => {
     } catch {
       return json(400, { error: "JSON inválido" });
     }
-    const { date, time, title, type, description } = body;
+    const { date, time, title, type, description, premium } = body;
     if (!date || !time || !title || !type)
       return json(400, { error: "Faltan campos: date, time, title, type" });
     if (!TYPES.includes(type))
@@ -100,6 +100,7 @@ export const handler = async (event) => {
       title,
       type,
       description: description ?? "",
+      premium: Boolean(premium),
       createdBy: email,
       createdAt: new Date().toISOString(),
     };

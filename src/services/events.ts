@@ -7,6 +7,7 @@ export interface EventoInput {
   title: string;
   type: ShowType;
   description?: string;
+  premium?: boolean;
 }
 
 export interface Evento extends EventoInput {

@@ -2,13 +2,16 @@ import { useState, type FormEvent } from "react";
 import {
   Box,
   Button,
+  Flex,
   Input,
   NativeSelect,
+  Switch,
   Text,
   Textarea,
   VStack,
 } from "@chakra-ui/react";
 import { CalendarPlus } from "lucide-react";
+import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { showTypeLabels, type ShowType } from "../data/shows";
 import { createEvento, type Evento } from "../services/events";
 
@@ -34,6 +37,7 @@ export const EventForm = ({ onCreated }: { onCreated: (e: Evento) => void }) => 
   const [title, setTitle] = useState("");
   const [type, setType] = useState<ShowType>("stream");
   const [description, setDescription] = useState("");
+  const [premium, setPremium] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -44,10 +48,11 @@ export const EventForm = ({ onCreated }: { onCreated: (e: Evento) => void }) => 
     setOk(false);
     setSubmitting(true);
     try {
-      const evento = await createEvento({ date, time, title, type, description });
+      const evento = await createEvento({ date, time, title, type, description, premium });
       onCreated(evento);
       setTitle("");
       setDescription("");
+      setPremium(false);
       setOk(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo crear el evento.");
@@ -108,6 +113,40 @@ export const EventForm = ({ onCreated }: { onCreated: (e: Evento) => void }) => 
             {...fieldProps}
           />
         </Box>
+
+        {/* Premium */}
+        <Flex
+          justify="space-between"
+          align="center"
+          gap="3"
+          p="3"
+          borderRadius="lg"
+          bg="rgba(245, 158, 11, 0.08)"
+          border="1px solid"
+          borderColor="rgba(245, 158, 11, 0.25)"
+        >
+          <Flex align="center" gap="2" color="amber.300">
+            <WhiskyGlass size={18} />
+            <Box>
+              <Text fontSize="sm" fontWeight="700" color="fg.default">
+                Contenido premium
+              </Text>
+              <Text fontSize="xs" color="fg.subtle">
+                Solo para miembros
+              </Text>
+            </Box>
+          </Flex>
+          <Switch.Root
+            checked={premium}
+            onCheckedChange={(e) => setPremium(e.checked)}
+            colorPalette="yellow"
+          >
+            <Switch.HiddenInput />
+            <Switch.Control>
+              <Switch.Thumb />
+            </Switch.Control>
+          </Switch.Root>
+        </Flex>
 
         {error && (
           <Text color="red.400" fontSize="sm">
