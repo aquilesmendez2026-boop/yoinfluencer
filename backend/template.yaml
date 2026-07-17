@@ -147,6 +147,19 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
+  # ── Config del sitio (estado "en vivo", etc.) ──
+  ConfigTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-config
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
   # ── Bucket privado para las descargas de la zona miembros ──
   FilesBucket:
     Type: AWS::S3::Bucket
@@ -174,6 +187,7 @@ Resources:
           TABLE_EPISODIOS: !Ref EpisodiosTable
           TABLE_DESCARGAS: !Ref DescargasTable
           TABLE_PREGUNTAS: !Ref PreguntasTable
+          TABLE_CONFIG: !Ref ConfigTable
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
       Policies:
@@ -191,6 +205,8 @@ Resources:
             TableName: !Ref DescargasTable
         - DynamoDBCrudPolicy:
             TableName: !Ref PreguntasTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ConfigTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
         - S3CrudPolicy:
@@ -352,6 +368,18 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /preguntas/{id}
             Method: DELETE
+        GetLive:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /live
+            Method: GET
+        SetLive:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /live
+            Method: PUT
 
 Outputs:
   ApiUrl:

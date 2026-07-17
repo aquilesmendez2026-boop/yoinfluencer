@@ -1,6 +1,7 @@
 import { Box } from "@chakra-ui/react";
 import { Navbar } from "../organisms/Navbar";
 import { Hero } from "../organisms/Hero";
+import { LiveSection } from "../organisms/LiveSection";
 import { AboutSection } from "../organisms/AboutSection";
 import { FormatsSection } from "../organisms/FormatsSection";
 import { ScheduleSection } from "../organisms/ScheduleSection";
@@ -16,6 +17,7 @@ export const HomePage = () => {
       <ProfileNudge />
       <Navbar />
       <Hero />
+      <LiveSection />
       <AboutSection />
       <FormatsSection />
       <ScheduleSection />

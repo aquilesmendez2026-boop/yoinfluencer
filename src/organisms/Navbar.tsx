@@ -67,7 +67,7 @@ export const Navbar = () => {
           <Button
             as="a"
             // @ts-expect-error Chakra Button renders an anchor via `as`
-            href="#platforms"
+            href="#envivo"
             size="sm"
             borderRadius="full"
             px="5"
@@ -124,7 +124,7 @@ export const Navbar = () => {
           <Button
             as="a"
             // @ts-expect-error Chakra Button renders an anchor via `as`
-            href="#platforms"
+            href="#envivo"
             size="md"
             borderRadius="full"
             color="fg.inverted"

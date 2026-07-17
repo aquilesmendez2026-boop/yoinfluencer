@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
-  Box, Button, Center, Flex, Grid, Heading, HStack, IconButton, Input, NativeSelect, Spinner, Text, VStack,
+  Box, Button, Center, Flex, Grid, Heading, HStack, IconButton, Input, NativeSelect, Spinner, Switch, Text, VStack,
 } from "@chakra-ui/react";
 import { Trash2, Upload, FileUp } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
+import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { listDescargas, uploadDescarga, deleteDescarga, type Descarga, type DownloadType } from "../services/descargas";
 
 const TYPES: DownloadType[] = ["audio", "pdf", "wallpaper", "video", "otro"];
@@ -27,6 +28,7 @@ export const DownloadsManager = () => {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [type, setType] = useState<DownloadType>("audio");
+  const [premium, setPremium] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -39,9 +41,9 @@ export const DownloadsManager = () => {
     setError(null);
     setUploading(true);
     try {
-      const d = await uploadDescarga(file, { title: title || file.name, type, size: humanSize(file.size) });
+      const d = await uploadDescarga(file, { title: title || file.name, type, size: humanSize(file.size), premium });
       setDescargas((p) => [d, ...(p ?? [])]);
-      setFile(null); setTitle("");
+      setFile(null); setTitle(""); setPremium(false);
       if (fileRef.current) fileRef.current.value = "";
     } catch {
       setError("No se pudo subir el archivo.");
@@ -73,6 +75,12 @@ export const DownloadsManager = () => {
               </NativeSelect.Field>
               <NativeSelect.Indicator />
             </NativeSelect.Root>
+            <Flex justify="space-between" align="center" p="2.5" borderRadius="lg" bg="rgba(245,158,11,0.08)" border="1px solid" borderColor="rgba(245,158,11,0.25)">
+              <HStack gap="2" color="amber.300"><WhiskyGlass size={16} /><Text fontSize="sm" fontWeight="600" color="fg.default">Solo premium</Text></HStack>
+              <Switch.Root checked={premium} onCheckedChange={(e) => setPremium(e.checked)} colorPalette="yellow">
+                <Switch.HiddenInput /><Switch.Control><Switch.Thumb /></Switch.Control>
+              </Switch.Root>
+            </Flex>
             {error && <Text color="red.400" fontSize="sm">{error}</Text>}
             <Button type="submit" loading={uploading} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92 }}>
               <Upload size={16} style={{ marginRight: "6px" }} /> Subir
@@ -91,6 +99,7 @@ export const DownloadsManager = () => {
                 <Flex key={d.id} justify="space-between" align="center" gap="3" p="3" borderRadius="lg" bg="bg.muted">
                   <HStack gap="3" minW="0">
                     <Box color="brand.primary" fontSize="xs" fontWeight="700" textTransform="uppercase" flexShrink="0">{typeLabel[d.type]}</Box>
+                    {d.premium && <Box color="amber.300" flexShrink="0"><WhiskyGlass size={14} /></Box>}
                     <VStack align="start" gap="0" minW="0">
                       <Text fontWeight="600" fontSize="sm" lineClamp={1}>{d.title}</Text>
                       {d.size && <Text fontSize="xs" color="fg.subtle">{d.size}</Text>}

@@ -21,6 +21,7 @@ import { GlassPanel } from "../atoms/GlassPanel";
 import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { AppHeader } from "../organisms/AppHeader";
 import { EventForm } from "../organisms/EventForm";
+import { LiveManager } from "../organisms/LiveManager";
 import { EpisodesManager } from "../organisms/EpisodesManager";
 import { DownloadsManager } from "../organisms/DownloadsManager";
 import { UsersManager } from "../organisms/UsersManager";
@@ -121,12 +122,16 @@ export const AdminPage = () => {
 
           <Tabs.Root defaultValue="shows" variant="line">
             <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
-              {["shows", "episodios", "descargas", "usuarios"].map((v) => (
+              {["en vivo", "shows", "episodios", "descargas", "usuarios"].map((v) => (
                 <Tabs.Trigger key={v} value={v} color="fg.muted" fontWeight="600" textTransform="capitalize" _selected={{ color: "brand.primary" }}>
                   {v}
                 </Tabs.Trigger>
               ))}
             </Tabs.List>
+
+            <Tabs.Content value="en vivo" pt="8">
+              <LiveManager />
+            </Tabs.Content>
 
             <Tabs.Content value="shows" pt="8">
               <Grid templateColumns={{ base: "1fr", lg: "380px 1fr" }} gap="6" alignItems="start">

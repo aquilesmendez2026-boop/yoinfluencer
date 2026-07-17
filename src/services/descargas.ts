@@ -7,7 +7,9 @@ export interface Descarga {
   title: string;
   type: DownloadType;
   fileKey: string;
+  filename?: string;
   size?: string;
+  premium?: boolean;
   /** URL firmada (temporal) para descargar. */
   url?: string;
   createdAt?: string;
@@ -19,7 +21,7 @@ export const listDescargas = () =>
 /** Sube el archivo a S3 y crea el registro de descarga (admin). */
 export async function uploadDescarga(
   file: File,
-  meta: { title: string; type: DownloadType; size?: string }
+  meta: { title: string; type: DownloadType; size?: string; premium?: boolean }
 ): Promise<Descarga> {
   const { uploadUrl, key } = await apiFetch<{ uploadUrl: string; key: string }>("/descargas-upload", {
     method: "POST",
@@ -34,7 +36,14 @@ export async function uploadDescarga(
 
   return apiFetch<{ descarga: Descarga }>("/descargas", {
     method: "POST",
-    body: JSON.stringify({ title: meta.title, type: meta.type, fileKey: key, size: meta.size ?? "" }),
+    body: JSON.stringify({
+      title: meta.title,
+      type: meta.type,
+      fileKey: key,
+      filename: file.name,
+      size: meta.size ?? "",
+      premium: meta.premium ?? false,
+    }),
   }).then((r) => r.descarga);
 }
 

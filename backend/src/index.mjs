@@ -20,6 +20,7 @@ const NOTAS = process.env.TABLE_NOTAS;
 const EPISODIOS = process.env.TABLE_EPISODIOS;
 const DESCARGAS = process.env.TABLE_DESCARGAS;
 const PREGUNTAS = process.env.TABLE_PREGUNTAS;
+const CONFIG = process.env.TABLE_CONFIG;
 const AVATARS_BUCKET = process.env.AVATARS_BUCKET;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 
@@ -225,7 +226,16 @@ export const handler = async (event) => {
           let url = "";
           if (d.fileKey && FILES_BUCKET) {
             try {
-              url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: FILES_BUCKET, Key: d.fileKey }), { expiresIn: 3600 });
+              const nombre = String(d.filename || d.title || "archivo").replace(/"/g, "");
+              url = await getSignedUrl(
+                s3,
+                new GetObjectCommand({
+                  Bucket: FILES_BUCKET,
+                  Key: d.fileKey,
+                  ResponseContentDisposition: `attachment; filename="${nombre}"`,
+                }),
+                { expiresIn: 3600 }
+              );
             } catch { /* omitir */ }
           }
           return { ...d, url };
@@ -251,9 +261,9 @@ export const handler = async (event) => {
     if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
-    const { title, type, fileKey, size } = body;
+    const { title, type, fileKey, size, filename, premium } = body;
     if (!title || !fileKey) return json(400, { error: "Faltan campos: title, fileKey" });
-    const item = { id: randomUUID(), title, type: type ?? "audio", fileKey, size: size ?? "", createdBy: email, createdAt: new Date().toISOString() };
+    const item = { id: randomUUID(), title, type: type ?? "audio", fileKey, size: size ?? "", filename: filename ?? "", premium: Boolean(premium), createdBy: email, createdAt: new Date().toISOString() };
     await ddb.send(new PutCommand({ TableName: DESCARGAS, Item: item }));
     return json(201, { descarga: item });
   }
@@ -269,6 +279,34 @@ export const handler = async (event) => {
     }
     await ddb.send(new DeleteCommand({ TableName: DESCARGAS, Key: { id } }));
     return json(200, { ok: true });
+  }
+
+  // ══════════ EN VIVO (config) ══════════
+  if (route === "GET /live") {
+    const { Item } = await ddb.send(new GetCommand({ TableName: CONFIG, Key: { id: "live" } }));
+    return json(200, {
+      live: {
+        isLive: Boolean(Item?.isLive),
+        videoId: Item?.videoId ?? "",
+        title: Item?.title ?? "",
+        platform: Item?.platform ?? "youtube",
+      },
+    });
+  }
+  if (route === "PUT /live") {
+    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const item = {
+      id: "live",
+      isLive: Boolean(body.isLive),
+      videoId: String(body.videoId ?? "").slice(0, 40),
+      title: String(body.title ?? "").slice(0, 200),
+      platform: body.platform ?? "youtube",
+      updatedAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: CONFIG, Item: item }));
+    return json(200, { live: item });
   }
 
   // ══════════ PREGUNTAS / BUZÓN ══════════

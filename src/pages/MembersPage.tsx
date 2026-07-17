@@ -103,7 +103,10 @@ export const MembersPage = () => {
                             <Icon size={20} />
                           </Flex>
                           <VStack align="start" gap="0.5">
-                            <Text fontWeight="600">{d.title}</Text>
+                            <HStack gap="1.5">
+                              {d.premium && <Box color="amber.300" flexShrink="0"><WhiskyGlass size={14} /></Box>}
+                              <Text fontWeight="600">{d.title}</Text>
+                            </HStack>
                             <Text fontSize="xs" color="fg.subtle">
                               {typeLabel[d.type] ?? "Archivo"}{d.size ? ` · ${d.size}` : ""}
                             </Text>
