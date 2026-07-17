@@ -74,6 +74,7 @@ export const Navbar = () => {
             color="fg.inverted"
             fontWeight="700"
             backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+            border="none"
             _hover={{ opacity: 0.9, transform: "translateY(-1px)", boxShadow: "neon" }}
             transition="all 0.3s"
           >
@@ -129,6 +130,7 @@ export const Navbar = () => {
             color="fg.inverted"
             fontWeight="700"
             backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+            border="none"
             onClick={() => setOpen(false)}
           >
             Ver en vivo

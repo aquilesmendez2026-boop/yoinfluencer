@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { ArrowLeft, Download, Lock, Play, FileText, Image, Music } from "lucide-react";
 import { Logo } from "../atoms/Logo";
+import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { SectionTitle } from "../atoms/SectionTitle";
 import { AuthButton } from "../molecules/AuthButton";
@@ -146,18 +147,27 @@ export const MembersPage = () => {
               {exclusiveContent.map((item) => (
                 <GlassPanel key={item.title} interactive p="6" h="full">
                   <VStack align="start" gap="3" h="full">
-                    <Badge
-                      bg="transparent"
-                      color="brand.secondary"
+                    <HStack
+                      gap="1.5"
+                      alignSelf="start"
+                      bg="rgba(245, 158, 11, 0.12)"
                       border="1px solid"
-                      borderColor="brand.secondary"
+                      borderColor="rgba(245, 158, 11, 0.35)"
                       borderRadius="full"
-                      px="3"
-                      fontSize="0.65rem"
-                      textTransform="uppercase"
+                      px="2.5"
+                      py="1"
+                      color="amber.300"
                     >
-                      {item.badge}
-                    </Badge>
+                      <WhiskyGlass size={14} />
+                      <Text
+                        fontSize="0.65rem"
+                        fontWeight="700"
+                        textTransform="uppercase"
+                        letterSpacing="wide"
+                      >
+                        {item.badge}
+                      </Text>
+                    </HStack>
                     <Heading as="h3" size="md">
                       {item.title}
                     </Heading>

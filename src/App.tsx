@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { system } from "./theme";
 import { HomePage } from "./pages/HomePage";
 import { MembersPage } from "./pages/MembersPage";
+import { AccountPage } from "./pages/AccountPage";
 import { LoginPage } from "./pages/LoginPage";
 import { AuthProvider, useAuth } from "./providers/AuthProvider";
 
@@ -32,6 +33,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/miembros" element={<MembersPage />} />
+      <Route path="/cuenta" element={<AccountPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
