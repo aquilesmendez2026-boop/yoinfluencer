@@ -12,11 +12,12 @@ import {
   IconButton,
   Input,
   Spinner,
+  Tabs,
   Text,
   Textarea,
   VStack,
 } from "@chakra-ui/react";
-import { CalendarDays, MapPin, Plus, Trash2, Lightbulb, ShieldAlert, User as UserIcon } from "lucide-react";
+import { CalendarDays, MapPin, Plus, Trash2, ShieldAlert, User as UserIcon } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { AppHeader } from "../organisms/AppHeader";
 import { MonthCalendar } from "../organisms/MonthCalendar";
@@ -148,22 +149,28 @@ export const AgendaPage = () => {
     <Box bg="bg.canvas" color="fg.default" minH="100vh">
       <AppHeader />
       <Container maxW="1200px" px={{ base: "5", md: "8" }} py={{ base: "10", md: "14" }}>
-        <VStack align="stretch" gap="12">
-          {/* ── AGENDA ── */}
-          <VStack align="stretch" gap="6">
-            <VStack align="start" gap="2">
-              <HStack gap="2" color="brand.primary">
-                <CalendarDays size={16} />
-                <Text fontSize="sm" fontWeight="700" letterSpacing="widest" textTransform="uppercase">
-                  Agenda del equipo
-                </Text>
-              </HStack>
-              <Heading as="h1" size={{ base: "2xl", md: "3xl" }} fontWeight="900" letterSpacing="tighter">
-                Reuniones
-              </Heading>
-            </VStack>
+        <VStack align="stretch" gap="8">
+          <VStack align="start" gap="2">
+            <HStack gap="2" color="brand.primary">
+              <CalendarDays size={16} />
+              <Text fontSize="sm" fontWeight="700" letterSpacing="widest" textTransform="uppercase">
+                Agenda del equipo
+              </Text>
+            </HStack>
+            <Heading as="h1" size={{ base: "2xl", md: "3xl" }} fontWeight="900" letterSpacing="tighter">
+              Espacio del equipo
+            </Heading>
+          </VStack>
 
-            <Grid templateColumns={{ base: "1fr", lg: "360px 1fr" }} gap="6" alignItems="start">
+          <Tabs.Root defaultValue="reuniones" variant="line">
+            <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
+              <Tabs.Trigger value="reuniones" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Reuniones</Tabs.Trigger>
+              <Tabs.Trigger value="notas" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Notas e ideas</Tabs.Trigger>
+              <Tabs.Trigger value="buzon" color="fg.muted" fontWeight="600" _selected={{ color: "brand.primary" }}>Buzón</Tabs.Trigger>
+            </Tabs.List>
+
+            <Tabs.Content value="reuniones" pt="8">
+              <Grid templateColumns={{ base: "1fr", lg: "360px 1fr" }} gap="6" alignItems="start">
               <GlassPanel p={{ base: "5", md: "6" }}>
                 <Heading size="sm" mb="4">Nueva reunión</Heading>
                 <VStack as="form" onSubmit={addReunion} align="stretch" gap="3">
@@ -215,24 +222,16 @@ export const AgendaPage = () => {
                   )}
                 </GlassPanel>
               </VStack>
-            </Grid>
-          </VStack>
+              </Grid>
+            </Tabs.Content>
 
-          {/* ── NOTAS / IDEAS ── */}
-          <VStack align="stretch" gap="6">
-            <VStack align="start" gap="2">
-              <HStack gap="2" color="brand.secondary">
-                <Lightbulb size={16} />
-                <Text fontSize="sm" fontWeight="700" letterSpacing="widest" textTransform="uppercase">
-                  Notas e ideas
-                </Text>
-              </HStack>
-              <Heading as="h2" size={{ base: "xl", md: "2xl" }} fontWeight="800">
-                Que no se pierda ninguna oportunidad
-              </Heading>
-            </VStack>
+            <Tabs.Content value="notas" pt="8">
+              <VStack align="stretch" gap="6">
+                <Heading as="h2" size={{ base: "lg", md: "xl" }} fontWeight="800">
+                  Que no se pierda ninguna oportunidad
+                </Heading>
 
-            <GlassPanel p={{ base: "5", md: "6" }}>
+                <GlassPanel p={{ base: "5", md: "6" }}>
               <VStack as="form" onSubmit={addNota} align="stretch" gap="3">
                 <Input placeholder="Título (opcional)" value={nTitulo} onChange={(e) => setNTitulo(e.target.value)} {...fieldProps} />
                 <Textarea placeholder="Escribe tu idea, invitado potencial, tema para un show…" value={nContenido} onChange={(e) => setNContenido(e.target.value)} rows={3} {...fieldProps} px="3" py="2" />
@@ -265,10 +264,13 @@ export const AgendaPage = () => {
                 ))}
               </Grid>
             )}
-          </VStack>
+              </VStack>
+            </Tabs.Content>
 
-          {/* ── BUZÓN DEL PÚBLICO ── */}
-          <QuestionsPanel />
+            <Tabs.Content value="buzon" pt="8">
+              <QuestionsPanel />
+            </Tabs.Content>
+          </Tabs.Root>
         </VStack>
       </Container>
     </Box>
