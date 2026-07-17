@@ -17,7 +17,7 @@ const beneficios = [
 ];
 
 export const PremiumPage = () => {
-  const { isPremium, profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [canceling, setCanceling] = useState(false);
 
@@ -49,7 +49,7 @@ export const PremiumPage = () => {
             </Heading>
           </VStack>
 
-          {isPremium && profile?.plan === "premium" ? (
+          {profile?.plan === "premium" ? (
             <GlassPanel p={{ base: "6", md: "8" }} borderColor="rgba(245,158,11,0.4)">
               <VStack gap="4" align="start">
                 <HStack gap="2" color="amber.300"><Sparkles size={22} /><Heading size="lg">¡Ya eres premium! 🎉</Heading></HStack>
@@ -58,10 +58,6 @@ export const PremiumPage = () => {
                   Cancelar membresía
                 </Button>
               </VStack>
-            </GlassPanel>
-          ) : isPremium ? (
-            <GlassPanel p={{ base: "6", md: "8" }}>
-              <Text color="fg.muted">Como admin ya tienes acceso a todo el contenido premium.</Text>
             </GlassPanel>
           ) : (
             <GlassPanel p={{ base: "6", md: "8" }} borderColor="rgba(245,158,11,0.35)">

@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout, isAdmin, isParticipant, isPremium, profile } = useAuth();
+  const { user, loading, login, logout, isAdmin, isParticipant, profile } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -107,7 +107,7 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
             </Box>
             <Menu.Separator borderColor="border.subtle" my="1" />
 
-            {!isPremium && (
+            {profile?.plan !== "premium" && (
               <Menu.Item value="premium" onClick={() => navigate("/premium")} {...itemStyle} color="amber.300">
                 <Crown size={16} />
                 Hazte Premium
