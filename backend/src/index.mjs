@@ -6,6 +6,7 @@ import {
   PutCommand,
   ScanCommand,
   DeleteCommand,
+  QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -22,11 +23,14 @@ const DESCARGAS = process.env.TABLE_DESCARGAS;
 const PREGUNTAS = process.env.TABLE_PREGUNTAS;
 const CONFIG = process.env.TABLE_CONFIG;
 const PRODUCCION = process.env.TABLE_PRODUCCION;
+const NOTIFICACIONES = process.env.TABLE_NOTIFICACIONES;
 const AVATARS_BUCKET = process.env.AVATARS_BUCKET;
 const FILES_BUCKET = process.env.FILES_BUCKET;
 
 const TYPES = ["stream", "charla", "especial"];
 const STAGES = ["idea", "guion", "grabacion", "edicion", "programado", "publicado"];
+const STAGE_LABELS = { idea: "Idea", guion: "Guion", grabacion: "Grabación", edicion: "Edición", programado: "Programado", publicado: "Publicado" };
+const ESTADOS = ["pendiente", "en_progreso", "en_revision", "aprobada"];
 const ROLES = ["miembro", "participante", "admin"];
 const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono"];
 
@@ -48,6 +52,26 @@ const parseBody = (event) => {
     return null;
   }
 };
+
+// Crea una notificación in-app para un usuario.
+async function notify(targetUserId, texto, meta = {}) {
+  if (!NOTIFICACIONES || !targetUserId) return;
+  const now = new Date().toISOString();
+  const id = randomUUID();
+  await ddb.send(new PutCommand({
+    TableName: NOTIFICACIONES,
+    Item: {
+      userId: targetUserId,
+      sk: `${now}#${id}`,
+      id, texto,
+      episodioId: meta.episodioId ?? "",
+      episodioTitulo: meta.episodioTitulo ?? "",
+      stage: meta.stage ?? "",
+      leida: false,
+      createdAt: now,
+    },
+  }));
+}
 async function withAvatarUrl(item) {
   if (item?.avatarKey && AVATARS_BUCKET) {
     try {
@@ -458,7 +482,7 @@ export const handler = async (event) => {
   }
 
   // ══════════ PRODUCCIÓN (episodios con etapas) ══════════
-  const emptyStage = () => ({ responsable: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", done: false });
+  const emptyStage = () => ({ responsable: "", responsableId: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", estado: "pendiente", subtareas: [], done: false });
 
   // Agrega archivoUrl (URL firmada) a las etapas que tienen archivo adjunto.
   async function withStageUrls(item) {
@@ -532,20 +556,46 @@ export const handler = async (event) => {
     const { Item } = await ddb.send(new GetCommand({ TableName: PRODUCCION, Key: { id } }));
     if (!Item) return json(404, { error: "No existe" });
     const stages = { ...(Item.stages ?? {}) };
+    let notiAsignar = null;
+    let notiHandoff = null;
     if (STAGES.includes(body.stage) && body.stageData) {
       const cur = stages[body.stage] ?? emptyStage();
       const d = body.stageData;
-      stages[body.stage] = {
+      const estado = ESTADOS.includes(d.estado) ? d.estado : (cur.estado ?? "pendiente");
+      const subtareas = Array.isArray(d.subtareas)
+        ? d.subtareas.slice(0, 60).map((t) => ({ id: String(t.id ?? randomUUID()).slice(0, 40), texto: String(t.texto ?? "").slice(0, 300), hecha: Boolean(t.hecha) }))
+        : (cur.subtareas ?? []);
+      const newStage = {
         responsable: d.responsable != null ? String(d.responsable).slice(0, 80) : (cur.responsable ?? ""),
+        responsableId: d.responsableId != null ? String(d.responsableId).slice(0, 60) : (cur.responsableId ?? ""),
         fecha: d.fecha != null ? String(d.fecha) : (cur.fecha ?? ""),
         contenido: d.contenido != null ? String(d.contenido).slice(0, 4000) : (cur.contenido ?? ""),
         archivoKey: d.archivoKey != null ? String(d.archivoKey) : (cur.archivoKey ?? ""),
         archivoNombre: d.archivoNombre != null ? String(d.archivoNombre).slice(0, 160) : (cur.archivoNombre ?? ""),
-        done: d.done != null ? Boolean(d.done) : Boolean(cur.done),
+        estado,
+        subtareas,
+        done: estado === "aprobada",
       };
+      stages[body.stage] = newStage;
+
+      // Notificación de asignación (a quien le tocó, si cambió y no es uno mismo).
+      if (newStage.responsableId && newStage.responsableId !== cur.responsableId && newStage.responsableId !== userId) {
+        notiAsignar = { to: newStage.responsableId, texto: `Te asignaron la etapa "${STAGE_LABELS[body.stage]}" de "${Item.titulo}"`, stage: body.stage };
+      }
+      // Handoff: al aprobar una etapa, avisar al responsable de la siguiente.
+      if (estado === "aprobada" && cur.estado !== "aprobada") {
+        const idx = STAGES.indexOf(body.stage);
+        const next = STAGES[idx + 1];
+        const nextStage = next ? stages[next] : null;
+        if (nextStage?.responsableId && nextStage.responsableId !== userId) {
+          notiHandoff = { to: nextStage.responsableId, texto: `"${STAGE_LABELS[body.stage]}" de "${Item.titulo}" quedó lista — te toca "${STAGE_LABELS[next]}"`, stage: next };
+        }
+      }
     }
     const updated = { ...Item, titulo: body.titulo != null ? String(body.titulo).slice(0, 160) : Item.titulo, stages };
     await ddb.send(new PutCommand({ TableName: PRODUCCION, Item: updated }));
+    if (notiAsignar) await notify(notiAsignar.to, notiAsignar.texto, { episodioId: id, episodioTitulo: Item.titulo, stage: notiAsignar.stage });
+    if (notiHandoff) await notify(notiHandoff.to, notiHandoff.texto, { episodioId: id, episodioTitulo: Item.titulo, stage: notiHandoff.stage });
     return json(200, { item: await withStageUrls(updated) });
   }
 
@@ -561,6 +611,47 @@ export const handler = async (event) => {
       }
     }
     await ddb.send(new DeleteCommand({ TableName: PRODUCCION, Key: { id } }));
+    return json(200, { ok: true });
+  }
+
+  // ══════════ EQUIPO (para asignar responsables) ══════════
+  if (route === "GET /equipo") {
+    if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
+    const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
+    const equipo = (Items ?? [])
+      .filter((u) => u.role === "participante" || u.role === "admin")
+      .map((u) => ({ userId: u.userId, nombre: u.apodo || u.name || u.email || "Sin nombre" }))
+      .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
+    return json(200, { equipo });
+  }
+
+  // ══════════ NOTIFICACIONES (in-app) ══════════
+  if (route === "GET /notificaciones") {
+    const { Items } = await ddb.send(new QueryCommand({
+      TableName: NOTIFICACIONES,
+      KeyConditionExpression: "userId = :u",
+      ExpressionAttributeValues: { ":u": userId },
+      ScanIndexForward: false,
+      Limit: 40,
+    }));
+    return json(200, { notificaciones: Items ?? [] });
+  }
+  if (route === "POST /notificaciones/leer") {
+    const { Items } = await ddb.send(new QueryCommand({
+      TableName: NOTIFICACIONES,
+      KeyConditionExpression: "userId = :u",
+      FilterExpression: "leida = :f",
+      ExpressionAttributeValues: { ":u": userId, ":f": false },
+      Limit: 50,
+    }));
+    for (const it of Items ?? []) {
+      await ddb.send(new UpdateCommand({
+        TableName: NOTIFICACIONES,
+        Key: { userId, sk: it.sk },
+        UpdateExpression: "SET leida = :t",
+        ExpressionAttributeValues: { ":t": true },
+      }));
+    }
     return json(200, { ok: true });
   }
 

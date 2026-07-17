@@ -160,6 +160,23 @@ Resources:
         - AttributeName: id
           KeyType: HASH
 
+  # ── Notificaciones in-app (por usuario) ──
+  NotificacionesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: nitalmal-notificaciones
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+
   # ── Config del sitio (estado "en vivo", etc.) ──
   ConfigTable:
     Type: AWS::DynamoDB::Table
@@ -202,6 +219,7 @@ Resources:
           TABLE_PREGUNTAS: !Ref PreguntasTable
           TABLE_CONFIG: !Ref ConfigTable
           TABLE_PRODUCCION: !Ref ProduccionTable
+          TABLE_NOTIFICACIONES: !Ref NotificacionesTable
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
       Policies:
@@ -223,6 +241,8 @@ Resources:
             TableName: !Ref ConfigTable
         - DynamoDBCrudPolicy:
             TableName: !Ref ProduccionTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref NotificacionesTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
         - S3CrudPolicy:
@@ -444,6 +464,24 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /produccion/{id}
             Method: DELETE
+        GetEquipo:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /equipo
+            Method: GET
+        ListNotificaciones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /notificaciones
+            Method: GET
+        LeerNotificaciones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /notificaciones/leer
+            Method: POST
 
 Outputs:
   ApiUrl:

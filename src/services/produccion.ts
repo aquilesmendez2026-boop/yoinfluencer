@@ -11,15 +11,35 @@ export const STAGES: { key: Stage; label: string; color: string }[] = [
   { key: "publicado", label: "Publicado", color: "brandGreen.500" },
 ];
 
+export type Estado = "pendiente" | "en_progreso" | "en_revision" | "aprobada";
+
+export const ESTADOS: { key: Estado; label: string; color: string }[] = [
+  { key: "pendiente", label: "Pendiente", color: "fg.subtle" },
+  { key: "en_progreso", label: "En progreso", color: "neon.cyan" },
+  { key: "en_revision", label: "En revisión", color: "neon.amber" },
+  { key: "aprobada", label: "Aprobada", color: "brandGreen.400" },
+];
+
+export interface Subtarea {
+  id: string;
+  texto: string;
+  hecha: boolean;
+}
+
 export interface StageData {
   responsable: string;
+  responsableId?: string;
   fecha: string;
   contenido: string;
   archivoKey?: string;
   archivoNombre?: string;
   archivoUrl?: string;
+  estado: Estado;
+  subtareas: Subtarea[];
   done: boolean;
 }
+
+export const estaLista = (st?: StageData) => st?.estado === "aprobada" || !!st?.done;
 
 export interface ProduccionItem {
   id: string;
@@ -29,12 +49,21 @@ export interface ProduccionItem {
   stages: Record<Stage, StageData>;
 }
 
-const emptyStage = (): StageData => ({ responsable: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", done: false });
+const emptyStage = (): StageData => ({ responsable: "", responsableId: "", fecha: "", contenido: "", archivoKey: "", archivoNombre: "", estado: "pendiente", subtareas: [], done: false });
 
 /** Rellena etapas faltantes por seguridad (items antiguos o incompletos). */
 export function normalizeStages(item: ProduccionItem): ProduccionItem {
   const stages = { ...(item.stages ?? {}) } as Record<Stage, StageData>;
-  for (const s of STAGES) if (!stages[s.key]) stages[s.key] = emptyStage();
+  for (const s of STAGES) {
+    const cur = stages[s.key];
+    if (!cur) stages[s.key] = emptyStage();
+    else stages[s.key] = {
+      ...emptyStage(),
+      ...cur,
+      estado: cur.estado ?? (cur.done ? "aprobada" : "pendiente"),
+      subtareas: Array.isArray(cur.subtareas) ? cur.subtareas : [],
+    };
+  }
   return { ...item, stages };
 }
 

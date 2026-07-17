@@ -3,6 +3,7 @@ import { Button, Flex, HStack } from "@chakra-ui/react";
 import { ArrowLeft } from "lucide-react";
 import { Logo } from "../atoms/Logo";
 import { AuthButton } from "../molecules/AuthButton";
+import { NotificationBell } from "../molecules/NotificationBell";
 
 /** Cabecera fija reutilizable para las páginas internas (miembros, cuenta, configuración). */
 export const AppHeader = () => {
@@ -36,6 +37,7 @@ export const AppHeader = () => {
           <ArrowLeft size={16} style={{ marginRight: "6px" }} />
           Inicio
         </Button>
+        <NotificationBell />
         <AuthButton />
       </HStack>
     </Flex>
