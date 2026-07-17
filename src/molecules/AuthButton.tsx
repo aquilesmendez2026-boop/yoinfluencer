@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout, isAdmin } = useAuth();
+  const { user, loading, login, logout, isAdmin, profile } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -34,7 +34,8 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
     );
   }
 
-  const name = user.displayName?.split(" ")[0] ?? "Cuenta";
+  const name = profile?.apodo || user.displayName?.split(" ")[0] || "Cuenta";
+  const photo = profile?.photoURL ?? user.photoURL;
 
   const itemStyle = {
     gap: "2.5",
@@ -64,9 +65,9 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
           _hover={{ boxShadow: "neon", transform: "translateY(-1px)" }}
           transition="all 0.3s"
         >
-          {user.photoURL ? (
+          {photo ? (
             <Image
-              src={user.photoURL}
+              src={photo}
               alt={name}
               boxSize="22px"
               borderRadius="full"

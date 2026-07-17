@@ -7,10 +7,12 @@ import { ScheduleSection } from "../organisms/ScheduleSection";
 import { EpisodesSection } from "../organisms/EpisodesSection";
 import { PlatformsSection } from "../organisms/PlatformsSection";
 import { Footer } from "../organisms/Footer";
+import { ProfileNudge } from "../molecules/ProfileNudge";
 
 export const HomePage = () => {
   return (
     <Box bg="bg.canvas" color="fg.default" minH="100vh" overflowX="hidden">
+      <ProfileNudge />
       <Navbar />
       <Hero />
       <AboutSection />

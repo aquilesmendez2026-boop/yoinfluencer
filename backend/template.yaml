@@ -41,6 +41,8 @@ Resources:
         AllowMethods:
           - GET
           - POST
+          - PUT
+          - DELETE
           - OPTIONS
 
   # ── Tabla de usuarios / miembros ──
@@ -55,6 +57,17 @@ Resources:
       KeySchema:
         - AttributeName: userId
           KeyType: HASH
+
+  # ── Bucket para las fotos de perfil (privado; se sirven con URL firmada) ──
+  AvatarsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "nitalmal-avatars-${AWS::AccountId}"
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [PUT, GET, HEAD]
+            AllowedOrigins: ["*"]
+            AllowedHeaders: ["*"]
 
   # ── Tabla de eventos / shows programados ──
   EventsTable:
@@ -80,11 +93,14 @@ Resources:
         Variables:
           TABLE_USERS: !Ref UsersTable
           TABLE_EVENTS: !Ref EventsTable
+          AVATARS_BUCKET: !Ref AvatarsBucket
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
         - DynamoDBCrudPolicy:
             TableName: !Ref EventsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AvatarsBucket
       Events:
         Me:
           Type: HttpApi
@@ -92,6 +108,18 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /me
             Method: GET
+        UpdateMe:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /me
+            Method: PUT
+        AvatarUpload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /avatar-upload
+            Method: POST
         ListEventos:
           Type: HttpApi
           Properties:
