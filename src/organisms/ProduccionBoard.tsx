@@ -3,7 +3,7 @@ import {
   Badge, Box, Button, Center, Checkbox, Flex, Heading, HStack, IconButton, Input, Link, NativeSelect, Spinner, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import {
-  ChevronRight, ChevronDown, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, UserPlus, Clock, CalendarPlus, FileText, Eye, AlertTriangle, ListChecks, CheckCircle2, Circle, History, Inbox, RotateCcw,
+  ChevronRight, ChevronDown, ArrowLeft, ArrowRight, Plus, Trash2, Pencil, Check, X, Paperclip, Download, User as UserIcon, UserPlus, Clock, CalendarPlus, FileText, AlertTriangle, ListChecks, CheckCircle2, Circle, History, Inbox, RotateCcw,
 } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { ApiError } from "../services/api";
@@ -214,25 +214,27 @@ const FieldInput = ({ field, value, onChange, onUpload }: {
   );
 };
 
-// ── Lectura de un valor tipado ──
+// ── Solo el valor de un campo (sin etiqueta) ──
+const FieldValueView = ({ field, value }: { field: TemplateField; value: FieldValue }) => {
+  if (field.type === "file" && isFileValue(value)) {
+    return value.archivoUrl ? (
+      <Link href={value.archivoUrl} target="_blank" rel="noopener noreferrer" display="inline-flex" alignItems="center" gap="1.5" color="brand.primary" fontSize="sm" _hover={{ textDecoration: "none" }}>
+        <Download size={14} /> {value.archivoNombre}
+      </Link>
+    ) : <Text fontSize="sm" color="fg.muted"><FileText size={12} style={{ display: "inline", marginRight: 4 }} />{value.archivoNombre}</Text>;
+  }
+  if (field.type === "checkbox") return <Text fontSize="sm" color="brandGreen.400"><Check size={13} style={{ display: "inline", marginRight: 4 }} />Sí</Text>;
+  if (field.type === "url") return <Link href={String(value)} target="_blank" rel="noopener noreferrer" color="brand.primary" fontSize="sm" wordBreak="break-all">{String(value)}</Link>;
+  return <Text fontSize="sm" color="fg.default" whiteSpace="pre-wrap">{String(value)}</Text>;
+};
+
+// ── Lectura de un valor tipado con etiqueta (para el panel de handoff) ──
 const FieldRead = ({ field, value }: { field: TemplateField; value: FieldValue }) => {
   if (!isFilled(field, value)) return null;
   return (
     <VStack align="stretch" gap="0.5">
       <Text fontSize="0.65rem" fontWeight="700" color="fg.subtle" textTransform="uppercase">{field.label}</Text>
-      {field.type === "file" && isFileValue(value) ? (
-        value.archivoUrl ? (
-          <Link href={value.archivoUrl} target="_blank" rel="noopener noreferrer" display="inline-flex" alignItems="center" gap="1.5" color="brand.primary" fontSize="sm" _hover={{ textDecoration: "none" }}>
-            <Download size={14} /> {value.archivoNombre}
-          </Link>
-        ) : <Text fontSize="sm" color="fg.muted"><FileText size={12} style={{ display: "inline", marginRight: 4 }} />{value.archivoNombre}</Text>
-      ) : field.type === "checkbox" ? (
-        <Text fontSize="sm" color="brandGreen.400"><Check size={13} style={{ display: "inline", marginRight: 4 }} />Sí</Text>
-      ) : field.type === "url" ? (
-        <Link href={String(value)} target="_blank" rel="noopener noreferrer" color="brand.primary" fontSize="sm" wordBreak="break-all">{String(value)}</Link>
-      ) : (
-        <Text fontSize="sm" color="fg.muted" whiteSpace="pre-wrap">{String(value)}</Text>
-      )}
+      <FieldValueView field={field} value={value} />
     </VStack>
   );
 };
@@ -291,7 +293,6 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
   onSave: (d: Partial<StageData>) => Promise<void>; onCollapse: () => void;
 }) => {
   const [editing, setEditing] = useState(false);
-  const [showPlanilla, setShowPlanilla] = useState(false);
   const [showHist, setShowHist] = useState(false);
   const [fecha, setFecha] = useState(data.fecha);
   const [estado, setEstado] = useState<Estado>(data.estado);
@@ -308,7 +309,7 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
   const lista = estaLista(data);
   const rel = relFecha(data.fecha, lista);
   const fields = template?.fields ?? [];
-  const { req, ok: reqOk, total: reqTotal } = reqStats(template, data.values);
+  const { ok: reqOk, total: reqTotal } = reqStats(template, data.values);
   const faltan = reqTotal - reqOk;
   const subHechas = (data.subtareas ?? []).filter((s) => s.hecha).length;
   const subAbiertas = (data.subtareas ?? []).filter((s) => !s.hecha).length;
@@ -401,41 +402,35 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
             )}
           </HStack>
 
-          {/* Requisitos (bloquean el Done) */}
-          {reqTotal > 0 && (
+          {/* Entrega: requisitos + valores llenados inline */}
+          {fields.length > 0 && (
             <Box>
               <Flex justify="space-between" align="center" mb="1.5">
-                <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase">Requisitos</Text>
-                <Text fontSize="xs" fontWeight="700" color={reqOk === reqTotal ? "brandGreen.400" : "fg.subtle"}>{reqOk}/{reqTotal}</Text>
+                <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase">Entrega</Text>
+                {reqTotal > 0 && <Text fontSize="xs" fontWeight="700" color={reqOk === reqTotal ? "brandGreen.400" : "fg.subtle"}>{reqOk}/{reqTotal} requisitos</Text>}
               </Flex>
-              <Box h="6px" bg="bg.elevated" borderRadius="full" overflow="hidden" mb="2">
-                <Box h="full" w={`${reqTotal ? Math.round((reqOk / reqTotal) * 100) : 0}%`} bg="brandGreen.500" borderRadius="full" transition="width .25s" />
-              </Box>
-              <VStack align="stretch" gap="1">
-                {req.map((f) => {
-                  const done = isFilled(f, data.values?.[f.key]);
+              {reqTotal > 0 && (
+                <Box h="6px" bg="bg.elevated" borderRadius="full" overflow="hidden" mb="2.5">
+                  <Box h="full" w={`${Math.round((reqOk / reqTotal) * 100)}%`} bg="brandGreen.500" borderRadius="full" transition="width .25s" />
+                </Box>
+              )}
+              <VStack align="stretch" gap="2.5">
+                {fields.map((f) => {
+                  const filled = isFilled(f, data.values?.[f.key]);
+                  if (!filled && !f.required) return null; // opcional vacío: omitir
                   return (
-                    <HStack key={f.key} gap="2" fontSize="xs" cursor="pointer" onClick={startEdit}>
-                      {done ? <CheckCircle2 size={14} color="#22c55e" /> : <Circle size={14} color="var(--chakra-colors-fg-subtle)" />}
-                      <Text color={done ? "fg.subtle" : "fg.muted"}>{f.label}</Text>
+                    <HStack key={f.key} gap="2.5" align="start">
+                      <Box pt="0.5" flexShrink="0">
+                        {!f.required ? <Box w="14px" /> : filled ? <CheckCircle2 size={14} color="#22c55e" /> : <Circle size={14} color="var(--chakra-colors-fg-subtle)" />}
+                      </Box>
+                      <Box flex="1" minW="0" cursor="pointer" onClick={startEdit}>
+                        <Text fontSize="0.62rem" fontWeight="700" color="fg.subtle" textTransform="uppercase">{f.label}{!f.required && " · opcional"}</Text>
+                        {filled ? <FieldValueView field={f} value={data.values?.[f.key]} /> : <Text fontSize="sm" color="fg.subtle" fontStyle="italic">Pendiente — toca para llenar</Text>}
+                      </Box>
                     </HStack>
                   );
                 })}
               </VStack>
-            </Box>
-          )}
-
-          {/* Planilla completa (incluye campos opcionales llenos) */}
-          {fields.length > 0 && (
-            <Box>
-              <Button size="xs" variant="ghost" disabled={!hayEntrega} color={showPlanilla ? "brand.primary" : "fg.subtle"} onClick={() => setShowPlanilla((v) => !v)} px="0" _hover={{ color: "brand.primary" }} opacity={hayEntrega ? 1 : 0.4}>
-                <Eye size={13} style={{ marginRight: "4px" }} /> {hayEntrega ? (showPlanilla ? "Ocultar entrega" : "Ver entrega") : "Sin entrega aún"}
-              </Button>
-              {showPlanilla && hayEntrega && (
-                <VStack align="stretch" gap="2.5" bg="bg.canvas" borderRadius="md" p="3" mt="1">
-                  {fields.map((f) => <FieldRead key={f.key} field={f} value={data.values?.[f.key]} />)}
-                </VStack>
-              )}
             </Box>
           )}
 
