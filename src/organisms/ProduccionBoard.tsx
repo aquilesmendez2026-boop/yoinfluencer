@@ -265,20 +265,33 @@ const StageCollapsed = ({ meta, data, equipo, template, onOpen, onSave }: {
   );
 };
 
-// ── Panel de la entrega recibida de la etapa anterior (handoff) ──
-const RecibidoPanel = ({ prev }: { prev: { label: string; data: StageData; template?: StageTemplate } }) => {
+// ── Panel del contexto recibido: TODAS las etapas previas con entrega (handoff acumulado) ──
+type PrevStage = { key: Stage; label: string; color: string; data: StageData; template?: StageTemplate };
+const RecibidoPanel = ({ prevs }: { prevs: PrevStage[] }) => {
   const [open, setOpen] = useState(true);
-  const campos = (prev.template?.fields ?? []).filter((f) => isFilled(f, prev.data.values?.[f.key]));
-  if (campos.length === 0) return null;
+  const conEntrega = prevs
+    .map((p) => ({ ...p, campos: (p.template?.fields ?? []).filter((f) => isFilled(f, p.data.values?.[f.key])) }))
+    .filter((p) => p.campos.length > 0);
+  if (conEntrega.length === 0) return null;
   return (
     <Box bg="rgba(34,211,238,0.05)" border="1px solid" borderColor="rgba(34,211,238,0.2)" borderRadius="md" p="3">
       <Flex justify="space-between" align="center" cursor="pointer" onClick={() => setOpen((v) => !v)}>
-        <HStack gap="1.5" color="brand.primary"><Inbox size={13} /><Text fontSize="xs" fontWeight="700" textTransform="uppercase">Recibido de {prev.label}</Text></HStack>
+        <HStack gap="1.5" color="brand.primary"><Inbox size={13} /><Text fontSize="xs" fontWeight="700" textTransform="uppercase">Recibido — contexto del episodio</Text></HStack>
         <ChevronDown size={14} color="var(--chakra-colors-fg-subtle)" style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
       </Flex>
       {open && (
-        <VStack align="stretch" gap="2.5" mt="2.5">
-          {campos.map((f) => <FieldRead key={f.key} field={f} value={prev.data.values?.[f.key]} />)}
+        <VStack align="stretch" gap="0" mt="2.5">
+          {conEntrega.map((p, i) => (
+            <Box key={p.key} pt={i === 0 ? "0" : "3"} mt={i === 0 ? "0" : "3"} borderTop={i === 0 ? "none" : "1px solid"} borderColor="rgba(255,255,255,0.06)">
+              <HStack gap="1.5" mb="2">
+                <Box w="7px" h="7px" borderRadius="full" bg={p.color} />
+                <Text fontSize="0.62rem" fontWeight="800" color="fg.muted" textTransform="uppercase" letterSpacing="wide">{p.label}</Text>
+              </HStack>
+              <VStack align="stretch" gap="2.5">
+                {p.campos.map((f) => <FieldRead key={f.key} field={f} value={p.data.values?.[f.key]} />)}
+              </VStack>
+            </Box>
+          ))}
         </VStack>
       )}
     </Box>
@@ -286,10 +299,10 @@ const RecibidoPanel = ({ prev }: { prev: { label: string; data: StageData; templ
 };
 
 // ── Etapa expandida (activa / abierta) ──
-const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse }: {
+const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse }: {
   meta: { key: Stage; label: string; color: string };
   data: StageData; equipo: Miembro[]; template?: StageTemplate;
-  prev?: { label: string; data: StageData; template?: StageTemplate } | null;
+  prevs?: PrevStage[];
   onSave: (d: Partial<StageData>) => Promise<void>; onCollapse: () => void;
 }) => {
   const [editing, setEditing] = useState(false);
@@ -387,8 +400,8 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
 
       {!editing ? (
         <VStack align="stretch" gap="3" mt="3">
-          {/* Entrega recibida de la etapa anterior (handoff, en lectura) */}
-          {prev && <RecibidoPanel prev={prev} />}
+          {/* Contexto recibido: todas las etapas previas con entrega (handoff acumulado) */}
+          {prevs && prevs.length > 0 && <RecibidoPanel prevs={prevs} />}
 
           {/* Responsable + Entrega a */}
           <HStack gap="6" flexWrap="wrap" align="center">
@@ -712,7 +725,7 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
           {STAGES.map((meta, i) => (
             expanded === meta.key ? (
               <StageExpanded key={meta.key} meta={meta} data={current.stages[meta.key]} equipo={equipo} template={plantillas?.[meta.key]}
-                prev={i > 0 ? { label: STAGES[i - 1].label, data: current.stages[STAGES[i - 1].key], template: plantillas?.[STAGES[i - 1].key] } : null}
+                prevs={STAGES.slice(0, i).map((ps) => ({ key: ps.key, label: ps.label, color: ps.color, data: current.stages[ps.key], template: plantillas?.[ps.key] }))}
                 onSave={(d) => stageSave(current.id, meta.key, d)} onCollapse={() => setExpanded(null)} />
             ) : (
               <StageCollapsed key={meta.key} meta={meta} data={current.stages[meta.key]} equipo={equipo} template={plantillas?.[meta.key]}
