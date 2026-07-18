@@ -683,7 +683,7 @@ export const handler = async (event) => {
       const d = body.stageData;
       const estado = ESTADOS.includes(d.estado) ? d.estado : (cur.estado ?? "pendiente");
       const subtareas = Array.isArray(d.subtareas)
-        ? d.subtareas.slice(0, 60).map((t) => ({ id: String(t.id ?? randomUUID()).slice(0, 40), texto: String(t.texto ?? "").slice(0, 300), hecha: Boolean(t.hecha) }))
+        ? d.subtareas.slice(0, 60).map((t) => ({ id: String(t.id ?? randomUUID()).slice(0, 40), texto: String(t.texto ?? "").slice(0, 300), desc: String(t.desc ?? "").slice(0, 2000), hecha: Boolean(t.hecha) }))
         : (cur.subtareas ?? []);
 
       // Fusiona valores tipados según la plantilla de la etapa (ignora claves desconocidas).

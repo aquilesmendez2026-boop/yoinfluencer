@@ -299,6 +299,7 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
   const [subtareas, setSubtareas] = useState<Subtarea[]>(data.subtareas ?? []);
   const [values, setValues] = useState<Record<string, FieldValue>>(data.values ?? {});
   const [nuevaSub, setNuevaSub] = useState("");
+  const [nuevaSubDesc, setNuevaSubDesc] = useState("");
   const [quick, setQuick] = useState("");
   const [gate, setGate] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
@@ -441,22 +442,26 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
                 <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase">Sub-tareas <Text as="span" color="fg.subtle" fontWeight="500" textTransform="none">(opcionales)</Text></Text>
                 {(data.subtareas ?? []).length > 0 && <HStack gap="1" color="fg.subtle" fontSize="xs"><ListChecks size={12} /><Text>{subHechas}/{data.subtareas.length}</Text></HStack>}
               </Flex>
-              <VStack align="stretch" gap="1">
+              <VStack align="stretch" gap="1.5">
                 {(data.subtareas ?? []).map((s) => (
-                  <HStack key={s.id} gap="2">
-                    <Checkbox.Root checked={s.hecha} onCheckedChange={() => toggleSub(s.id)} size="sm">
-                      <Checkbox.HiddenInput /><Checkbox.Control />
-                      <Checkbox.Label fontSize="xs" color={s.hecha ? "fg.subtle" : "fg.muted"} textDecoration={s.hecha ? "line-through" : "none"}>{s.texto}</Checkbox.Label>
-                    </Checkbox.Root>
-                    <IconButton aria-label="Quitar" size="xs" variant="ghost" color="fg.subtle" ml="auto" onClick={() => removeSub(s.id)} _hover={{ color: "red.400" }}><X size={11} /></IconButton>
-                  </HStack>
+                  <Box key={s.id}>
+                    <HStack gap="2" align="start">
+                      <Checkbox.Root checked={s.hecha} onCheckedChange={() => toggleSub(s.id)} size="sm" mt="0.5">
+                        <Checkbox.HiddenInput /><Checkbox.Control />
+                        <Checkbox.Label fontSize="xs" fontWeight="600" color={s.hecha ? "fg.subtle" : "fg.default"} textDecoration={s.hecha ? "line-through" : "none"}>{s.texto}</Checkbox.Label>
+                      </Checkbox.Root>
+                      <IconButton aria-label="Quitar" size="xs" variant="ghost" color="fg.subtle" ml="auto" onClick={() => removeSub(s.id)} _hover={{ color: "red.400" }}><X size={11} /></IconButton>
+                    </HStack>
+                    {s.desc && <Text fontSize="xs" color="fg.subtle" ml="6" whiteSpace="pre-wrap" mt="0.5">{s.desc}</Text>}
+                  </Box>
                 ))}
                 {data.responsableId && (
-                  <HStack gap="1">
-                    <Input size="xs" placeholder="+ agregar sub-tarea" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQuick(); } }} bg="bg.canvas" border="1px solid" borderColor="border.subtle" borderRadius="md" color="fg.default" px="2.5" _focusVisible={{ borderColor: "brand.primary", outline: "none" }} />
+                  <HStack gap="1" mt="1">
+                    <Input size="xs" placeholder="+ agregar sub-tarea (título)" value={quick} onChange={(e) => setQuick(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addQuick(); } }} bg="bg.canvas" border="1px solid" borderColor="border.subtle" borderRadius="md" color="fg.default" px="2.5" _focusVisible={{ borderColor: "brand.primary", outline: "none" }} />
                     <IconButton aria-label="Agregar" size="xs" variant="ghost" color="brand.primary" onClick={addQuick}><Plus size={15} /></IconButton>
                   </HStack>
                 )}
+                {data.responsableId && <Text fontSize="0.6rem" color="fg.subtle">Para título + descripción, usa "Editar planilla".</Text>}
               </VStack>
             </Box>
           )}
@@ -555,19 +560,25 @@ const StageExpanded = ({ meta, data, equipo, template, prev, onSave, onCollapse 
                 <Button size="xs" variant="plain" color="brand.primary" onClick={() => setSubtareas(PLANTILLAS_SUB[meta.key].map((t) => ({ id: uid(), texto: t, hecha: false })))}>Usar plantilla</Button>
               )}
             </Flex>
-            <VStack align="stretch" gap="1">
+            <VStack align="stretch" gap="2">
               {subtareas.map((s) => (
-                <HStack key={s.id} gap="2">
-                  <Checkbox.Root checked={s.hecha} onCheckedChange={() => setSubtareas((p) => p.map((x) => x.id === s.id ? { ...x, hecha: !x.hecha } : x))} size="sm">
-                    <Checkbox.HiddenInput /><Checkbox.Control /><Checkbox.Label fontSize="xs" color="fg.muted">{s.texto}</Checkbox.Label>
-                  </Checkbox.Root>
-                  <IconButton aria-label="Quitar" size="xs" variant="ghost" color="fg.subtle" ml="auto" onClick={() => setSubtareas((p) => p.filter((x) => x.id !== s.id))}><X size={12} /></IconButton>
-                </HStack>
+                <Box key={s.id} bg="bg.muted" borderRadius="md" p="2">
+                  <HStack gap="2" align="start">
+                    <Checkbox.Root checked={s.hecha} onCheckedChange={() => setSubtareas((p) => p.map((x) => x.id === s.id ? { ...x, hecha: !x.hecha } : x))} size="sm" mt="0.5">
+                      <Checkbox.HiddenInput /><Checkbox.Control /><Checkbox.Label fontSize="xs" fontWeight="600" color="fg.default">{s.texto}</Checkbox.Label>
+                    </Checkbox.Root>
+                    <IconButton aria-label="Quitar" size="xs" variant="ghost" color="fg.subtle" ml="auto" onClick={() => setSubtareas((p) => p.filter((x) => x.id !== s.id))}><X size={12} /></IconButton>
+                  </HStack>
+                  <Textarea placeholder="Descripción (opcional)…" value={s.desc ?? ""} onChange={(e) => setSubtareas((p) => p.map((x) => x.id === s.id ? { ...x, desc: e.target.value } : x))} {...fp} rows={2} py="1.5" mt="1" fontSize="xs" />
+                </Box>
               ))}
-              <HStack gap="2">
-                <Input placeholder="Agregar sub-tarea…" value={nuevaSub} onChange={(e) => setNuevaSub(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (nuevaSub.trim()) { setSubtareas((p) => [...p, { id: uid(), texto: nuevaSub.trim(), hecha: false }]); setNuevaSub(""); } } }} {...fp} />
-                <IconButton aria-label="Agregar" size="sm" variant="ghost" color="brand.primary" onClick={() => { if (nuevaSub.trim()) { setSubtareas((p) => [...p, { id: uid(), texto: nuevaSub.trim(), hecha: false }]); setNuevaSub(""); } }}><Plus size={16} /></IconButton>
-              </HStack>
+              <Box bg="bg.muted" borderRadius="md" p="2">
+                <HStack gap="2">
+                  <Input placeholder="Título de la sub-tarea…" value={nuevaSub} onChange={(e) => setNuevaSub(e.target.value)} {...fp} />
+                  <IconButton aria-label="Agregar" size="sm" variant="ghost" color="brand.primary" onClick={() => { if (nuevaSub.trim()) { setSubtareas((p) => [...p, { id: uid(), texto: nuevaSub.trim(), desc: nuevaSubDesc.trim(), hecha: false }]); setNuevaSub(""); setNuevaSubDesc(""); } }}><Plus size={16} /></IconButton>
+                </HStack>
+                <Textarea placeholder="Descripción (opcional)…" value={nuevaSubDesc} onChange={(e) => setNuevaSubDesc(e.target.value)} {...fp} rows={2} py="1.5" mt="1.5" fontSize="xs" />
+              </Box>
             </VStack>
           </Box>
 

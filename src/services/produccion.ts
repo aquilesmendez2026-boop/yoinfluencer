@@ -23,6 +23,7 @@ export const ESTADOS: { key: Estado; label: string; color: string }[] = [
 export interface Subtarea {
   id: string;
   texto: string;
+  desc?: string;
   hecha: boolean;
 }
 
