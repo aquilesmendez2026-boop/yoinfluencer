@@ -25,8 +25,11 @@ interface AuthContextValue {
   /** Perfil desde el backend (apodo, foto propia, país, etc.). null mientras carga. */
   profile: Profile | null;
   role: string | null;
+  /** Admin o super admin: gestión de contenido del sitio. */
   isAdmin: boolean;
-  /** Participante del podcast (o admin): acceso a la agenda del equipo. */
+  /** Super admin: además ve usuarios registrados y asigna/quita roles. */
+  isSuperAdmin: boolean;
+  /** Participante del podcast (o admin/super admin): acceso a la agenda del equipo. */
   isParticipant: boolean;
   /** Miembro premium (por pago) o admin. */
   isPremium: boolean;
@@ -104,9 +107,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         loading,
         profile,
         role: profile?.role ?? null,
-        isAdmin: profile?.role === "admin",
-        isParticipant: profile?.role === "participante" || profile?.role === "admin",
-        isPremium: profile?.plan === "premium" || profile?.role === "admin",
+        isAdmin: profile?.role === "admin" || profile?.role === "superadmin",
+        isSuperAdmin: profile?.role === "superadmin",
+        isParticipant: profile?.role === "participante" || profile?.role === "admin" || profile?.role === "superadmin",
+        isPremium: profile?.plan === "premium" || profile?.role === "admin" || profile?.role === "superadmin",
         refreshProfile,
         login,
         loginWithEmail,

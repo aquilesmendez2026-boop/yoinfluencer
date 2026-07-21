@@ -15,11 +15,12 @@ import { Users } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { listUsuarios, setUsuarioRole, type Usuario } from "../services/team";
 
-const ROLES = ["miembro", "participante", "admin"];
+const ROLES = ["miembro", "participante", "admin", "superadmin"];
 const roleColor: Record<string, string> = {
   miembro: "fg.subtle",
   participante: "neon.cyan",
   admin: "neon.magenta",
+  superadmin: "neon.amber",
 };
 
 export const UsersManager = () => {
@@ -55,8 +56,9 @@ export const UsersManager = () => {
           Gestión de accesos
         </Heading>
         <Text color="fg.muted" fontSize="sm">
-          Asigna <b>participante</b> a quienes forman parte del podcast (acceso a la agenda) o{" "}
-          <b>admin</b> para gestión total.
+          Asigna <b>participante</b> a quienes forman parte del podcast (acceso a la agenda),{" "}
+          <b>admin</b> para gestión de contenido, o <b>super admin</b> para control total
+          (incluye esta gestión de usuarios). Solo el super admin ve esta sección.
         </Text>
       </VStack>
 

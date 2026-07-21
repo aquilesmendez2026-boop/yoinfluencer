@@ -26,6 +26,8 @@ const PRODUCCION = process.env.TABLE_PRODUCCION;
 const NOTIFICACIONES = process.env.TABLE_NOTIFICACIONES;
 const AVATARS_BUCKET = process.env.AVATARS_BUCKET;
 const FILES_BUCKET = process.env.FILES_BUCKET;
+// Correo que siempre es super admin (bootstrap): se promueve al iniciar sesión.
+const SUPERADMIN_EMAIL = (process.env.SUPERADMIN_EMAIL || "").trim().toLowerCase();
 
 const TYPES = ["stream", "charla", "especial"];
 const STAGES = ["idea", "guion", "grabacion", "edicion", "programado", "publicado"];
@@ -135,7 +137,7 @@ function faltantesParaAprobar(stage, values) {
   if (!tpl) return [];
   return tpl.fields.filter((f) => f.required && !fieldFilled(f.type, values?.[f.key])).map((f) => f.label);
 }
-const ROLES = ["miembro", "participante", "admin"];
+const ROLES = ["miembro", "participante", "admin", "superadmin"];
 const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono"];
 
 const json = (statusCode, body) => ({
@@ -148,7 +150,11 @@ async function getRole(userId) {
   const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
   return Item?.role ?? "miembro";
 }
-const canParticipate = (role) => role === "participante" || role === "admin";
+const canParticipate = (role) => role === "participante" || role === "admin" || role === "superadmin";
+// Gestión de contenido del sitio (eventos, episodios, descargas, en vivo…).
+const canAdmin = (role) => role === "admin" || role === "superadmin";
+// Solo el super admin: ve usuarios registrados y asigna/quita roles.
+const isSuperAdmin = (role) => role === "superadmin";
 const parseBody = (event) => {
   try {
     return JSON.parse(event.body || "{}");
@@ -212,6 +218,14 @@ export const handler = async (event) => {
         ExpressionAttributeValues: { ":e": email, ":n": name, ":t": now, ":role": "miembro", ":plan": "free" },
       })
     );
+    // Bootstrap del super admin por correo: se promueve automáticamente al entrar.
+    if (SUPERADMIN_EMAIL && email.toLowerCase() === SUPERADMIN_EMAIL) {
+      await ddb.send(new UpdateCommand({
+        TableName: USERS, Key: { userId },
+        UpdateExpression: "SET #r = :sa", ExpressionAttributeNames: { "#r": "role" },
+        ExpressionAttributeValues: { ":sa": "superadmin" },
+      }));
+    }
     const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
     return json(200, { user: await withAvatarUrl(Item) });
   }
@@ -310,7 +324,7 @@ export const handler = async (event) => {
     return json(200, { eventos });
   }
   if (route === "POST /eventos") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const { date, time, title, type, description, premium } = body;
@@ -321,7 +335,7 @@ export const handler = async (event) => {
     return json(201, { evento: item });
   }
   if (route === "DELETE /eventos/{id}") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     await ddb.send(new DeleteCommand({ TableName: EVENTS, Key: { id } }));
@@ -335,7 +349,7 @@ export const handler = async (event) => {
     return json(200, { episodios });
   }
   if (route === "POST /episodios") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const { number, title, description, showNotes, duration, date, premium, links } = body;
@@ -361,7 +375,7 @@ export const handler = async (event) => {
     return json(201, { episodio: item });
   }
   if (route === "PUT /episodios/{id}") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     const body = parseBody(event);
     if (!id || !body) return json(400, { error: "Datos inválidos" });
@@ -382,7 +396,7 @@ export const handler = async (event) => {
     return json(200, { episodio: updated });
   }
   if (route === "DELETE /episodios/{id}") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     await ddb.send(new DeleteCommand({ TableName: EPISODIOS, Key: { id } }));
@@ -417,7 +431,7 @@ export const handler = async (event) => {
     return json(200, { descargas });
   }
   if (route === "POST /descargas-upload") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     if (!FILES_BUCKET) return json(500, { error: "Almacenamiento no configurado" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
@@ -431,7 +445,7 @@ export const handler = async (event) => {
     return json(200, { uploadUrl, key });
   }
   if (route === "POST /descargas") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const { title, type, fileKey, size, filename, premium } = body;
@@ -441,7 +455,7 @@ export const handler = async (event) => {
     return json(201, { descarga: item });
   }
   if (route === "DELETE /descargas/{id}") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: DESCARGAS, Key: { id } }));
@@ -467,7 +481,7 @@ export const handler = async (event) => {
     });
   }
   if (route === "PUT /live") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const item = {
@@ -552,7 +566,7 @@ export const handler = async (event) => {
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: REUNIONES, Key: { id } }));
-    if (Item && Item.createdByUserId !== userId && role !== "admin") return json(403, { error: "Solo el autor o admin" });
+    if (Item && Item.createdByUserId !== userId && !canAdmin(role)) return json(403, { error: "Solo el autor o admin" });
     await ddb.send(new DeleteCommand({ TableName: REUNIONES, Key: { id } }));
     return json(200, { ok: true });
   }
@@ -580,7 +594,7 @@ export const handler = async (event) => {
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: NOTAS, Key: { id } }));
-    if (Item && Item.createdByUserId !== userId && role !== "admin") return json(403, { error: "Solo el autor o admin" });
+    if (Item && Item.createdByUserId !== userId && !canAdmin(role)) return json(403, { error: "Solo el autor o admin" });
     await ddb.send(new DeleteCommand({ TableName: NOTAS, Key: { id } }));
     return json(200, { ok: true });
   }
@@ -774,7 +788,7 @@ export const handler = async (event) => {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
     const equipo = (Items ?? [])
-      .filter((u) => u.role === "participante" || u.role === "admin")
+      .filter((u) => u.role === "participante" || u.role === "admin" || u.role === "superadmin")
       .map((u) => ({ userId: u.userId, nombre: u.apodo || u.name || u.email || "Sin nombre" }))
       .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
     return json(200, { equipo });
@@ -810,9 +824,9 @@ export const handler = async (event) => {
     return json(200, { ok: true });
   }
 
-  // ══════════ USUARIOS / ROLES ══════════
+  // ══════════ USUARIOS / ROLES (solo super admin) ══════════
   if (route === "GET /usuarios") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!isSuperAdmin(await getRole(userId))) return json(403, { error: "Solo el super admin" });
     const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
     const usuarios = (Items ?? [])
       .map((u) => ({ userId: u.userId, email: u.email, name: u.name, role: u.role ?? "miembro" }))
@@ -820,10 +834,12 @@ export const handler = async (event) => {
     return json(200, { usuarios });
   }
   if (route === "PUT /usuarios/{id}/role") {
-    if ((await getRole(userId)) !== "admin") return json(403, { error: "Solo administradores" });
+    if (!isSuperAdmin(await getRole(userId))) return json(403, { error: "Solo el super admin" });
     const body = parseBody(event);
     const targetId = event.pathParameters?.id;
     if (!body || !targetId || !ROLES.includes(body.role)) return json(400, { error: `role debe ser: ${ROLES.join(", ")}` });
+    // Evitar que el super admin se quite su propio rol y pierda el acceso.
+    if (targetId === userId && body.role !== "superadmin") return json(400, { error: "No puedes cambiar tu propio rol de super admin" });
     await ddb.send(
       new UpdateCommand({
         TableName: USERS,

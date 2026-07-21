@@ -222,6 +222,7 @@ Resources:
           TABLE_NOTIFICACIONES: !Ref NotificacionesTable
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
+          SUPERADMIN_EMAIL: aquiles@umine.com
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable

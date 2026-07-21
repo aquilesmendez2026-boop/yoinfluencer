@@ -47,7 +47,7 @@ const formatLong = (ds: string) => {
 };
 
 export const AdminPage = () => {
-  const { role } = useAuth();
+  const { role, isAdmin, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
 
   const [events, setEvents] = useState<Evento[]>([]);
@@ -55,12 +55,12 @@ export const AdminPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (role !== "admin") return;
+    if (!isAdmin) return;
     listEventos()
       .then(setEvents)
       .catch(() => setEvents([]))
       .finally(() => setLoading(false));
-  }, [role]);
+  }, [isAdmin]);
 
   const dayEvents = useMemo(
     () => events.filter((e) => e.date === selected).sort((a, b) => a.time.localeCompare(b.time)),
@@ -82,7 +82,7 @@ export const AdminPage = () => {
   }
 
   // No autorizado
-  if (role !== "admin") {
+  if (!isAdmin) {
     return (
       <Box bg="bg.canvas" color="fg.default" minH="100vh">
         <AppHeader />
@@ -122,7 +122,7 @@ export const AdminPage = () => {
 
           <Tabs.Root defaultValue="shows" variant="line">
             <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
-              {["en vivo", "shows", "episodios", "descargas", "usuarios"].map((v) => (
+              {["en vivo", "shows", "episodios", "descargas", ...(isSuperAdmin ? ["usuarios"] : [])].map((v) => (
                 <Tabs.Trigger key={v} value={v} color="fg.muted" fontWeight="600" textTransform="capitalize" _selected={{ color: "brand.primary" }}>
                   {v}
                 </Tabs.Trigger>
@@ -243,9 +243,11 @@ export const AdminPage = () => {
             <Tabs.Content value="descargas" pt="8">
               <DownloadsManager />
             </Tabs.Content>
-            <Tabs.Content value="usuarios" pt="8">
-              <UsersManager />
-            </Tabs.Content>
+            {isSuperAdmin && (
+              <Tabs.Content value="usuarios" pt="8">
+                <UsersManager />
+              </Tabs.Content>
+            )}
           </Tabs.Root>
         </VStack>
       </Container>
