@@ -12,4 +12,8 @@ const firebaseConfig = {
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
 export const googleProvider = new GoogleAuthProvider();
+// Fuerza el selector de cuenta de Google en cada login (no reingresar
+// automáticamente con la última cuenta). Así puedes elegir con cuál entrar.
+googleProvider.setCustomParameters({ prompt: "select_account" });
