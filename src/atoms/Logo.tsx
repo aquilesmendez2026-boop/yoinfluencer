@@ -14,7 +14,7 @@ export const Logo = (props: TextProps) => {
       userSelect="none"
       {...props}
     >
-      YO INFLUENCER
+      SE BUSCA NOMBRE!!!
     </Text>
   );
 };

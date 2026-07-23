@@ -328,7 +328,7 @@ export const LoginPage = () => {
             lineHeight="0.95"
           >
             <Box as="span" color="fg.default">
-              YO{" "}
+              SE BUSCA{" "}
             </Box>
             <Box
               as="span"
@@ -336,7 +336,7 @@ export const LoginPage = () => {
               backgroundClip="text"
               color="transparent"
             >
-              INFLUENCER
+              NOMBRE!!!
             </Box>
           </Heading>
           <Box

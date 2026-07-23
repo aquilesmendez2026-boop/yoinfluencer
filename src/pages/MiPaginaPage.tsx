@@ -79,7 +79,7 @@ export const MiPaginaPage = () => {
                 Solo para el staff
               </Heading>
               <Text color="fg.muted">
-                Esta sección es para el equipo de Yo Influencer. Si crees que deberías tener acceso,
+                Esta sección es para el equipo de se busca nombre!!!. Si crees que deberías tener acceso,
                 habla con un administrador.
               </Text>
             </VStack>
@@ -141,7 +141,7 @@ export const MiPaginaPage = () => {
               Mi página
             </Heading>
             <Text color="fg.muted">
-              Así te ve el público en Yo Influencer. Cuida tu alias, tu foto y tu biografía.
+              Así te ve el público en se busca nombre!!!. Cuida tu alias, tu foto y tu biografía.
             </Text>
             {user?.uid && (
               <Button

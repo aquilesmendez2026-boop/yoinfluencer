@@ -14,7 +14,7 @@ const PASOS: Paso[] = [
     ruta: "/",
     titulo: "Bienvenido a la demo",
     texto:
-      "Estás recorriendo Yo Influencer con datos de ejemplo. Nada de lo que veas acá es real y no se guarda ningún cambio. Te muestro lo que se puede hacer.",
+      "Estás recorriendo se busca nombre!!! con datos de ejemplo. Nada de lo que veas acá es real y no se guarda ningún cambio. Te muestro lo que se puede hacer.",
   },
   {
     ruta: "/",

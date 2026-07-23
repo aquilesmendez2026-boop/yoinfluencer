@@ -42,7 +42,7 @@ export const PremiumPage = () => {
               </Text>
             </HStack>
             <Heading as="h1" size={{ base: "3xl", md: "4xl" }} fontWeight="900" letterSpacing="tighter">
-              Yo Influencer{" "}
+              se busca nombre!!!{" "}
               <Box as="span" backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)" backgroundClip="text" color="transparent">
                 Premium
               </Box>

@@ -52,7 +52,7 @@ export const downloads: DownloadItem[] = [
     fileKey: "ep12-audio-hd.mp3",
   },
   {
-    title: "Pack de wallpapers Yo Influencer",
+    title: "Pack de wallpapers se busca nombre!!!",
     type: "wallpaper",
     size: "14 MB",
     fileKey: "wallpapers-ntm.zip",

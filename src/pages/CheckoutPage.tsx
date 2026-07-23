@@ -66,7 +66,7 @@ export const CheckoutPage = () => {
               {/* Resumen */}
               <Flex justify="space-between" align="center" bg="#f5f7fa" borderRadius="lg" p="4">
                 <Box>
-                  <Text fontWeight="700">Yo Influencer Premium</Text>
+                  <Text fontWeight="700">se busca nombre!!! Premium</Text>
                   <Text fontSize="xs" color="#666">Suscripción mensual</Text>
                 </Box>
                 <Text fontWeight="800" fontSize="lg">{clp(amount)}</Text>
