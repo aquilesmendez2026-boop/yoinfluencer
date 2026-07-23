@@ -1,2 +1,3 @@
 .aws-sam/
 samconfig.local.toml
+node_modules/

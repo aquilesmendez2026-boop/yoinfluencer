@@ -18,8 +18,8 @@ export const GlassPanel = ({ interactive, children, ...props }: GlassPanelProps)
         interactive
           ? {
               transform: "translateY(-6px)",
-              borderColor: "border.neon",
-              boxShadow: "neon",
+              borderColor: "border.brand",
+              boxShadow: "brand",
             }
           : undefined
       }

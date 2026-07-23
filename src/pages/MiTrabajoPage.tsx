@@ -14,7 +14,7 @@ const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(
 const estadoMeta = (e: Estado) => ESTADOS.find((x) => x.key === e) ?? ESTADOS[0];
 
 interface Fila {
-  episodioId: string;
+  contenidoId: string;
   titulo: string;
   stageKey: string;
   stageLabel: string;
@@ -34,7 +34,7 @@ const construirFilas = (items: ProduccionItem[], myId: string): Fila[] => {
       if (st?.responsableId === myId) {
         const lista = estaLista(st);
         filas.push({
-          episodioId: it.id, titulo: it.titulo, stageKey: s.key, stageLabel: s.label, color: s.color,
+          contenidoId: it.id, titulo: it.titulo, stageKey: s.key, stageLabel: s.label, color: s.color,
           estado: st.estado, fecha: st.fecha ?? "", lista,
           overdue: !!st.fecha && st.fecha < hoy && !lista,
         });
@@ -78,7 +78,7 @@ export const MiTrabajoPage = () => {
         <AppHeader />
         <Center minH="60vh">
           <VStack gap="4" textAlign="center" px="6">
-            <ShieldAlert size={48} color="#f59e0b" />
+            <ShieldAlert size={48} color="#c9a227" />
             <Heading size="lg">Solo para el equipo</Heading>
             <Text color="fg.muted" maxW="md">Esta vista muestra las etapas de producción asignadas a ti.</Text>
             <Button onClick={() => navigate("/")} borderRadius="full" variant="outline" borderColor="border.subtle">Volver al inicio</Button>
@@ -118,7 +118,7 @@ export const MiTrabajoPage = () => {
               {filas.map((f) => {
                 const em = estadoMeta(f.estado);
                 return (
-                  <GlassPanel key={`${f.episodioId}-${f.stageKey}`} interactive p={{ base: "4", md: "5" }} cursor="pointer" onClick={() => navigate(`/agenda?tab=produccion&ep=${f.episodioId}`)} opacity={f.lista ? 0.6 : 1} borderColor={f.overdue ? "rgba(239,68,68,0.4)" : undefined}>
+                  <GlassPanel key={`${f.contenidoId}-${f.stageKey}`} interactive p={{ base: "4", md: "5" }} cursor="pointer" onClick={() => navigate(`/agenda?tab=produccion&ep=${f.contenidoId}`)} opacity={f.lista ? 0.6 : 1} borderColor={f.overdue ? "rgba(239,68,68,0.4)" : undefined}>
                     <Flex justify="space-between" align="center" gap="3">
                       <HStack gap="3" minW="0">
                         <Box w="9px" h="9px" borderRadius="full" bg={f.color} flexShrink="0" />
@@ -127,7 +127,7 @@ export const MiTrabajoPage = () => {
                           <HStack gap="2" flexWrap="wrap">
                             <Text fontSize="xs" color="fg.muted">{f.stageLabel}</Text>
                             {f.lista ? (
-                              <Badge bg="rgba(34,197,94,0.15)" color="brandGreen.400" borderRadius="full" px="2" fontSize="0.6rem" fontWeight="700">LISTA</Badge>
+                              <Badge bg="rgba(34,197,94,0.15)" color="brand.400" borderRadius="full" px="2" fontSize="0.6rem" fontWeight="700">LISTA</Badge>
                             ) : (
                               <Badge bg="bg.elevated" color={em.color} borderRadius="full" px="2" fontSize="0.6rem" fontWeight="700">{em.label}</Badge>
                             )}

@@ -24,12 +24,23 @@ const PREGUNTAS = process.env.TABLE_PREGUNTAS;
 const CONFIG = process.env.TABLE_CONFIG;
 const PRODUCCION = process.env.TABLE_PRODUCCION;
 const NOTIFICACIONES = process.env.TABLE_NOTIFICACIONES;
+const LUGARES = process.env.TABLE_LUGARES;
+const REDES = process.env.TABLE_REDES;
+const LIVES = process.env.TABLE_LIVES;
+const SECCIONES = process.env.TABLE_SECCIONES;
 const AVATARS_BUCKET = process.env.AVATARS_BUCKET;
 const FILES_BUCKET = process.env.FILES_BUCKET;
-// Correo que siempre es super admin (bootstrap): se promueve al iniciar sesión.
-const SUPERADMIN_EMAIL = (process.env.SUPERADMIN_EMAIL || "").trim().toLowerCase();
+// Email que recibe rol admin la primera vez que entra (ver bootstrap en GET /me).
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "";
 
-const TYPES = ["stream", "charla", "especial"];
+// Tipos de contenido en agenda/calendario.
+const TYPES = ["en_vivo", "grabacion", "publicacion", "colaboracion", "evento"];
+// Formatos de contenido del creador (usados en la planilla de la etapa "idea").
+const FORMATOS = ["Reel", "Video largo", "En vivo", "Visita a lugar", "Colaboración", "Carrusel de fotos", "Historia"];
+// Categorías del catálogo de locales del ambiente.
+const CATEGORIAS_LUGAR = ["club", "sauna", "hotel", "bar", "evento", "fiesta_privada", "tienda", "taller", "otro"];
+// Redes sociales soportadas en el promocional.
+const PLATAFORMAS = ["instagram", "tiktok", "youtube", "twitch", "x", "facebook", "kick", "spotify"];
 const STAGES = ["idea", "guion", "grabacion", "edicion", "programado", "publicado"];
 const STAGE_LABELS = { idea: "Idea", guion: "Guion", grabacion: "Grabación", edicion: "Edición", programado: "Programado", publicado: "Publicado" };
 const ESTADOS = ["pendiente", "en_progreso", "en_revision", "aprobada"];
@@ -42,62 +53,72 @@ const ESTADOS = ["pendiente", "en_progreso", "en_revision", "aprobada"];
 const FIELD_TYPES = ["texto", "texto-largo", "fecha", "numero", "select", "checkbox", "url", "file"];
 const STAGE_TEMPLATES = {
   idea: {
-    version: 1,
-    entrega: "Para el guionista",
+    version: 2,
+    entrega: "Para quien escribe el guion",
     fields: [
-      { key: "tema", label: "Tema central", type: "texto", required: true },
-      { key: "tipo", label: "Tipo de episodio", type: "select", required: true, options: ["Entrevista", "Debate", "Solo", "Especial"] },
-      { key: "angulo", label: "Ángulo / enfoque", type: "texto-largo", required: true },
-      { key: "invitado", label: "Invitado propuesto", type: "texto", required: false },
+      { key: "concepto", label: "Concepto del contenido", type: "texto", required: true },
+      { key: "formato", label: "Formato", type: "select", required: true, options: FORMATOS },
+      { key: "plataformas", label: "Plataformas destino", type: "texto", required: true },
+      { key: "gancho_idea", label: "¿Por qué alguien se detendría a verlo?", type: "texto-largo", required: true },
+      { key: "lugar_tentativo", label: "Lugar tentativo", type: "texto", required: false },
       { key: "referencias", label: "Referencias / links", type: "texto-largo", required: false },
     ],
   },
   guion: {
-    version: 1,
+    version: 2,
     entrega: "Para quien graba",
     fields: [
-      { key: "gancho", label: "Gancho de apertura", type: "texto-largo", required: true },
-      { key: "bloques", label: "Estructura por bloques", type: "texto-largo", required: true },
-      { key: "duracion", label: "Duración estimada (min)", type: "numero", required: false },
-      { key: "documento", label: "Guion (documento)", type: "file", required: true },
+      { key: "hook", label: "Hook (primeros 3 segundos)", type: "texto-largo", required: true },
+      { key: "storyboard", label: "Storyboard / plano a plano", type: "texto-largo", required: true },
+      { key: "cta", label: "Llamado a la acción", type: "texto", required: true },
+      { key: "duracion", label: "Duración estimada (seg)", type: "numero", required: false },
+      { key: "documento", label: "Guion (documento)", type: "file", required: false },
     ],
   },
   grabacion: {
-    version: 1,
-    entrega: "Para el editor",
+    version: 2,
+    entrega: "Para quien edita",
     fields: [
       { key: "fecha_grab", label: "Fecha de grabación", type: "fecha", required: true },
-      { key: "lugar", label: "Lugar / estudio", type: "texto", required: false },
-      { key: "crudo", label: "Audio/video crudo", type: "file", required: true },
+      { key: "lugar", label: "Lugar / ubicación", type: "texto", required: false },
+      { key: "crudo", label: "Material crudo (video)", type: "file", required: true },
+      { key: "fotos", label: "Fotos del rodaje", type: "file", required: false },
       { key: "notas_edicion", label: "Notas para edición", type: "texto-largo", required: false },
     ],
   },
   edicion: {
-    version: 1,
+    version: 2,
     entrega: "Para quien programa",
     fields: [
-      { key: "master", label: "Master final (audio/video)", type: "file", required: true },
-      { key: "duracion_final", label: "Duración final (min)", type: "numero", required: false },
+      { key: "master", label: "Master final (video)", type: "file", required: true },
+      { key: "relacion", label: "Relación de aspecto", type: "select", required: true, options: ["9:16 (vertical)", "1:1 (cuadrado)", "16:9 (horizontal)"] },
+      { key: "subtitulos", label: "Lleva subtítulos", type: "checkbox", required: false },
+      { key: "musica", label: "Música / audio usado", type: "texto", required: false },
       { key: "notas", label: "Notas de la edición", type: "texto-largo", required: false },
     ],
   },
   programado: {
-    version: 1,
+    version: 2,
     entrega: "Para publicar",
     fields: [
-      { key: "titulo_pub", label: "Título de publicación", type: "texto", required: true },
-      { key: "descripcion", label: "Descripción / show notes", type: "texto-largo", required: true },
+      { key: "copy", label: "Copy de la publicación", type: "texto-largo", required: true },
+      { key: "hashtags", label: "Hashtags", type: "texto", required: false },
       { key: "fecha_pub", label: "Fecha de publicación", type: "fecha", required: true },
+      { key: "hora_pub", label: "Hora de publicación", type: "texto", required: false },
       { key: "portada", label: "Portada / miniatura", type: "file", required: false },
-      { key: "plataformas", label: "Plataformas (Spotify, YouTube…)", type: "texto", required: false },
+      { key: "plataformas_pub", label: "Dónde se publica", type: "texto", required: true },
+      { key: "colaboradores", label: "Colaboradores / menciones", type: "texto", required: false },
     ],
   },
   publicado: {
-    version: 1,
+    version: 2,
     entrega: "Cierre",
     fields: [
+      { key: "url_instagram", label: "Enlace Instagram", type: "url", required: false },
+      { key: "url_tiktok", label: "Enlace TikTok", type: "url", required: false },
       { key: "url_youtube", label: "Enlace YouTube", type: "url", required: false },
-      { key: "url_spotify", label: "Enlace Spotify", type: "url", required: false },
+      { key: "vistas", label: "Vistas a las 48 h", type: "numero", required: false },
+      { key: "likes", label: "Likes a las 48 h", type: "numero", required: false },
       { key: "publicado_ok", label: "Confirmar publicado", type: "checkbox", required: true },
     ],
   },
@@ -137,8 +158,26 @@ function faltantesParaAprobar(stage, values) {
   if (!tpl) return [];
   return tpl.fields.filter((f) => f.required && !fieldFilled(f.type, values?.[f.key])).map((f) => f.label);
 }
-const ROLES = ["miembro", "participante", "admin", "superadmin"];
-const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono"];
+// Jerarquía editorial del medio swinger. El índice es el rango: a mayor índice,
+// más permisos. super_admin es único (lo fija ADMIN_EMAIL en el bootstrap).
+//   miembro     → lee.
+//   influencer  → publica en las secciones que le asignaron.
+//   editor      → publica/edita en cualquier sección y modera.
+//   admin       → gestiona secciones, usuarios y asignaciones.
+//   super_admin → control total. Solo uno.
+// "local" es un rol lateral: dueño de un local (bar, sauna…) que gestiona su
+// propia ficha y sus eventos. No es staff editorial ni gestiona el sitio; se
+// ubica apenas por encima de miembro para el sistema de rangos.
+const ROLES = ["miembro", "local", "influencer", "editor", "admin", "super_admin"];
+const RANK = Object.fromEntries(ROLES.map((r, i) => [r, i]));
+const rankOf = (role) => RANK[role] ?? 0;
+/** ¿`role` alcanza al menos el rango mínimo pedido? */
+const atLeast = (role, min) => rankOf(role) >= rankOf(min);
+const isStaff = (role) => atLeast(role, "influencer"); // puede publicar artículos
+const canManage = (role) => atLeast(role, "admin");    // gestiona el sitio
+const isLocal = (role) => role === "local";            // dueño de un local
+const isSuperAdmin = (role) => role === "super_admin"; // único; gestiona usuarios/roles
+const PROFILE_FIELDS = ["apodo", "pais", "region", "telefono", "alias", "bio", "instagram"];
 
 const json = (statusCode, body) => ({
   statusCode,
@@ -150,11 +189,8 @@ async function getRole(userId) {
   const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
   return Item?.role ?? "miembro";
 }
-const canParticipate = (role) => role === "participante" || role === "admin" || role === "superadmin";
-// Gestión de contenido del sitio (eventos, episodios, descargas, en vivo…).
-const canAdmin = (role) => role === "admin" || role === "superadmin";
-// Solo el super admin: ve usuarios registrados y asigna/quita roles.
-const isSuperAdmin = (role) => role === "superadmin";
+// Compat: "participar" (buzón, notas, reuniones) = ser parte del staff.
+const canParticipate = (role) => isStaff(role);
 const parseBody = (event) => {
   try {
     return JSON.parse(event.body || "{}");
@@ -197,6 +233,112 @@ async function withAvatarUrl(item) {
   return item;
 }
 
+// Convierte un nombre en slug URL-safe: "Arte Erótico" → "arte-erotico".
+function slugify(s) {
+  return String(s)
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
+// Normaliza el cuerpo de un lugar. Deja fuera id/createdAt para no pisarlos al editar.
+function lugarFields(b) {
+  const fotos = Array.isArray(b.fotos) ? b.fotos : [];
+  const eventos = Array.isArray(b.eventos) ? b.eventos : [];
+  const rating = Number(b.rating);
+  return {
+    categoria: b.categoria,
+    direccion: String(b.direccion ?? "").slice(0, 300),
+    ciudad: String(b.ciudad ?? "").slice(0, 120),
+    mapsUrl: String(b.mapsUrl ?? "").slice(0, 400),
+    // Datos que carga el propio local.
+    horario: String(b.horario ?? "").slice(0, 600),
+    telefono: String(b.telefono ?? "").slice(0, 40),
+    web: String(b.web ?? "").slice(0, 300),
+    descripcion: String(b.descripcion ?? "").slice(0, 4000),
+    rating: Number.isFinite(rating) ? Math.min(5, Math.max(0, rating)) : 0,
+    resena: String(b.resena ?? "").slice(0, 4000),
+    precio: String(b.precio ?? "").slice(0, 10),
+    recomendado: Boolean(b.recomendado),
+    visitadoEl: String(b.visitadoEl ?? "").slice(0, 10),
+    contenidoId: String(b.contenidoId ?? "").slice(0, 80),
+    contenidoUrl: String(b.contenidoUrl ?? "").slice(0, 300),
+    fotos: fotos
+      .slice(0, 12)
+      .filter((f) => f && typeof f === "object" && f.key)
+      .map((f) => ({ key: String(f.key).slice(0, 300), nombre: String(f.nombre ?? "foto").slice(0, 160) })),
+    // Eventos del local: fecha (YYYY-MM-DD), título, descripción y hora opcional.
+    eventos: eventos
+      .slice(0, 60)
+      .filter((e) => e && typeof e === "object" && e.fecha && e.titulo)
+      .map((e) => ({
+        id: String(e.id || randomUUID()),
+        fecha: String(e.fecha).slice(0, 10),
+        hora: String(e.hora ?? "").slice(0, 5),
+        titulo: String(e.titulo).slice(0, 160),
+        descripcion: String(e.descripcion ?? "").slice(0, 600),
+      })),
+  };
+}
+
+// Firma las URLs de lectura de cada foto para que el navegador pueda mostrarlas.
+async function withLugarUrls(lugar) {
+  if (!lugar?.fotos?.length || !FILES_BUCKET) return { ...lugar, fotos: lugar?.fotos ?? [] };
+  const fotos = await Promise.all(
+    lugar.fotos.map(async (f) => {
+      try {
+        const url = await getSignedUrl(s3, new GetObjectCommand({ Bucket: FILES_BUCKET, Key: f.key }), { expiresIn: 3600 });
+        return { ...f, url };
+      } catch {
+        return { ...f, url: "" };
+      }
+    })
+  );
+  return { ...lugar, fotos };
+}
+
+// Firma la URL de lectura de la portada de un artículo, si tiene.
+async function withCoverUrl(item) {
+  if (item?.coverKey && FILES_BUCKET) {
+    try {
+      item.coverUrl = await getSignedUrl(s3, new GetObjectCommand({ Bucket: FILES_BUCKET, Key: item.coverKey }), { expiresIn: 3600 });
+    } catch { /* omitir */ }
+  }
+  return item;
+}
+// Devuelve el item completo del usuario (rol + secciones asignadas).
+async function getUser(userId) {
+  const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
+  return Item ?? null;
+}
+// Busca un usuario por email (case-insensitive). Devuelve el item o null.
+async function findUserByEmail(email) {
+  const e = String(email ?? "").trim().toLowerCase();
+  if (!e) return null;
+  const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
+  return (Items ?? []).find((u) => String(u.email ?? "").toLowerCase() === e) ?? null;
+}
+// Vincula (o desvincula) el local que administra un usuario. Espejo de ownerId,
+// para saber en /me si el usuario administra un local sin escanear lugares.
+async function setUserLocalId(uid, localId) {
+  if (!uid) return;
+  if (localId) {
+    await ddb.send(new UpdateCommand({ TableName: USERS, Key: { userId: uid }, UpdateExpression: "SET localId = :l", ExpressionAttributeValues: { ":l": localId } }));
+  } else {
+    await ddb.send(new UpdateCommand({ TableName: USERS, Key: { userId: uid }, UpdateExpression: "REMOVE localId" }));
+  }
+}
+// ¿Este usuario puede publicar en esta sección?
+// Editor y superiores: en cualquiera. Influencer: solo en las asignadas.
+function puedeEnSeccion(user, seccionId) {
+  const role = user?.role ?? "miembro";
+  if (atLeast(role, "editor")) return true;
+  if (role !== "influencer") return false;
+  return Array.isArray(user.secciones) && user.secciones.includes(seccionId);
+}
+
 export const handler = async (event) => {
   const route = event.routeKey;
   const claims = claimsOf(event);
@@ -208,6 +350,13 @@ export const handler = async (event) => {
   // ══════════ PERFIL ══════════
   if (route === "GET /me") {
     const now = new Date().toISOString();
+    // Bootstrap del super admin: con la tabla de usuarios vacía nadie puede
+    // promover a nadie, porque cambiar roles ya exige ser admin. Si el email
+    // del token coincide con ADMIN_EMAIL, el rol inicial es super_admin (único).
+    // Solo aplica al crear el usuario (if_not_exists), así que no puede usarse
+    // para reescalar el rol de una cuenta que ya existe.
+    const esSuperAdminInicial =
+      ADMIN_EMAIL && email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     await ddb.send(
       new UpdateCommand({
         TableName: USERS,
@@ -215,17 +364,15 @@ export const handler = async (event) => {
         UpdateExpression:
           "SET email = :e, #n = :n, lastLogin = :t, createdAt = if_not_exists(createdAt, :t), #r = if_not_exists(#r, :role), #p = if_not_exists(#p, :plan)",
         ExpressionAttributeNames: { "#n": "name", "#r": "role", "#p": "plan" },
-        ExpressionAttributeValues: { ":e": email, ":n": name, ":t": now, ":role": "miembro", ":plan": "free" },
+        ExpressionAttributeValues: {
+          ":e": email,
+          ":n": name,
+          ":t": now,
+          ":role": esSuperAdminInicial ? "super_admin" : "miembro",
+          ":plan": "free",
+        },
       })
     );
-    // Bootstrap del super admin por correo: se promueve automáticamente al entrar.
-    if (SUPERADMIN_EMAIL && email.toLowerCase() === SUPERADMIN_EMAIL) {
-      await ddb.send(new UpdateCommand({
-        TableName: USERS, Key: { userId },
-        UpdateExpression: "SET #r = :sa", ExpressionAttributeNames: { "#r": "role" },
-        ExpressionAttributeValues: { ":sa": "superadmin" },
-      }));
-    }
     const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId } }));
     return json(200, { user: await withAvatarUrl(Item) });
   }
@@ -236,7 +383,8 @@ export const handler = async (event) => {
     for (const f of PROFILE_FIELDS) {
       if (typeof body[f] === "string") {
         names[`#${f}`] = f;
-        values[`:${f}`] = body[f].trim().slice(0, 120);
+        // La bio del influencer admite texto largo; el resto, campos cortos.
+        values[`:${f}`] = body[f].trim().slice(0, f === "bio" ? 2000 : 120);
         sets.push(`#${f} = :${f}`);
       }
     }
@@ -320,11 +468,30 @@ export const handler = async (event) => {
   // ══════════ EVENTOS ══════════
   if (route === "GET /eventos") {
     const { Items } = await ddb.send(new ScanCommand({ TableName: EVENTS }));
-    const eventos = (Items ?? []).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
+    const propios = Items ?? [];
+    // Fusiona los eventos de los locales APROBADOS en la agenda general.
+    const { Items: locales } = await ddb.send(new ScanCommand({ TableName: LUGARES }));
+    const deLocales = (locales ?? [])
+      .filter((l) => l.aprobado && Array.isArray(l.eventos))
+      .flatMap((l) =>
+        l.eventos.map((e) => ({
+          id: `local:${l.id}:${e.id}`,
+          date: e.fecha,
+          time: e.hora || "",
+          title: `${l.nombre}: ${e.titulo}`,
+          type: "evento",
+          description: e.descripcion || "",
+          premium: false,
+          source: "local",
+          lugarId: l.id,
+          lugarNombre: l.nombre,
+        }))
+      );
+    const eventos = [...propios, ...deLocales].sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`));
     return json(200, { eventos });
   }
   if (route === "POST /eventos") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const { date, time, title, type, description, premium } = body;
@@ -335,72 +502,125 @@ export const handler = async (event) => {
     return json(201, { evento: item });
   }
   if (route === "DELETE /eventos/{id}") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     await ddb.send(new DeleteCommand({ TableName: EVENTS, Key: { id } }));
     return json(200, { ok: true });
   }
 
-  // ══════════ EPISODIOS ══════════
+  // ══════════ ARTÍCULOS (ruta histórica /episodios) ══════════
+  // Cada artículo pertenece a una SECCIÓN y tiene un AUTOR (influencer del staff).
+  // Estado borrador|publicado: el público solo ve publicados; el staff ve además
+  // sus propios borradores; editor/admin ven todo.
+  const normalizaLinks = (l) => ({ instagram: l?.instagram ?? "", tiktok: l?.tiktok ?? "", youtube: l?.youtube ?? "" });
+
   if (route === "GET /episodios") {
     const { Items } = await ddb.send(new ScanCommand({ TableName: EPISODIOS }));
-    const episodios = (Items ?? []).sort((a, b) => (b.number ?? 0) - (a.number ?? 0));
+    const rol = await getRole(userId);
+    const qs = event.queryStringParameters ?? {};
+    let visibles = (Items ?? []).filter((a) => {
+      const publicado = (a.estado ?? "publicado") === "publicado";
+      if (atLeast(rol, "editor")) return true;          // ve todo
+      if (publicado) return true;                        // publicado lo ve cualquiera
+      return a.autorId === userId;                        // su propio borrador
+    });
+    if (qs.seccion) visibles = visibles.filter((a) => a.seccion === qs.seccion);
+    if (qs.autor) visibles = visibles.filter((a) => a.autorId === qs.autor);
+    const episodios = await Promise.all(
+      visibles
+        .sort((a, b) => String(b.publishedAt || b.createdAt).localeCompare(String(a.publishedAt || a.createdAt)))
+        .map(withCoverUrl)
+    );
     return json(200, { episodios });
   }
   if (route === "POST /episodios") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const user = await getUser(userId);
+    if (!isStaff(user?.role)) return json(403, { error: "Solo el staff puede publicar" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
-    const { number, title, description, showNotes, duration, date, premium, links } = body;
-    if (!title || number == null) return json(400, { error: "Faltan campos: number, title" });
+    const title = String(body.title ?? "").trim();
+    const seccion = String(body.seccion ?? "");
+    if (!title) return json(400, { error: "Falta el título" });
+    if (!seccion) return json(400, { error: "Falta la sección" });
+    if (!puedeEnSeccion(user, seccion)) return json(403, { error: "No tienes permiso para publicar en esa sección" });
+    const estado = body.estado === "publicado" ? "publicado" : "borrador";
+    const now = new Date().toISOString();
     const item = {
       id: randomUUID(),
-      number: Number(number),
-      title,
-      description: description ?? "",
-      showNotes: showNotes ?? "",
-      duration: duration ?? "",
-      date: date ?? "",
-      premium: Boolean(premium),
-      links: {
-        spotify: links?.spotify ?? "",
-        youtube: links?.youtube ?? "",
-        apple: links?.apple ?? "",
-      },
-      createdBy: email,
-      createdAt: new Date().toISOString(),
+      title: title.slice(0, 200),
+      seccion,
+      resumen: String(body.resumen ?? "").slice(0, 400),
+      cuerpo: String(body.cuerpo ?? "").slice(0, 20000),
+      coverKey: body.coverKey ? String(body.coverKey).slice(0, 300) : "",
+      estado,
+      autorId: userId,
+      autorNombre: user.alias || user.name || email || "Anónimo/a",
+      number: body.number != null && body.number !== "" ? Number(body.number) : undefined,
+      premium: Boolean(body.premium),
+      links: normalizaLinks(body.links),
+      createdAt: now,
+      publishedAt: estado === "publicado" ? now : "",
     };
     await ddb.send(new PutCommand({ TableName: EPISODIOS, Item: item }));
-    return json(201, { episodio: item });
+    return json(201, { episodio: await withCoverUrl(item) });
   }
   if (route === "PUT /episodios/{id}") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     const body = parseBody(event);
     if (!id || !body) return json(400, { error: "Datos inválidos" });
     const { Item } = await ddb.send(new GetCommand({ TableName: EPISODIOS, Key: { id } }));
     if (!Item) return json(404, { error: "No existe" });
+    const user = await getUser(userId);
+    // Puede editar: el autor del artículo, o editor/admin.
+    const esAutor = Item.autorId === userId;
+    if (!esAutor && !atLeast(user?.role, "editor")) return json(403, { error: "No puedes editar este artículo" });
+    const seccion = body.seccion != null ? String(body.seccion) : Item.seccion;
+    // Si cambia la sección, el autor debe poder publicar en la nueva.
+    if (seccion !== Item.seccion && esAutor && !puedeEnSeccion(user, seccion))
+      return json(403, { error: "No tienes permiso para esa sección" });
+    const nuevoEstado = body.estado === "publicado" ? "publicado" : body.estado === "borrador" ? "borrador" : (Item.estado ?? "borrador");
+    const yaPublicado = (Item.estado ?? "publicado") === "publicado";
     const updated = {
       ...Item,
-      number: body.number != null ? Number(body.number) : Item.number,
-      title: body.title ?? Item.title,
-      description: body.description ?? Item.description,
-      showNotes: body.showNotes ?? Item.showNotes,
-      duration: body.duration ?? Item.duration,
-      date: body.date ?? Item.date,
+      title: body.title != null ? String(body.title).trim().slice(0, 200) || Item.title : Item.title,
+      seccion,
+      resumen: body.resumen != null ? String(body.resumen).slice(0, 400) : Item.resumen,
+      cuerpo: body.cuerpo != null ? String(body.cuerpo).slice(0, 20000) : Item.cuerpo,
+      coverKey: body.coverKey != null ? String(body.coverKey).slice(0, 300) : Item.coverKey,
+      estado: nuevoEstado,
+      number: body.number != null ? (body.number === "" ? undefined : Number(body.number)) : Item.number,
       premium: body.premium != null ? Boolean(body.premium) : Item.premium,
-      links: body.links ? { spotify: body.links.spotify ?? "", youtube: body.links.youtube ?? "", apple: body.links.apple ?? "" } : Item.links,
+      links: body.links ? normalizaLinks(body.links) : (Item.links ?? normalizaLinks()),
+      publishedAt: nuevoEstado === "publicado" ? (yaPublicado ? Item.publishedAt : new Date().toISOString()) : "",
     };
     await ddb.send(new PutCommand({ TableName: EPISODIOS, Item: updated }));
-    return json(200, { episodio: updated });
+    return json(200, { episodio: await withCoverUrl(updated) });
   }
   if (route === "DELETE /episodios/{id}") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: EPISODIOS, Key: { id } }));
+    if (!Item) return json(200, { ok: true });
+    const user = await getUser(userId);
+    if (Item.autorId !== userId && !atLeast(user?.role, "editor")) return json(403, { error: "No puedes borrar este artículo" });
+    if (Item.coverKey && FILES_BUCKET) {
+      try { await s3.send(new DeleteObjectCommand({ Bucket: FILES_BUCKET, Key: Item.coverKey })); } catch { /* omitir */ }
+    }
     await ddb.send(new DeleteCommand({ TableName: EPISODIOS, Key: { id } }));
     return json(200, { ok: true });
+  }
+  // Presigned PUT para la portada de un artículo (bucket de archivos, prefijo contenidos/).
+  if (route === "POST /episodios-upload") {
+    if (!isStaff(await getRole(userId))) return json(403, { error: "Solo el staff" });
+    if (!FILES_BUCKET) return json(500, { error: "Almacenamiento no configurado" });
+    const body = parseBody(event);
+    const contentType = body?.contentType || "image/jpeg";
+    if (!/^image\/(jpeg|png|webp|gif|avif)$/.test(contentType)) return json(400, { error: "Formato de imagen no permitido" });
+    const safe = String(body?.filename || "portada").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+    const key = `contenidos/${randomUUID()}-${safe}`;
+    const uploadUrl = await getSignedUrl(s3, new PutObjectCommand({ Bucket: FILES_BUCKET, Key: key, ContentType: contentType }), { expiresIn: 600 });
+    return json(200, { uploadUrl, key, contentType });
   }
 
   // ══════════ DESCARGAS (S3) ══════════
@@ -431,7 +651,7 @@ export const handler = async (event) => {
     return json(200, { descargas });
   }
   if (route === "POST /descargas-upload") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     if (!FILES_BUCKET) return json(500, { error: "Almacenamiento no configurado" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
@@ -445,7 +665,7 @@ export const handler = async (event) => {
     return json(200, { uploadUrl, key });
   }
   if (route === "POST /descargas") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const { title, type, fileKey, size, filename, premium } = body;
@@ -455,7 +675,7 @@ export const handler = async (event) => {
     return json(201, { descarga: item });
   }
   if (route === "DELETE /descargas/{id}") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: DESCARGAS, Key: { id } }));
@@ -481,7 +701,7 @@ export const handler = async (event) => {
     });
   }
   if (route === "PUT /live") {
-    if (!canAdmin(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
     const body = parseBody(event);
     if (!body) return json(400, { error: "JSON inválido" });
     const item = {
@@ -566,7 +786,7 @@ export const handler = async (event) => {
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: REUNIONES, Key: { id } }));
-    if (Item && Item.createdByUserId !== userId && !canAdmin(role)) return json(403, { error: "Solo el autor o admin" });
+    if (Item && Item.createdByUserId !== userId && role !== "admin") return json(403, { error: "Solo el autor o admin" });
     await ddb.send(new DeleteCommand({ TableName: REUNIONES, Key: { id } }));
     return json(200, { ok: true });
   }
@@ -594,7 +814,7 @@ export const handler = async (event) => {
     const id = event.pathParameters?.id;
     if (!id) return json(400, { error: "Falta id" });
     const { Item } = await ddb.send(new GetCommand({ TableName: NOTAS, Key: { id } }));
-    if (Item && Item.createdByUserId !== userId && !canAdmin(role)) return json(403, { error: "Solo el autor o admin" });
+    if (Item && Item.createdByUserId !== userId && role !== "admin") return json(403, { error: "Solo el autor o admin" });
     await ddb.send(new DeleteCommand({ TableName: NOTAS, Key: { id } }));
     return json(200, { ok: true });
   }
@@ -788,8 +1008,8 @@ export const handler = async (event) => {
     if (!canParticipate(await getRole(userId))) return json(403, { error: "Solo participantes" });
     const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
     const equipo = (Items ?? [])
-      .filter((u) => u.role === "participante" || u.role === "admin" || u.role === "superadmin")
-      .map((u) => ({ userId: u.userId, nombre: u.apodo || u.name || u.email || "Sin nombre" }))
+      .filter((u) => isStaff(u.role))
+      .map((u) => ({ userId: u.userId, nombre: u.alias || u.apodo || u.name || u.email || "Sin nombre" }))
       .sort((a, b) => String(a.nombre).localeCompare(String(b.nombre)));
     return json(200, { equipo });
   }
@@ -824,32 +1044,380 @@ export const handler = async (event) => {
     return json(200, { ok: true });
   }
 
+  // ══════════ LUGARES (catálogo público de sitios visitados) ══════════
+  // Los miembros ven solo los publicados; el equipo ve también los borradores.
+  if (route === "GET /lugares") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: LUGARES }));
+    const rol = await getRole(userId);
+    const puedeVerTodo = canParticipate(rol); // staff+ ve todo (aprobados y pendientes)
+    const visibles = (Items ?? []).filter((l) => puedeVerTodo || l.aprobado || l.ownerId === userId);
+    const lugares = await Promise.all(
+      visibles
+        .sort((a, b) => String(b.visitadoEl || b.createdAt).localeCompare(String(a.visitadoEl || a.createdAt)))
+        .map(withLugarUrls)
+    );
+    return json(200, { lugares });
+  }
+  // Ficha del local del usuario actual (rol "local"): su propia ficha o null.
+  if (route === "GET /mi-local") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: LUGARES }));
+    const mio = (Items ?? []).find((l) => l.ownerId === userId);
+    return json(200, { lugar: mio ? await withLugarUrls(mio) : null });
+  }
+  if (route === "POST /lugares") {
+    const rol = await getRole(userId);
+    if (!isLocal(rol) && !canParticipate(rol)) return json(403, { error: "No autorizado" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const nombre = String(body.nombre ?? "").trim();
+    if (!nombre) return json(400, { error: "Falta el nombre del local" });
+    if (!CATEGORIAS_LUGAR.includes(body.categoria))
+      return json(400, { error: `categoria debe ser: ${CATEGORIAS_LUGAR.join(", ")}` });
+    // Resuelve el dueño (ownerId) de la ficha:
+    //  - un "local" crea su propia ficha (dueño = él mismo).
+    //  - un admin puede crearla y asignar un dueño por email (ownerEmail).
+    let ownerId = "";
+    const { Items: lugaresExist } = await ddb.send(new ScanCommand({ TableName: LUGARES }));
+    if (isLocal(rol)) {
+      if ((lugaresExist ?? []).some((l) => l.ownerId === userId))
+        return json(409, { error: "Ya tienes un local registrado" });
+      ownerId = userId;
+    } else if (canManage(rol) && body.ownerEmail) {
+      const dueno = await findUserByEmail(body.ownerEmail);
+      if (!dueno) return json(404, { error: "No hay un usuario con ese email. Debe iniciar sesión al menos una vez." });
+      if ((lugaresExist ?? []).some((l) => l.ownerId === dueno.userId))
+        return json(409, { error: "Ese usuario ya administra otro local" });
+      ownerId = dueno.userId;
+    }
+    const item = {
+      ...lugarFields(body),
+      id: randomUUID(),
+      nombre: nombre.slice(0, 160),
+      ownerId,
+      // Un local nace pendiente; solo un admin puede aprobar al crear.
+      aprobado: canManage(rol) ? Boolean(body.aprobado) : false,
+      createdBy: email,
+      createdByName: name || email,
+      createdAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: LUGARES, Item: item }));
+    if (ownerId) await setUserLocalId(ownerId, item.id);
+    return json(201, { lugar: await withLugarUrls(item) });
+  }
+  // Asigna (o quita) el dueño de un local por email. Solo admin+.
+  if (route === "PUT /lugares/{id}/owner") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const id = event.pathParameters?.id;
+    const body = parseBody(event);
+    if (!id) return json(400, { error: "Falta id" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: LUGARES, Key: { id } }));
+    if (!Item) return json(404, { error: "No existe" });
+    const emailNuevo = String(body?.email ?? "").trim();
+    // Desvincula al dueño anterior (si había).
+    if (Item.ownerId) await setUserLocalId(Item.ownerId, "");
+    if (!emailNuevo) {
+      await ddb.send(new UpdateCommand({ TableName: LUGARES, Key: { id }, UpdateExpression: "SET ownerId = :o", ExpressionAttributeValues: { ":o": "" } }));
+      return json(200, { ok: true, ownerId: "", ownerNombre: "" });
+    }
+    const dueno = await findUserByEmail(emailNuevo);
+    if (!dueno) return json(404, { error: "No hay un usuario con ese email. Debe iniciar sesión al menos una vez." });
+    // Un usuario administra un solo local.
+    const { Items } = await ddb.send(new ScanCommand({ TableName: LUGARES }));
+    if ((Items ?? []).some((l) => l.id !== id && l.ownerId === dueno.userId))
+      return json(409, { error: "Ese usuario ya administra otro local" });
+    await ddb.send(new UpdateCommand({ TableName: LUGARES, Key: { id }, UpdateExpression: "SET ownerId = :o", ExpressionAttributeValues: { ":o": dueno.userId } }));
+    await setUserLocalId(dueno.userId, id);
+    await notify(dueno.userId, `Ahora administras el local "${Item.nombre}". Entra a "Mi local" para completar su ficha.`);
+    return json(200, { ok: true, ownerId: dueno.userId, ownerNombre: dueno.alias || dueno.name || dueno.email });
+  }
+  if (route === "PUT /lugares/{id}") {
+    const rol = await getRole(userId);
+    const id = event.pathParameters?.id;
+    const body = parseBody(event);
+    if (!id || !body) return json(400, { error: "Datos inválidos" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: LUGARES, Key: { id } }));
+    if (!Item) return json(404, { error: "No existe" });
+    // Puede editar: el dueño del local, o el staff.
+    const esDueno = Item.ownerId && Item.ownerId === userId;
+    if (!esDueno && !canParticipate(rol)) return json(403, { error: "No puedes editar este local" });
+    if (body.categoria != null && !CATEGORIAS_LUGAR.includes(body.categoria))
+      return json(400, { error: `categoria debe ser: ${CATEGORIAS_LUGAR.join(", ")}` });
+    const updated = {
+      ...Item,
+      ...lugarFields({ ...Item, ...body }),
+      nombre: String(body.nombre ?? Item.nombre).trim().slice(0, 160) || Item.nombre,
+      // aprobado solo lo cambia un admin; el dueño/staff no se auto-aprueba.
+      aprobado: canManage(rol) && body.aprobado != null ? Boolean(body.aprobado) : Item.aprobado,
+      updatedAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: LUGARES, Item: updated }));
+    return json(200, { lugar: await withLugarUrls(updated) });
+  }
+  // Aprobar / desaprobar un local (solo admin+).
+  if (route === "PUT /lugares/{id}/aprobar") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const id = event.pathParameters?.id;
+    const body = parseBody(event);
+    if (!id) return json(400, { error: "Falta id" });
+    const aprobado = body?.aprobado == null ? true : Boolean(body.aprobado);
+    const { Item } = await ddb.send(new GetCommand({ TableName: LUGARES, Key: { id } }));
+    if (!Item) return json(404, { error: "No existe" });
+    await ddb.send(new UpdateCommand({
+      TableName: LUGARES, Key: { id },
+      UpdateExpression: "SET aprobado = :a",
+      ExpressionAttributeValues: { ":a": aprobado },
+    }));
+    // Notifica al dueño del local que su ficha fue revisada.
+    if (Item.ownerId) await notify(Item.ownerId, aprobado ? `Tu local "${Item.nombre}" fue aprobado.` : `Tu local "${Item.nombre}" quedó pendiente.`);
+    return json(200, { ok: true, id, aprobado });
+  }
+  if (route === "DELETE /lugares/{id}") {
+    const rol = await getRole(userId);
+    const id = event.pathParameters?.id;
+    if (!id) return json(400, { error: "Falta id" });
+    const pre = await ddb.send(new GetCommand({ TableName: LUGARES, Key: { id } }));
+    const esDueno = pre.Item?.ownerId && pre.Item.ownerId === userId;
+    if (!esDueno && !canManage(rol)) return json(403, { error: "No puedes borrar este local" });
+    const Item = pre.Item;
+    // Limpia las fotos en S3 antes de borrar el registro para no dejar huérfanos.
+    for (const foto of Item?.fotos ?? []) {
+      if (!foto?.key || !FILES_BUCKET) continue;
+      try {
+        await s3.send(new DeleteObjectCommand({ Bucket: FILES_BUCKET, Key: foto.key }));
+      } catch { /* omitir */ }
+    }
+    await ddb.send(new DeleteCommand({ TableName: LUGARES, Key: { id } }));
+    // Desvincula al dueño para que su "Mi local" quede libre.
+    if (Item?.ownerId) await setUserLocalId(Item.ownerId, "");
+    return json(200, { ok: true });
+  }
+  if (route === "POST /lugares-upload") {
+    const rol = await getRole(userId);
+    if (!isLocal(rol) && !canParticipate(rol)) return json(403, { error: "No autorizado" });
+    if (!FILES_BUCKET) return json(500, { error: "Almacenamiento no configurado" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const contentType = body.contentType || "image/jpeg";
+    if (!/^image\/(jpeg|png|webp|gif|avif)$/.test(contentType))
+      return json(400, { error: "Formato de imagen no permitido" });
+    const safe = String(body.filename || "foto").replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+    const key = `lugares/${randomUUID()}-${safe}`;
+    const uploadUrl = await getSignedUrl(
+      s3,
+      new PutObjectCommand({ Bucket: FILES_BUCKET, Key: key, ContentType: contentType }),
+      { expiresIn: 600 }
+    );
+    return json(200, { uploadUrl, key, contentType });
+  }
+
+  // ══════════ REDES SOCIALES (promoción de perfiles) ══════════
+  if (route === "GET /redes") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: REDES }));
+    const redes = (Items ?? []).sort((a, b) => (a.orden ?? 99) - (b.orden ?? 99));
+    return json(200, { redes });
+  }
+  if (route === "PUT /redes") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const body = parseBody(event);
+    if (!Array.isArray(body?.redes)) return json(400, { error: "Se espera { redes: [] }" });
+    // Reemplazo completo: se borra lo anterior y se reescribe la lista ordenada.
+    const { Items } = await ddb.send(new ScanCommand({ TableName: REDES }));
+    for (const old of Items ?? []) {
+      await ddb.send(new DeleteCommand({ TableName: REDES, Key: { id: old.id } }));
+    }
+    const redes = body.redes.slice(0, 20).map((r, i) => ({
+      id: PLATAFORMAS.includes(r.plataforma) ? r.plataforma : `otra-${i}`,
+      plataforma: PLATAFORMAS.includes(r.plataforma) ? r.plataforma : "otra",
+      handle: String(r.handle ?? "").trim().slice(0, 80),
+      url: String(r.url ?? "").trim().slice(0, 300),
+      seguidores: Number.isFinite(Number(r.seguidores)) ? Number(r.seguidores) : 0,
+      destacada: Boolean(r.destacada),
+      orden: i,
+    }));
+    for (const r of redes) {
+      await ddb.send(new PutCommand({ TableName: REDES, Item: r }));
+    }
+    return json(200, { redes });
+  }
+
+  // ══════════ EN VIVOS REALIZADOS (historial) ══════════
+  // Complementa GET/PUT /live, que solo describe el en vivo en curso.
+  if (route === "GET /lives") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: LIVES }));
+    const lives = (Items ?? []).sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)));
+    return json(200, { lives });
+  }
+  if (route === "POST /lives") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const body = parseBody(event);
+    if (!body) return json(400, { error: "JSON inválido" });
+    const titulo = String(body.titulo ?? "").trim();
+    if (!titulo || !body.fecha) return json(400, { error: "Faltan campos: titulo, fecha" });
+    const item = {
+      id: randomUUID(),
+      titulo: titulo.slice(0, 200),
+      fecha: String(body.fecha).slice(0, 10),
+      plataforma: PLATAFORMAS.includes(body.plataforma) ? body.plataforma : "youtube",
+      url: String(body.url ?? "").trim().slice(0, 300),
+      duracion: String(body.duracion ?? "").slice(0, 20),
+      espectadores: Number.isFinite(Number(body.espectadores)) ? Number(body.espectadores) : 0,
+      descripcion: String(body.descripcion ?? "").slice(0, 1000),
+      createdAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: LIVES, Item: item }));
+    return json(201, { live: item });
+  }
+  if (route === "DELETE /lives/{id}") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const id = event.pathParameters?.id;
+    if (!id) return json(400, { error: "Falta id" });
+    await ddb.send(new DeleteCommand({ TableName: LIVES, Key: { id } }));
+    return json(200, { ok: true });
+  }
+
+  // ══════════ SECCIONES (temáticas del medio, como las de un periódico) ══════════
+  if (route === "GET /secciones") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: SECCIONES }));
+    const puedeVerTodo = canManage(await getRole(userId));
+    const secciones = (Items ?? [])
+      .filter((s) => puedeVerTodo || s.activa)
+      .sort((a, b) => (a.orden ?? 99) - (b.orden ?? 99) || String(a.nombre).localeCompare(String(b.nombre)));
+    return json(200, { secciones });
+  }
+  if (route === "POST /secciones") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const body = parseBody(event);
+    const nombre = String(body?.nombre ?? "").trim();
+    if (!nombre) return json(400, { error: "Falta el nombre de la sección" });
+    const item = {
+      id: randomUUID(),
+      nombre: nombre.slice(0, 80),
+      slug: slugify(nombre),
+      descripcion: String(body.descripcion ?? "").slice(0, 600),
+      color: String(body.color ?? "").slice(0, 20),
+      orden: Number.isFinite(Number(body.orden)) ? Number(body.orden) : 99,
+      activa: body.activa == null ? true : Boolean(body.activa),
+      createdAt: new Date().toISOString(),
+    };
+    await ddb.send(new PutCommand({ TableName: SECCIONES, Item: item }));
+    return json(201, { seccion: item });
+  }
+  if (route === "PUT /secciones/{id}") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const id = event.pathParameters?.id;
+    const body = parseBody(event);
+    if (!id || !body) return json(400, { error: "Datos inválidos" });
+    const { Item } = await ddb.send(new GetCommand({ TableName: SECCIONES, Key: { id } }));
+    if (!Item) return json(404, { error: "No existe" });
+    const nombre = body.nombre != null ? String(body.nombre).trim().slice(0, 80) : Item.nombre;
+    const updated = {
+      ...Item,
+      nombre: nombre || Item.nombre,
+      slug: body.nombre != null ? slugify(nombre) : Item.slug,
+      descripcion: body.descripcion != null ? String(body.descripcion).slice(0, 600) : Item.descripcion,
+      color: body.color != null ? String(body.color).slice(0, 20) : Item.color,
+      orden: body.orden != null && Number.isFinite(Number(body.orden)) ? Number(body.orden) : Item.orden,
+      activa: body.activa != null ? Boolean(body.activa) : Item.activa,
+    };
+    await ddb.send(new PutCommand({ TableName: SECCIONES, Item: updated }));
+    return json(200, { seccion: updated });
+  }
+  if (route === "DELETE /secciones/{id}") {
+    if (!canManage(await getRole(userId))) return json(403, { error: "Solo administradores" });
+    const id = event.pathParameters?.id;
+    if (!id) return json(400, { error: "Falta id" });
+    await ddb.send(new DeleteCommand({ TableName: SECCIONES, Key: { id } }));
+    return json(200, { ok: true });
+  }
+
+  // ══════════ INFLUENCERS (perfiles públicos del staff) ══════════
+  if (route === "GET /influencers") {
+    const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
+    const staff = (Items ?? []).filter((u) => isStaff(u.role));
+    const influencers = await Promise.all(
+      staff
+        .sort((a, b) => rankOf(b.role) - rankOf(a.role))
+        .map(async (u) => await withAvatarUrl({
+          userId: u.userId,
+          alias: u.alias || u.name || "Anónimo/a",
+          bio: u.bio ?? "",
+          role: u.role,
+          secciones: Array.isArray(u.secciones) ? u.secciones : [],
+          pais: u.pais ?? "",
+          instagram: u.instagram ?? "",
+          avatarKey: u.avatarKey,
+        }))
+    );
+    return json(200, { influencers });
+  }
+  if (route === "GET /influencers/{id}") {
+    const id = event.pathParameters?.id;
+    const { Item } = await ddb.send(new GetCommand({ TableName: USERS, Key: { userId: id } }));
+    if (!Item || !isStaff(Item.role)) return json(404, { error: "No existe" });
+    const perfil = await withAvatarUrl({
+      userId: Item.userId,
+      alias: Item.alias || Item.name || "Anónimo/a",
+      bio: Item.bio ?? "",
+      role: Item.role,
+      secciones: Array.isArray(Item.secciones) ? Item.secciones : [],
+      pais: Item.pais ?? "",
+      instagram: Item.instagram ?? "",
+      avatarKey: Item.avatarKey,
+    });
+    return json(200, { influencer: perfil });
+  }
+
   // ══════════ USUARIOS / ROLES (solo super admin) ══════════
   if (route === "GET /usuarios") {
     if (!isSuperAdmin(await getRole(userId))) return json(403, { error: "Solo el super admin" });
     const { Items } = await ddb.send(new ScanCommand({ TableName: USERS }));
     const usuarios = (Items ?? [])
-      .map((u) => ({ userId: u.userId, email: u.email, name: u.name, role: u.role ?? "miembro" }))
-      .sort((a, b) => String(a.email).localeCompare(String(b.email)));
+      .map((u) => ({
+        userId: u.userId, email: u.email, name: u.name, alias: u.alias ?? "",
+        role: u.role ?? "miembro", secciones: Array.isArray(u.secciones) ? u.secciones : [],
+      }))
+      .sort((a, b) => rankOf(b.role) - rankOf(a.role) || String(a.email).localeCompare(String(b.email)));
     return json(200, { usuarios });
   }
   if (route === "PUT /usuarios/{id}/role") {
-    if (!isSuperAdmin(await getRole(userId))) return json(403, { error: "Solo el super admin" });
+    const miRol = await getRole(userId);
+    if (!isSuperAdmin(miRol)) return json(403, { error: "Solo el super admin gestiona roles" });
     const body = parseBody(event);
     const targetId = event.pathParameters?.id;
     if (!body || !targetId || !ROLES.includes(body.role)) return json(400, { error: `role debe ser: ${ROLES.join(", ")}` });
-    // Evitar que el super admin se quite su propio rol y pierda el acceso.
-    if (targetId === userId && body.role !== "superadmin") return json(400, { error: "No puedes cambiar tu propio rol de super admin" });
-    await ddb.send(
-      new UpdateCommand({
-        TableName: USERS,
-        Key: { userId: targetId },
-        UpdateExpression: "SET #r = :r",
-        ExpressionAttributeNames: { "#r": "role" },
-        ExpressionAttributeValues: { ":r": body.role },
-      })
-    );
+    // super_admin es único: se fija por ADMIN_EMAIL en el bootstrap y no se asigna por API.
+    if (body.role === "super_admin") return json(403, { error: "El rol super_admin no se puede asignar" });
+    // No se puede tocar a un super_admin (ni degradarlo).
+    const objetivo = await getRole(targetId);
+    if (objetivo === "super_admin") return json(403, { error: "No se puede cambiar el rol del super admin" });
+    // Solo se otorgan roles de rango estrictamente menor al propio (evita escalada).
+    if (rankOf(body.role) >= rankOf(miRol)) return json(403, { error: "No puedes asignar un rol igual o superior al tuyo" });
+    await ddb.send(new UpdateCommand({
+      TableName: USERS,
+      Key: { userId: targetId },
+      UpdateExpression: "SET #r = :r",
+      ExpressionAttributeNames: { "#r": "role" },
+      ExpressionAttributeValues: { ":r": body.role },
+    }));
     return json(200, { ok: true, userId: targetId, role: body.role });
+  }
+  // Asigna a un influencer las secciones en las que puede publicar.
+  if (route === "PUT /usuarios/{id}/secciones") {
+    if (!isSuperAdmin(await getRole(userId))) return json(403, { error: "Solo el super admin" });
+    const body = parseBody(event);
+    const targetId = event.pathParameters?.id;
+    if (!body || !targetId || !Array.isArray(body.secciones)) return json(400, { error: "Se espera { secciones: [] }" });
+    // Valida contra las secciones existentes.
+    const { Items } = await ddb.send(new ScanCommand({ TableName: SECCIONES }));
+    const validas = new Set((Items ?? []).map((s) => s.id));
+    const secciones = [...new Set(body.secciones.map(String))].filter((s) => validas.has(s)).slice(0, 50);
+    await ddb.send(new UpdateCommand({
+      TableName: USERS,
+      Key: { userId: targetId },
+      UpdateExpression: "SET secciones = :s",
+      ExpressionAttributeValues: { ":s": secciones },
+    }));
+    return json(200, { ok: true, userId: targetId, secciones });
   }
 
   return json(404, { error: "Ruta no encontrada" });

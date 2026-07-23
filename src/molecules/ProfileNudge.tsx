@@ -26,8 +26,8 @@ export const ProfileNudge = () => {
       borderRadius="2xl"
       bg="bg.elevated"
       border="1px solid"
-      borderColor="border.neon"
-      boxShadow="neon"
+      borderColor="border.brand"
+      boxShadow="brand"
       backdropFilter="blur(16px)"
       animation="fadeIn 0.4s ease-out"
     >
@@ -50,7 +50,7 @@ export const ProfileNudge = () => {
           border="none"
           color="fg.inverted"
           fontWeight="700"
-          backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+          backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
           onClick={() => navigate("/cuenta")}
         >
           Completar ahora

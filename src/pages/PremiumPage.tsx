@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
 import { cancelarSuscripcion } from "../services/suscripcion";
 
 const beneficios = [
-  "Episodios exclusivos sin censura",
+  "Contenidos exclusivos sin censura",
   "Todas las descargas premium (audios, packs, guiones)",
   "Sin anuncios en el sitio",
   "Acceso anticipado a los shows",
@@ -42,8 +42,8 @@ export const PremiumPage = () => {
               </Text>
             </HStack>
             <Heading as="h1" size={{ base: "3xl", md: "4xl" }} fontWeight="900" letterSpacing="tighter">
-              Ni Tan Mal{" "}
-              <Box as="span" backgroundImage="linear-gradient(135deg, #f59e0b 0%, #d946ef 100%)" backgroundClip="text" color="transparent">
+              Yo Influencer{" "}
+              <Box as="span" backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)" backgroundClip="text" color="transparent">
                 Premium
               </Box>
             </Heading>
@@ -78,7 +78,7 @@ export const PremiumPage = () => {
                 <VStack align="stretch" gap="3">
                   {beneficios.map((b) => (
                     <HStack key={b} gap="3">
-                      <Flex align="center" justify="center" w="22px" h="22px" borderRadius="full" bg="brandGreen.500" color="fg.inverted" flexShrink="0" style={{ backgroundImage: "linear-gradient(135deg,#22d3ee,#d946ef)" }}>
+                      <Flex align="center" justify="center" w="22px" h="22px" borderRadius="full" bg="brand.500" color="fg.inverted" flexShrink="0" style={{ backgroundImage: "linear-gradient(135deg,#12b76a,#054f31)" }}>
                         <Check size={14} />
                       </Flex>
                       <Text fontSize="sm">{b}</Text>
@@ -86,7 +86,7 @@ export const PremiumPage = () => {
                   ))}
                 </VStack>
 
-                <Button onClick={() => navigate("/checkout")} size="xl" h="14" borderRadius="full" border="none" color="fg.inverted" fontWeight="800" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92, boxShadow: "neon" }} transition="all 0.3s">
+                <Button onClick={() => navigate("/checkout")} size="xl" h="14" borderRadius="full" border="none" color="fg.inverted" fontWeight="800" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" _hover={{ opacity: 0.92, boxShadow: "brand" }} transition="all 0.3s">
                   Suscribirme con MercadoPago
                 </Button>
                 <Text fontSize="xs" color="fg.subtle" textAlign="center">

@@ -43,8 +43,8 @@ const formatLong = (ds: string) => {
 const fieldProps = {
   bg: "bg.muted", border: "1px solid", borderColor: "border.subtle", borderRadius: "lg",
   color: "fg.default", size: "md" as const, px: "3",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 
 export const AgendaPage = () => {
@@ -81,7 +81,7 @@ export const AgendaPage = () => {
   }, [isParticipant]);
 
   const calItems: Evento[] = useMemo(
-    () => reuniones.map((r) => ({ id: r.id, date: r.date, time: r.time, title: r.title, type: "especial", description: "", premium: false })),
+    () => reuniones.map((r) => ({ id: r.id, date: r.date, time: r.time, title: r.title, type: "evento", description: "", premium: false })),
     [reuniones]
   );
   const dayReuniones = useMemo(
@@ -135,10 +135,10 @@ export const AgendaPage = () => {
         <AppHeader />
         <Center minH="60vh">
           <VStack gap="4" textAlign="center" px="6">
-            <ShieldAlert size={48} color="#f59e0b" />
+            <ShieldAlert size={48} color="#c9a227" />
             <Heading size="lg">Sección del equipo</Heading>
             <Text color="fg.muted" maxW="md">
-              Esta agenda es solo para los participantes del podcast. Si crees que deberías tener
+              Esta agenda es solo para el equipo. Si crees que deberías tener
               acceso, pídele a un admin que te asigne el rol.
             </Text>
             <Button onClick={() => navigate("/")} borderRadius="full" variant="outline" borderColor="border.subtle">
@@ -176,7 +176,7 @@ export const AgendaPage = () => {
             </Tabs.List>
 
             <Tabs.Content value="produccion" pt="8">
-              <ProduccionBoard openEpisodeId={epParam} />
+              <ProduccionBoard openContenidoId={epParam} />
             </Tabs.Content>
 
             <Tabs.Content value="reuniones" pt="8">
@@ -189,7 +189,7 @@ export const AgendaPage = () => {
                   <Input placeholder="Título (ej. Pauta del mes)" value={rTitle} onChange={(e) => setRTitle(e.target.value)} required {...fieldProps} />
                   <Input placeholder="Lugar / enlace (Meet, Zoom, oficina…)" value={rLugar} onChange={(e) => setRLugar(e.target.value)} {...fieldProps} />
                   <Textarea placeholder="Notas de la reunión…" value={rDesc} onChange={(e) => setRDesc(e.target.value)} rows={2} {...fieldProps} px="3" py="2" />
-                  <Button type="submit" loading={savingR} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92 }}>
+                  <Button type="submit" loading={savingR} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" _hover={{ opacity: 0.92 }}>
                     <Plus size={16} style={{ marginRight: "6px" }} /> Agregar
                   </Button>
                 </VStack>
@@ -244,8 +244,8 @@ export const AgendaPage = () => {
                 <GlassPanel p={{ base: "5", md: "6" }}>
               <VStack as="form" onSubmit={addNota} align="stretch" gap="3">
                 <Input placeholder="Título (opcional)" value={nTitulo} onChange={(e) => setNTitulo(e.target.value)} {...fieldProps} />
-                <Textarea placeholder="Escribe tu idea, invitado potencial, tema para un show…" value={nContenido} onChange={(e) => setNContenido(e.target.value)} rows={3} {...fieldProps} px="3" py="2" />
-                <Button type="submit" loading={savingN} alignSelf="start" px="6" borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #d946ef 0%, #22d3ee 100%)" _hover={{ opacity: 0.92 }}>
+                <Textarea placeholder="Escribe tu idea, un lugar para visitar, una colaboración…" value={nContenido} onChange={(e) => setNContenido(e.target.value)} rows={3} {...fieldProps} px="3" py="2" />
+                <Button type="submit" loading={savingN} alignSelf="start" px="6" borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #054f31 0%, #12b76a 100%)" _hover={{ opacity: 0.92 }}>
                   <Plus size={16} style={{ marginRight: "6px" }} /> Guardar idea
                 </Button>
               </VStack>

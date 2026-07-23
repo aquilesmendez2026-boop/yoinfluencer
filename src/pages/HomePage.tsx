@@ -5,8 +5,11 @@ import { LiveSection } from "../organisms/LiveSection";
 import { AboutSection } from "../organisms/AboutSection";
 import { FormatsSection } from "../organisms/FormatsSection";
 import { ScheduleSection } from "../organisms/ScheduleSection";
-import { EpisodesSection } from "../organisms/EpisodesSection";
-import { PlatformsSection } from "../organisms/PlatformsSection";
+import { ContenidosSection } from "../organisms/ContenidosSection";
+import { SeccionesSection } from "../organisms/SeccionesSection";
+import { StaffSection } from "../organisms/StaffSection";
+import { RedesSection } from "../organisms/RedesSection";
+import { LugaresSection } from "../organisms/LugaresSection";
 import { BuzonSection } from "../organisms/BuzonSection";
 import { Footer } from "../organisms/Footer";
 import { ProfileNudge } from "../molecules/ProfileNudge";
@@ -19,11 +22,14 @@ export const HomePage = () => {
       <Hero />
       <LiveSection />
       <AboutSection />
+      <SeccionesSection />
+      <ContenidosSection />
+      <StaffSection />
       <FormatsSection />
+      <LugaresSection />
       <ScheduleSection />
-      <EpisodesSection />
       <BuzonSection />
-      <PlatformsSection />
+      <RedesSection />
       <Footer />
     </Box>
   );

@@ -30,8 +30,8 @@ const fieldProps = {
   color: "fg.default",
   size: "lg" as const,
   px: "4",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 
 const Label = ({ children }: { children: string }) => (
@@ -136,7 +136,7 @@ export const AccountPage = () => {
                       justify="center"
                       boxSize="88px"
                       borderRadius="full"
-                      backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+                      backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
                       color="fg.inverted"
                       fontWeight="800"
                       fontSize="3xl"
@@ -168,7 +168,7 @@ export const AccountPage = () => {
                     {profile?.apodo || name}
                   </Heading>
                   {role && (
-                    <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.neon" borderRadius="full" px="3" textTransform="capitalize">
+                    <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.brand" borderRadius="full" px="3" textTransform="capitalize">
                       {role}
                     </Badge>
                   )}
@@ -236,8 +236,8 @@ export const AccountPage = () => {
                 border="none"
                 color="fg.inverted"
                 fontWeight="700"
-                backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-                _hover={{ opacity: 0.92, boxShadow: "neon" }}
+                backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
+                _hover={{ opacity: 0.92, boxShadow: "brand" }}
                 transition="all 0.3s"
                 loading={saving}
                 alignSelf="start"

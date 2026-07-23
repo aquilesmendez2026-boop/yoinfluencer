@@ -18,8 +18,8 @@ import {
 const fp = {
   bg: "bg.muted", border: "1px solid", borderColor: "border.subtle", borderRadius: "lg",
   color: "fg.default", size: "sm" as const, px: "3",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -42,24 +42,24 @@ const relFecha = (fecha: string, lista: boolean): { text: string; tone: string }
   const dias = Math.round((new Date(fecha + "T00:00:00").getTime() - new Date(todayStr() + "T00:00:00").getTime()) / 86400000);
   if (lista) return { text: `entregada ${fecha}`, tone: "fg.subtle" };
   if (dias < 0) return { text: `atrasada ${-dias} día${-dias > 1 ? "s" : ""}`, tone: "red.300" };
-  if (dias === 0) return { text: "vence hoy", tone: "neon.amber" };
-  if (dias === 1) return { text: "vence mañana", tone: "neon.amber" };
-  return { text: `vence en ${dias} días`, tone: dias <= 3 ? "neon.amber" : "fg.subtle" };
+  if (dias === 0) return { text: "vence hoy", tone: "accent.gold" };
+  if (dias === 1) return { text: "vence mañana", tone: "accent.gold" };
+  return { text: `vence en ${dias} días`, tone: dias <= 3 ? "accent.gold" : "fg.subtle" };
 };
 
 const PLANTILLAS_SUB: Record<Stage, string[]> = {
-  idea: ["Definir tema", "Buscar invitado", "Escribir brief"],
-  guion: ["Escribir gancho", "Estructurar bloques", "Revisar duración"],
-  grabacion: ["Reservar estudio/lugar", "Preparar equipo", "Confirmar asistentes", "Grabar"],
-  edicion: ["Cortar silencios", "Intro y cortinas", "Mezclar audio", "Exportar"],
-  programado: ["Subir a plataformas", "Show notes", "Portada/miniatura", "Agendar publicación"],
-  publicado: ["Publicar", "Compartir en redes", "Responder comentarios"],
+  idea: ["Definir concepto", "Elegir formato", "Elegir lugar", "Buscar referencias"],
+  guion: ["Escribir el hook", "Armar el storyboard", "Definir el CTA", "Revisar duración"],
+  grabacion: ["Reservar el lugar", "Preparar equipo", "Grabar video", "Tomar fotos"],
+  edicion: ["Cortar y armar", "Agregar subtítulos", "Elegir música", "Exportar en formato final"],
+  programado: ["Escribir el copy", "Elegir hashtags", "Diseñar portada", "Agendar publicación"],
+  publicado: ["Publicar", "Compartir en historias", "Responder comentarios", "Anotar métricas 48 h"],
 };
 
 const hechas = (item: ProduccionItem) => STAGES.filter((s) => estaLista(item.stages[s.key])).length;
 const etapaActual = (item: ProduccionItem) => {
   const pend = STAGES.find((s) => !estaLista(item.stages[s.key]));
-  return pend ?? { key: "publicado" as Stage, label: "Terminado", color: "brandGreen.500" };
+  return pend ?? { key: "publicado" as Stage, label: "Terminado", color: "brand.500" };
 };
 const siguienteLabel = (key: Stage): string | null => {
   const idx = STAGES.findIndex((s) => s.key === key);
@@ -94,7 +94,7 @@ const EstadoControl = ({ data, onSave }: { data: StageData; onSave: (d: Partial<
   const em = estadoMeta(data.estado);
   if (!open) {
     return (
-      <Badge as="button" bg="bg.elevated" color={em.color} borderRadius="full" px="2.5" py="1" fontSize="0.6rem" fontWeight="700" cursor="pointer" onClick={(e) => { e.stopPropagation(); setOpen(true); }} _hover={{ borderColor: "border.neon" }} border="1px solid" borderColor="transparent">
+      <Badge as="button" bg="bg.elevated" color={em.color} borderRadius="full" px="2.5" py="1" fontSize="0.6rem" fontWeight="700" cursor="pointer" onClick={(e) => { e.stopPropagation(); setOpen(true); }} _hover={{ borderColor: "border.brand" }} border="1px solid" borderColor="transparent">
         <HStack gap="1">{em.label}<ChevronDown size={10} /></HStack>
       </Badge>
     );
@@ -129,7 +129,7 @@ const AssignControl = ({ data, equipo, onSave }: { data: StageData; equipo: Miem
   }
   if (!open) {
     return (
-      <Button size="xs" variant="outline" borderColor="border.subtle" color="brand.primary" borderRadius="full" onClick={(e) => { e.stopPropagation(); setOpen(true); }} _hover={{ borderColor: "border.neon" }}>
+      <Button size="xs" variant="outline" borderColor="border.subtle" color="brand.primary" borderRadius="full" onClick={(e) => { e.stopPropagation(); setOpen(true); }} _hover={{ borderColor: "border.brand" }}>
         <UserPlus size={13} style={{ marginRight: "4px" }} /> Asignar
       </Button>
     );
@@ -189,7 +189,7 @@ const FieldInput = ({ field, value, onChange, onUpload }: {
         </NativeSelect.Root>
       ) : field.type === "file" ? (
         <HStack gap="2" wrap="wrap">
-          <Button size="xs" variant="outline" borderColor="border.subtle" color="fg.default" onClick={() => fileRef.current?.click()} _hover={{ borderColor: "border.neon" }}>
+          <Button size="xs" variant="outline" borderColor="border.subtle" color="fg.default" onClick={() => fileRef.current?.click()} _hover={{ borderColor: "border.brand" }}>
             {uploading ? <Spinner size="xs" /> : <Paperclip size={13} style={{ marginRight: "4px" }} />}
             {isFileValue(value) ? "Cambiar" : "Adjuntar"}
           </Button>
@@ -223,7 +223,7 @@ const FieldValueView = ({ field, value }: { field: TemplateField; value: FieldVa
       </Link>
     ) : <Text fontSize="sm" color="fg.muted"><FileText size={12} style={{ display: "inline", marginRight: 4 }} />{value.archivoNombre}</Text>;
   }
-  if (field.type === "checkbox") return <Text fontSize="sm" color="brandGreen.400"><Check size={13} style={{ display: "inline", marginRight: 4 }} />Sí</Text>;
+  if (field.type === "checkbox") return <Text fontSize="sm" color="brand.400"><Check size={13} style={{ display: "inline", marginRight: 4 }} />Sí</Text>;
   if (field.type === "url") return <Link href={String(value)} target="_blank" rel="noopener noreferrer" color="brand.primary" fontSize="sm" wordBreak="break-all">{String(value)}</Link>;
   return <Text fontSize="sm" color="fg.default" whiteSpace="pre-wrap">{String(value)}</Text>;
 };
@@ -250,7 +250,7 @@ const StageCollapsed = ({ meta, data, equipo, template, onOpen, onSave }: {
   const { ok, total } = reqStats(template, data.values);
   const rel = relFecha(data.fecha, lista);
   return (
-    <Flex align="center" gap="3" bg="bg.muted" borderLeft="3px solid" borderColor={overdue ? "red.400" : lista ? "brandGreen.500" : meta.color} borderRadius="md" px="3.5" py="2.5" cursor="pointer" onClick={onOpen} _hover={{ bg: "bg.elevated" }} opacity={lista ? 0.85 : 1}>
+    <Flex align="center" gap="3" bg="bg.muted" borderLeft="3px solid" borderColor={overdue ? "red.400" : lista ? "brand.500" : meta.color} borderRadius="md" px="3.5" py="2.5" cursor="pointer" onClick={onOpen} _hover={{ bg: "bg.elevated" }} opacity={lista ? 0.85 : 1}>
       <Box w="8px" h="8px" borderRadius="full" bg={lista ? "#22c55e" : meta.color} flexShrink="0" />
       <Text fontWeight="700" fontSize="sm" minW="90px">{meta.label}</Text>
       <Box flex="1" minW="0" onClick={(e) => e.stopPropagation()}>
@@ -274,9 +274,9 @@ const RecibidoPanel = ({ prevs }: { prevs: PrevStage[] }) => {
     .filter((p) => p.campos.length > 0);
   if (conEntrega.length === 0) return null;
   return (
-    <Box bg="rgba(34,211,238,0.05)" border="1px solid" borderColor="rgba(34,211,238,0.2)" borderRadius="md" p="3">
+    <Box bg="rgba(18,183,106,0.05)" border="1px solid" borderColor="rgba(18,183,106,0.2)" borderRadius="md" p="3">
       <Flex justify="space-between" align="center" cursor="pointer" onClick={() => setOpen((v) => !v)}>
-        <HStack gap="1.5" color="brand.primary"><Inbox size={13} /><Text fontSize="xs" fontWeight="700" textTransform="uppercase">Recibido — contexto del episodio</Text></HStack>
+        <HStack gap="1.5" color="brand.primary"><Inbox size={13} /><Text fontSize="xs" fontWeight="700" textTransform="uppercase">Recibido — contexto del contenido</Text></HStack>
         <ChevronDown size={14} color="var(--chakra-colors-fg-subtle)" style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .15s" }} />
       </Flex>
       {open && (
@@ -372,7 +372,7 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
   const removeSub = (id: string) => onSave({ subtareas: (data.subtareas ?? []).filter((s) => s.id !== id) }).catch(() => {});
 
   return (
-    <Box borderLeft="3px solid" borderColor={lista ? "brandGreen.500" : meta.color} bg="bg.muted" borderRadius="md" p="4" boxShadow={lista ? undefined : "0 0 0 1px rgba(34,211,238,0.12)"}>
+    <Box borderLeft="3px solid" borderColor={lista ? "brand.500" : meta.color} bg="bg.muted" borderRadius="md" p="4" boxShadow={lista ? undefined : "0 0 0 1px rgba(18,183,106,0.12)"}>
       {/* Header */}
       <Flex justify="space-between" align="center" gap="2" wrap="wrap">
         <HStack gap="2" minW="0" flexWrap="wrap">
@@ -421,11 +421,11 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
             <Box>
               <Flex justify="space-between" align="center" mb="1.5">
                 <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase">Entrega</Text>
-                {reqTotal > 0 && <Text fontSize="xs" fontWeight="700" color={reqOk === reqTotal ? "brandGreen.400" : "fg.subtle"}>{reqOk}/{reqTotal} requisitos</Text>}
+                {reqTotal > 0 && <Text fontSize="xs" fontWeight="700" color={reqOk === reqTotal ? "brand.400" : "fg.subtle"}>{reqOk}/{reqTotal} requisitos</Text>}
               </Flex>
               {reqTotal > 0 && (
                 <Box h="6px" bg="bg.elevated" borderRadius="full" overflow="hidden" mb="2.5">
-                  <Box h="full" w={`${Math.round((reqOk / reqTotal) * 100)}%`} bg="brandGreen.500" borderRadius="full" transition="width .25s" />
+                  <Box h="full" w={`${Math.round((reqOk / reqTotal) * 100)}%`} bg="brand.500" borderRadius="full" transition="width .25s" />
                 </Box>
               )}
               <VStack align="stretch" gap="2.5">
@@ -518,10 +518,10 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
                 <HStack gap="2">
                   <Text fontSize="xs" color="fg.muted">¿Reabrir? Invalida el handoff.</Text>
                   <Button size="xs" variant="ghost" color="fg.subtle" onClick={() => setConfirmReopen(false)}>No</Button>
-                  <Button size="xs" variant="outline" borderColor="rgba(245,158,11,0.4)" color="neon.amber" onClick={reopen} _hover={{ borderColor: "neon.amber" }}><RotateCcw size={12} style={{ marginRight: "4px" }} />Sí, reabrir</Button>
+                  <Button size="xs" variant="outline" borderColor="rgba(245,158,11,0.4)" color="accent.gold" onClick={reopen} _hover={{ borderColor: "accent.gold" }}><RotateCcw size={12} style={{ marginRight: "4px" }} />Sí, reabrir</Button>
                 </HStack>
               ) : (
-                <Button size="sm" variant="ghost" color="fg.subtle" onClick={() => setConfirmReopen(true)} _hover={{ color: "neon.amber" }}><RotateCcw size={14} style={{ marginRight: "5px" }} />Reabrir etapa</Button>
+                <Button size="sm" variant="ghost" color="fg.subtle" onClick={() => setConfirmReopen(true)} _hover={{ color: "accent.gold" }}><RotateCcw size={14} style={{ marginRight: "5px" }} />Reabrir etapa</Button>
               )
             ) : (
               <>
@@ -531,7 +531,7 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
                     <Check size={15} style={{ marginRight: "5px" }} /> Marcar lista
                   </Button>
                 ) : (
-                  <Button size="sm" loading={marking} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22c55e 0%, #22d3ee 100%)" onClick={markReady} _hover={{ opacity: 0.92 }}>
+                  <Button size="sm" loading={marking} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22c55e 0%, #12b76a 100%)" onClick={markReady} _hover={{ opacity: 0.92 }}>
                     <Check size={15} style={{ marginRight: "5px" }} /> Marcar lista
                   </Button>
                 )}
@@ -604,7 +604,7 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
 
           <HStack justify="end" gap="1">
             <Button size="xs" variant="ghost" color="fg.subtle" onClick={() => { setEditing(false); setGate(null); }}><X size={14} style={{ marginRight: "4px" }} />Cancelar</Button>
-            <Button size="xs" loading={saving} borderRadius="md" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" onClick={save}><Check size={14} style={{ marginRight: "4px" }} />Guardar</Button>
+            <Button size="xs" loading={saving} borderRadius="md" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" onClick={save}><Check size={14} style={{ marginRight: "4px" }} />Guardar</Button>
           </HStack>
         </VStack>
       )}
@@ -613,7 +613,7 @@ const StageExpanded = ({ meta, data, equipo, template, prevs, onSave, onCollapse
 };
 
 // ── Card resumen ──
-const EpisodeSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOpen: () => void; onDelete: () => void }) => {
+const ContenidoSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOpen: () => void; onDelete: () => void }) => {
   const act = etapaActual(item);
   const n = hechas(item);
   const resp = item.stages[act.key]?.responsable;
@@ -626,7 +626,7 @@ const EpisodeSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOp
           <VStack align="start" gap="2" minW="0">
             <Text fontWeight="700" lineClamp={1}>{item.titulo}</Text>
             <HStack gap="2" flexWrap="wrap">
-              <Badge bg="bg.elevated" color={terminado ? "brandGreen.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="0.5">
+              <Badge bg="bg.elevated" color={terminado ? "brand.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="0.5">
                 <HStack gap="1.5"><Box w="7px" h="7px" borderRadius="full" bg={act.color} /><Text fontSize="0.7rem" fontWeight="700">{terminado ? "Terminado" : `En ${act.label}`}</Text></HStack>
               </Badge>
               <Text fontSize="xs" color="fg.subtle">{n}/{STAGES.length} listas</Text>
@@ -645,7 +645,7 @@ const EpisodeSummary = ({ item, onOpen, onDelete }: { item: ProduccionItem; onOp
   );
 };
 
-export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = {}) => {
+export const ProduccionBoard = ({ openContenidoId }: { openContenidoId?: string } = {}) => {
   const [items, setItems] = useState<ProduccionItem[] | null>(null);
   const [equipo, setEquipo] = useState<Miembro[]>([]);
   const [plantillas, setPlantillas] = useState<Plantillas | null>(null);
@@ -662,13 +662,13 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
     getPlantillas().then(setPlantillas).catch(() => setPlantillas(null));
   }, []);
 
-  // Deep-link: abre automáticamente el episodio indicado (una sola vez).
+  // Deep-link: abre automáticamente el contenido indicado (una sola vez).
   useEffect(() => {
-    if (openedRef.current || !openEpisodeId || !items) return;
-    if (items.some((i) => i.id === openEpisodeId)) { setSelected(openEpisodeId); openedRef.current = true; }
-  }, [openEpisodeId, items]);
+    if (openedRef.current || !openContenidoId || !items) return;
+    if (items.some((i) => i.id === openContenidoId)) { setSelected(openContenidoId); openedRef.current = true; }
+  }, [openContenidoId, items]);
 
-  // Al abrir un episodio, expandir su etapa activa.
+  // Al abrir un contenido, expandir su etapa activa.
   useEffect(() => {
     if (selected === null) { setExpanded(null); return; }
     const it = items?.find((i) => i.id === selected);
@@ -714,7 +714,7 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
         <VStack align="start" gap="3">
           <Heading size="lg" fontWeight="900">{current.titulo}</Heading>
           <HStack gap="3" flexWrap="wrap">
-            <Badge bg="bg.elevated" color={terminado ? "brandGreen.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="1">
+            <Badge bg="bg.elevated" color={terminado ? "brand.400" : "fg.default"} border="1px solid" borderColor={act.color} borderRadius="full" px="3" py="1">
               <HStack gap="1.5"><Box w="8px" h="8px" borderRadius="full" bg={act.color} /><Text fontWeight="700" fontSize="sm">{terminado ? "Terminado" : `En ${act.label}`}</Text></HStack>
             </Badge>
             <Text fontSize="sm" color="fg.subtle">{hechas(current)}/{STAGES.length} etapas listas</Text>
@@ -741,15 +741,15 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
     <VStack align="stretch" gap="6">
       <VStack align="start" gap="1">
         <Heading size="lg" fontWeight="800">Pipeline de producción</Heading>
-        <Text color="fg.muted" fontSize="sm">Cada episodio es una card: entra para ver su desarrollo, responsables, sub-tareas y planillas por etapa.</Text>
+        <Text color="fg.muted" fontSize="sm">Cada contenido es una card: entra para ver su desarrollo, responsables, sub-tareas y planillas por etapa.</Text>
       </VStack>
 
       <GlassPanel p={{ base: "4", md: "5" }}>
         <VStack as="form" onSubmit={add} align="stretch" gap="3">
-          <Input placeholder="Título del episodio" value={titulo} onChange={(e) => setTitulo(e.target.value)} {...fp} size="md" />
+          <Input placeholder="Título del contenido" value={titulo} onChange={(e) => setTitulo(e.target.value)} {...fp} size="md" />
           <Textarea placeholder="La idea / brief inicial (queda como el tema de la etapa Idea)" value={idea} onChange={(e) => setIdea(e.target.value)} {...fp} size="md" rows={2} py="2" />
-          <Button type="submit" loading={saving} alignSelf="start" px="6" size="md" borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92 }}>
-            <Plus size={16} style={{ marginRight: "6px" }} /> Crear episodio
+          <Button type="submit" loading={saving} alignSelf="start" px="6" size="md" borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" _hover={{ opacity: 0.92 }}>
+            <Plus size={16} style={{ marginRight: "6px" }} /> Crear contenido
           </Button>
         </VStack>
       </GlassPanel>
@@ -757,11 +757,11 @@ export const ProduccionBoard = ({ openEpisodeId }: { openEpisodeId?: string } = 
       {items === null ? (
         <Center py="10"><Spinner color="brand.primary" size="lg" /></Center>
       ) : (items ?? []).length === 0 ? (
-        <Text color="fg.subtle" fontSize="sm">Aún no hay episodios en producción. Crea el primero.</Text>
+        <Text color="fg.subtle" fontSize="sm">Aún no hay contenidos en producción. Crea el primero.</Text>
       ) : (
         <VStack align="stretch" gap="3">
           {(items ?? []).map((it) => (
-            <EpisodeSummary key={it.id} item={it} onOpen={() => setSelected(it.id)} onDelete={() => remove(it.id)} />
+            <ContenidoSummary key={it.id} item={it} onOpen={() => setSelected(it.id)} onDelete={() => remove(it.id)} />
           ))}
         </VStack>
       )}

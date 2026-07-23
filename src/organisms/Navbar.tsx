@@ -3,18 +3,21 @@ import { Box, Button, Flex, HStack, IconButton, Link, Stack } from "@chakra-ui/r
 import { Menu, X } from "lucide-react";
 import { Logo } from "../atoms/Logo";
 import { AuthButton } from "../molecules/AuthButton";
+import { useDemo } from "../providers/DemoProvider";
+import { DEMO_BANNER_H } from "./DemoBanner";
 
 const navLinks = [
-  { label: "El show", href: "#about" },
-  { label: "Formatos", href: "#formats" },
-  { label: "Horarios", href: "#schedule" },
-  { label: "Episodios", href: "#episodes" },
-  { label: "Dónde ver", href: "#platforms" },
+  { label: "El medio", href: "#about" },
+  { label: "Secciones", href: "#secciones" },
+  { label: "Artículos", href: "#contenidos" },
+  { label: "Clubs", href: "#lugares" },
+  { label: "Agenda", href: "#schedule" },
 ];
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const { demo } = useDemo();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -27,7 +30,8 @@ export const Navbar = () => {
     <Box
       as="header"
       position="fixed"
-      top="0"
+      // En modo demo el banner (fixed, 48px) va arriba; el navbar baja para no quedar tapado.
+      top={demo ? DEMO_BANNER_H : "0"}
       left="0"
       right="0"
       zIndex="100"
@@ -73,9 +77,9 @@ export const Navbar = () => {
             px="5"
             color="fg.inverted"
             fontWeight="700"
-            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+            backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
             border="none"
-            _hover={{ opacity: 0.9, transform: "translateY(-1px)", boxShadow: "neon" }}
+            _hover={{ opacity: 0.9, transform: "translateY(-1px)", boxShadow: "brand" }}
             transition="all 0.3s"
           >
             Ver en vivo
@@ -129,7 +133,7 @@ export const Navbar = () => {
             borderRadius="full"
             color="fg.inverted"
             fontWeight="700"
-            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+            backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
             border="none"
             onClick={() => setOpen(false)}
           >

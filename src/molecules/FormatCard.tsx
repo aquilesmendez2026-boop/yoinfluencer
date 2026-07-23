@@ -7,7 +7,7 @@ const icons = [Gamepad2, Wine];
 
 export const FormatCard = ({ format, index }: { format: Format; index: number }) => {
   const Icon = icons[index % icons.length];
-  const accent = index % 2 === 0 ? "neon.cyan" : "neon.magenta";
+  const accent = index % 2 === 0 ? "brand.400" : "brand.600";
 
   return (
     <GlassPanel interactive p={{ base: "6", md: "8" }} h="full">

@@ -7,8 +7,8 @@ import { getLive, setLive, parseYouTubeId } from "../services/live";
 const fp = {
   bg: "bg.muted", border: "1px solid", borderColor: "border.subtle", borderRadius: "lg",
   color: "fg.default", size: "md" as const, px: "3",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 const Lbl = ({ children }: { children: string }) => (
   <Text fontSize="xs" fontWeight="700" color="fg.muted" textTransform="uppercase" mb="1">{children}</Text>
@@ -68,11 +68,11 @@ export const LiveManager = () => {
               {videoUrl && <Text fontSize="xs" color={videoId.length === 11 ? "brand.primary" : "amber.400"} mt="1">ID detectado: {videoId || "—"}</Text>}
             </Box>
             <Box>
-              <Lbl>Título del stream</Lbl>
-              <Input placeholder="Ej. Locuras en vivo — Episodio especial" value={title} onChange={(e) => setTitle(e.target.value)} {...fp} />
+              <Lbl>Título del en vivo</Lbl>
+              <Input placeholder="Ej. Probamos el restaurante del momento" value={title} onChange={(e) => setTitle(e.target.value)} {...fp} />
             </Box>
             {msg && <Text fontSize="sm" color={msg.startsWith("✓") ? "brand.primary" : "red.400"}>{msg}</Text>}
-            <Button type="submit" loading={saving} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92 }}>
+            <Button type="submit" loading={saving} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" _hover={{ opacity: 0.92 }}>
               <Save size={16} style={{ marginRight: "6px" }} /> Guardar
             </Button>
           </VStack>

@@ -12,6 +12,7 @@ import { Mail, Eye, EyeOff, LogIn, ArrowLeft } from "lucide-react";
 import { BackgroundBlobs } from "../atoms/BackgroundBlobs";
 import { Logo } from "../atoms/Logo";
 import { useAuth } from "../providers/AuthProvider";
+import { useDemo } from "../providers/DemoProvider";
 import { authErrorMessage } from "../services/authErrors";
 
 type Mode = "login" | "register" | "forgot";
@@ -26,16 +27,17 @@ const inputProps = {
   px: "4",
   color: "fg.default",
   _placeholder: { color: "fg.subtle" },
-  _hover: { borderColor: "border.neon" },
+  _hover: { borderColor: "border.brand" },
   _focusVisible: {
     borderColor: "brand.primary",
-    boxShadow: "0 0 0 1px #22d3ee",
+    boxShadow: "0 0 0 1px #12b76a",
     outline: "none",
   },
 };
 
 export const LoginPage = () => {
   const { login, loginWithEmail, registerWithEmail, resetPassword } = useAuth();
+  const { enterDemo } = useDemo();
 
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
@@ -91,11 +93,11 @@ export const LoginPage = () => {
   const titles: Record<Mode, { title: string; subtitle: string }> = {
     login: {
       title: "Ingresa con tus credenciales",
-      subtitle: "Inicia sesión para entrar a la comunidad Ni Tan Mal.",
+      subtitle: "Inicia sesión para entrar a la comunidad.",
     },
     register: {
       title: "Crea tu cuenta",
-      subtitle: "Únete y accede al contenido exclusivo del podcast.",
+      subtitle: "Regístrate para leer y ser parte de la comunidad.",
     },
     forgot: {
       title: "Recupera tu acceso",
@@ -207,9 +209,9 @@ export const LoginPage = () => {
           border="none"
           color="fg.inverted"
           fontWeight="700"
-          backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-          _hover={{ opacity: 0.92, boxShadow: "neon" }}
-          _focusVisible={{ outline: "none", boxShadow: "neon" }}
+          backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
+          _hover={{ opacity: 0.92, boxShadow: "brand" }}
+          _focusVisible={{ outline: "none", boxShadow: "brand" }}
           transition="all 0.3s"
           loading={submitting}
         >
@@ -244,7 +246,7 @@ export const LoginPage = () => {
               onClick={handleGoogle}
               type="button"
               disabled={submitting}
-              _hover={{ borderColor: "border.neon", bg: "bg.elevated" }}
+              _hover={{ borderColor: "border.brand", bg: "bg.elevated" }}
               transition="all 0.3s"
             >
               <LogIn size={20} style={{ marginRight: "8px" }} />
@@ -252,6 +254,23 @@ export const LoginPage = () => {
             </Button>
           </>
         )}
+
+        {/* Recorrer la plataforma sin cuenta (solo lectura). */}
+        <Button
+          onClick={enterDemo}
+          type="button"
+          h="12"
+          borderRadius="xl"
+          variant="outline"
+          borderColor="border.brand"
+          color="brand.300"
+          bg="bg.surface"
+          _hover={{ boxShadow: "brand", color: "brand.200" }}
+          transition="all 0.3s"
+        >
+          <Eye size={18} style={{ marginRight: "8px" }} />
+          Ver demo — recorrer sin cuenta
+        </Button>
 
         <Box textAlign="center" pt="1">
           {mode === "login" && (
@@ -309,25 +328,25 @@ export const LoginPage = () => {
             lineHeight="0.95"
           >
             <Box as="span" color="fg.default">
-              NI TAN{" "}
+              YO{" "}
             </Box>
             <Box
               as="span"
-              backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+              backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)"
               backgroundClip="text"
               color="transparent"
             >
-              MAL
+              INFLUENCER
             </Box>
           </Heading>
           <Box
             h="3px"
             w="72px"
             borderRadius="full"
-            backgroundImage="linear-gradient(90deg, #22d3ee 0%, #d946ef 100%)"
+            backgroundImage="linear-gradient(90deg, #6ce9a6 0%, #12b76a 100%)"
           />
           <Text fontSize={{ base: "md", md: "lg" }} color="fg.muted" maxW="sm">
-            Entra a la comunidad: episodios exclusivos, detrás de cámaras y
+            Entra a la comunidad: artículos por sección, creadores y contenido exclusivo,
             descargables solo para miembros.
           </Text>
         </VStack>

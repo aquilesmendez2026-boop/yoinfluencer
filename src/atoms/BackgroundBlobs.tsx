@@ -20,7 +20,7 @@ export const BackgroundBlobs = () => {
         left="-5%"
         w={{ base: "260px", md: "480px" }}
         h={{ base: "260px", md: "480px" }}
-        bg="neon.cyan"
+        bg="brand.400"
         opacity="0.18"
         filter="blur(90px)"
         borderRadius="full"
@@ -32,7 +32,7 @@ export const BackgroundBlobs = () => {
         right="-5%"
         w={{ base: "300px", md: "560px" }}
         h={{ base: "300px", md: "560px" }}
-        bg="neon.magenta"
+        bg="brand.600"
         opacity="0.16"
         filter="blur(100px)"
         borderRadius="full"
@@ -45,7 +45,7 @@ export const BackgroundBlobs = () => {
         transform="translateX(-50%)"
         w={{ base: "200px", md: "360px" }}
         h={{ base: "200px", md: "360px" }}
-        bg="neon.amber"
+        bg="accent.gold"
         opacity="0.08"
         filter="blur(90px)"
         borderRadius="full"

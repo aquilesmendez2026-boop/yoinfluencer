@@ -2,22 +2,36 @@ import { apiFetch } from "./api";
 
 export type Stage = "idea" | "guion" | "grabacion" | "edicion" | "programado" | "publicado";
 
+/** Formatos de contenido. Debe coincidir con FORMATOS del backend (planilla "idea"). */
+export const FORMATOS = [
+  "Reel",
+  "Video largo",
+  "En vivo",
+  "Visita a lugar",
+  "Colaboración",
+  "Carrusel de fotos",
+  "Historia",
+] as const;
+
+export type Formato = (typeof FORMATOS)[number];
+
+// El pipeline avanza de verde claro a verde pleno: el color comunica el progreso.
 export const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: "idea", label: "Idea", color: "neon.cyan" },
-  { key: "guion", label: "Guion", color: "#8b5cf6" },
-  { key: "grabacion", label: "Grabación", color: "neon.magenta" },
-  { key: "edicion", label: "Edición", color: "#ec4899" },
-  { key: "programado", label: "Programado", color: "neon.amber" },
-  { key: "publicado", label: "Publicado", color: "brandGreen.500" },
+  { key: "idea", label: "Idea", color: "#a6f4c5" },
+  { key: "guion", label: "Guion", color: "#6ce9a6" },
+  { key: "grabacion", label: "Grabación", color: "#32d583" },
+  { key: "edicion", label: "Edición", color: "#12b76a" },
+  { key: "programado", label: "Programado", color: "accent.gold" },
+  { key: "publicado", label: "Publicado", color: "brand.500" },
 ];
 
 export type Estado = "pendiente" | "en_progreso" | "en_revision" | "aprobada";
 
 export const ESTADOS: { key: Estado; label: string; color: string }[] = [
   { key: "pendiente", label: "Pendiente", color: "fg.subtle" },
-  { key: "en_progreso", label: "En progreso", color: "neon.cyan" },
-  { key: "en_revision", label: "En revisión", color: "neon.amber" },
-  { key: "aprobada", label: "Aprobada", color: "brandGreen.400" },
+  { key: "en_progreso", label: "En progreso", color: "brand.400" },
+  { key: "en_revision", label: "En revisión", color: "accent.gold" },
+  { key: "aprobada", label: "Aprobada", color: "brand.400" },
 ];
 
 export interface Subtarea {

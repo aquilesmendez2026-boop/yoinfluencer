@@ -8,9 +8,11 @@ import { showTypeLabels, type ShowType } from "../data/shows";
 import { listEventos, type Evento } from "../services/events";
 
 const legendColor: Record<ShowType, string> = {
-  stream: "neon.cyan",
-  charla: "neon.magenta",
-  especial: "neon.amber",
+  en_vivo: "brand.400",
+  grabacion: "brand.300",
+  publicacion: "brand.600",
+  colaboracion: "accent.sage",
+  evento: "accent.gold",
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -40,16 +42,16 @@ export const ScheduleSection = () => {
     <Section id="schedule">
       <VStack gap="10" w="full">
         <SectionTitle
-          eyebrow="Horarios"
-          title="¿Cuándo nos sintonizas?"
-          subtitle="Estos son los próximos shows en vivo. Guárdalos antes de que se te olvide."
+          eyebrow="Agenda"
+          title="Qué se viene esta semana"
+          subtitle="La rutina de publicaciones, grabaciones y en vivos. Anótala para no perderte ninguna."
         />
 
         {/* Leyenda de tipos */}
         <HStack gap="6" flexWrap="wrap" justify="center">
           {(Object.keys(showTypeLabels) as ShowType[]).map((type) => (
             <HStack key={type} gap="2">
-              <VStack w="10px" h="10px" borderRadius="full" bg={legendColor[type]} boxShadow="neon" />
+              <VStack w="10px" h="10px" borderRadius="full" bg={legendColor[type]} boxShadow="brand" />
               <Text fontSize="sm" color="fg.muted">
                 {showTypeLabels[type]}
               </Text>

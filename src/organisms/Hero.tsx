@@ -32,7 +32,7 @@ export const Hero = () => {
           textTransform="uppercase"
           color="brand.primary"
         >
-          Podcast · En vivo y sin filtro
+          Un medio hecho por la comunidad
         </Text>
 
         <Heading
@@ -43,15 +43,15 @@ export const Hero = () => {
           lineHeight="0.95"
         >
           <Box as="span" color="fg.default">
-            NI TAN{" "}
+            YO{" "}
           </Box>
           <Box
             as="span"
-            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+            backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)"
             backgroundClip="text"
             color="transparent"
           >
-            MAL
+            INFLUENCER
           </Box>
         </Heading>
 
@@ -61,30 +61,30 @@ export const Hero = () => {
           maxW="2xl"
           lineHeight="tall"
         >
-          El podcast de los hombres y las locuras que hacen{" "}
+          Historias, cultura y experiencias del{" "}
           <Box as="span" color="fg.default" fontWeight="600">
-            antes de pensar
+            mundo swinger
           </Box>
-          . Streamers de juegos, noches de conversación con un trago y cero pretensiones.
+          . Escrito por su propia comunidad: vida swinger, shibari, bondage, BDSM y arte erótico, sin prejuicios.
         </Text>
 
         <HStack gap="4" flexWrap="wrap" justify="center" pt="2">
           <Button
             as="a"
             // @ts-expect-error Chakra Button renders an anchor via `as`
-            href="#platforms"
+            href="#secciones"
             size="xl"
             h="14"
             px="8"
             borderRadius="full"
             color="fg.inverted"
             fontWeight="700"
-            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-            _hover={{ opacity: 0.92, transform: "translateY(-2px)", boxShadow: "neon" }}
+            backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
+            _hover={{ opacity: 0.92, transform: "translateY(-2px)", boxShadow: "brand" }}
             transition="all 0.3s"
           >
             <Play size={20} style={{ marginRight: "8px" }} />
-            Escúchanos
+            Explorar secciones
           </Button>
           <Button
             as="a"
@@ -99,10 +99,10 @@ export const Hero = () => {
             color="fg.default"
             bg="bg.surface"
             backdropFilter="blur(12px)"
-            _hover={{ borderColor: "border.neon", transform: "translateY(-2px)" }}
+            _hover={{ borderColor: "border.brand", transform: "translateY(-2px)" }}
             transition="all 0.3s"
           >
-            Próximos shows
+            Ver agenda
           </Button>
         </HStack>
       </VStack>

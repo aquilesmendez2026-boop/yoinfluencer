@@ -21,8 +21,8 @@ const fieldProps = {
   borderColor: "border.subtle",
   borderRadius: "lg",
   color: "fg.default",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 
 const Label = ({ children }: { children: string }) => (
@@ -35,7 +35,7 @@ export const EventForm = ({ onCreated }: { onCreated: (e: Evento) => void }) => 
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<ShowType>("stream");
+  const [type, setType] = useState<ShowType>("en_vivo");
   const [description, setDescription] = useState("");
   const [premium, setPremium] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -167,8 +167,8 @@ export const EventForm = ({ onCreated }: { onCreated: (e: Evento) => void }) => 
           border="none"
           color="fg.inverted"
           fontWeight="700"
-          backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-          _hover={{ opacity: 0.92, boxShadow: "neon" }}
+          backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
+          _hover={{ opacity: 0.92, boxShadow: "brand" }}
           transition="all 0.3s"
           loading={submitting}
         >

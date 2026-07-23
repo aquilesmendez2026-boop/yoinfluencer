@@ -8,9 +8,9 @@ export const AboutSection = () => {
     <Section id="about">
       <VStack gap="8" w="full">
         <SectionTitle
-          eyebrow="El show"
-          title="Lo que pasa cuando primero se actúa y después se piensa"
-          subtitle="Ni Tan Mal es la mesa donde se cuentan las historias que no contarías sobrio. Un grupo de amigos, micrófonos abiertos y la honestidad brutal de quienes ya hicieron de todo… y lo volverían a hacer."
+          eyebrow="El medio"
+          title="Un periódico del ambiente, escrito por quienes lo viven"
+          subtitle="Un staff de creadores publica en secciones temáticas: vida swinger, shibari, bondage, BDSM, spanking, arte erótico y reseñas de clubs. Información, cultura y experiencia real, con respeto y sin prejuicios."
         />
 
         <Wrap justify="center" gap="3">
@@ -41,7 +41,7 @@ export const AboutSection = () => {
           maxW="2xl"
           fontStyle="italic"
         >
-          “Al final del día, ninguna locura fue tan grave. Estuvo… ni tan mal.”
+          “Todo consensuado, seguro y sin prejuicios.”
         </Text>
       </VStack>
     </Section>

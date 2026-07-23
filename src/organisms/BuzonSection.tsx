@@ -34,7 +34,7 @@ export const BuzonSection = () => {
         <SectionTitle
           eyebrow="Buzón"
           title="¿Tienes una pregunta o idea?"
-          subtitle="Mándanos tu pregunta, tema o invitado que quieras escuchar. La leemos y puede terminar en un episodio."
+          subtitle="Mándame tu pregunta, o el lugar que querés que vaya a probar. La leo y puede terminar en un contenido."
         />
 
         <GlassPanel p={{ base: "6", md: "8" }} w="full" maxW="2xl" mx="auto">
@@ -49,7 +49,7 @@ export const BuzonSection = () => {
           ) : (
             <VStack as="form" onSubmit={submit} align="stretch" gap="4">
               <Textarea
-                placeholder="Escribe tu pregunta, idea o a quién te gustaría de invitado…"
+                placeholder="Escribe tu pregunta, una idea o el lugar que querés que reseñe…"
                 value={contenido}
                 onChange={(e) => setContenido(e.target.value)}
                 rows={4}
@@ -60,8 +60,8 @@ export const BuzonSection = () => {
                 color="fg.default"
                 px="4"
                 py="3"
-                _hover={{ borderColor: "border.neon" }}
-                _focusVisible={{ borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" }}
+                _hover={{ borderColor: "border.brand" }}
+                _focusVisible={{ borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" }}
                 required
               />
               {error && <Text color="red.400" fontSize="sm">{error}</Text>}
@@ -75,8 +75,8 @@ export const BuzonSection = () => {
                 border="none"
                 color="fg.inverted"
                 fontWeight="700"
-                backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
-                _hover={{ opacity: 0.92, boxShadow: "neon" }}
+                backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
+                _hover={{ opacity: 0.92, boxShadow: "brand" }}
               >
                 <Send size={18} style={{ marginRight: "8px" }} />
                 Enviar

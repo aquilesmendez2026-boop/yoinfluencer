@@ -18,20 +18,30 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "../services/firebase";
 import { getProfile, type Profile } from "../services/profile";
+import { atLeast } from "../services/team";
+import { DEMO_USER, DEMO_PROFILE } from "../demo/demoData";
 
 interface AuthContextValue {
   user: User | null;
   loading: boolean;
-  /** Perfil desde el backend (apodo, foto propia, país, etc.). null mientras carga. */
+  /** Perfil desde el backend (alias, foto propia, secciones, etc.). null mientras carga. */
   profile: Profile | null;
   role: string | null;
-  /** Admin o super admin: gestión de contenido del sitio. */
-  isAdmin: boolean;
-  /** Super admin: además ve usuarios registrados y asigna/quita roles. */
+  /** Único, control total. */
   isSuperAdmin: boolean;
-  /** Participante del podcast (o admin/super admin): acceso a la agenda del equipo. */
+  /** admin o super_admin: gestiona el sitio. */
+  isAdmin: boolean;
+  /** editor o superior: publica/edita en cualquier sección. */
+  isEditor: boolean;
+  /** influencer o superior: parte del staff, puede publicar. */
+  isInfluencer: boolean;
+  /** Rol "local": dueño de un local (bar, sauna…). */
+  isLocal: boolean;
+  /** Administra un local: por rol "local" o porque un admin le asignó una ficha. */
+  ownsLocal: boolean;
+  /** Alias de isInfluencer (compat: acceso a la trastienda del equipo). */
   isParticipant: boolean;
-  /** Miembro premium (por pago) o admin. */
+  /** Miembro premium (por pago) o staff. */
   isPremium: boolean;
   refreshProfile: () => Promise<void>;
   login: () => Promise<void>;
@@ -44,18 +54,20 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children, demo = false }: { children: ReactNode; demo?: boolean }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
+    // En modo demo no hay Firebase: usamos un usuario/perfil sintéticos.
+    if (demo) return;
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [demo]);
 
   const refreshProfile = useCallback(async () => {
     if (!auth.currentUser) {
@@ -65,7 +77,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setProfile(await getProfile());
     } catch {
-      setProfile({ role: "miembro" });
+      // Un fallo transitorio del backend (p. ej. un reinicio) no debe degradar
+      // un perfil ya cargado: conservamos el anterior y solo caemos a "miembro"
+      // si aún no teníamos ninguno.
+      setProfile((prev) => prev ?? { role: "miembro" });
     }
   }, []);
 
@@ -100,17 +115,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return auth.currentUser.getIdToken(forceRefresh);
   };
 
+  // Valores efectivos: en demo, usuario y perfil sintéticos (super admin).
+  const effUser = demo ? (DEMO_USER as unknown as User) : user;
+  const effProfile = demo ? DEMO_PROFILE : profile;
+  const effLoading = demo ? false : loading;
+
   return (
     <AuthContext.Provider
       value={{
-        user,
-        loading,
-        profile,
-        role: profile?.role ?? null,
-        isAdmin: profile?.role === "admin" || profile?.role === "superadmin",
-        isSuperAdmin: profile?.role === "superadmin",
-        isParticipant: profile?.role === "participante" || profile?.role === "admin" || profile?.role === "superadmin",
-        isPremium: profile?.plan === "premium" || profile?.role === "admin" || profile?.role === "superadmin",
+        user: effUser,
+        loading: effLoading,
+        profile: effProfile,
+        role: effProfile?.role ?? null,
+        isSuperAdmin: effProfile?.role === "super_admin",
+        isAdmin: atLeast(effProfile?.role, "admin"),
+        isEditor: atLeast(effProfile?.role, "editor"),
+        isInfluencer: atLeast(effProfile?.role, "influencer"),
+        isLocal: effProfile?.role === "local",
+        ownsLocal: effProfile?.role === "local" || !!effProfile?.localId,
+        isParticipant: atLeast(effProfile?.role, "influencer"),
+        isPremium: effProfile?.plan === "premium" || atLeast(effProfile?.role, "influencer"),
         refreshProfile,
         login,
         loginWithEmail,

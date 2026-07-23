@@ -9,6 +9,16 @@ export interface Profile {
   pais?: string;
   region?: string;
   telefono?: string;
+  /** Nombre público del influencer (seudónimo del staff). */
+  alias?: string;
+  /** Biografía pública del influencer. */
+  bio?: string;
+  /** Perfil de Instagram (handle o URL). */
+  instagram?: string;
+  /** Ids de las secciones en las que puede publicar (las asigna el admin). */
+  secciones?: string[];
+  /** Id del local que administra este usuario (si es dueño de uno). */
+  localId?: string;
   avatarKey?: string;
   /** Foto propia (URL firmada de S3), si el usuario subió una. */
   photoURL?: string;
@@ -22,6 +32,9 @@ export interface ProfileInput {
   pais?: string;
   region?: string;
   telefono?: string;
+  alias?: string;
+  bio?: string;
+  instagram?: string;
   avatarKey?: string;
 }
 

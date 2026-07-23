@@ -8,13 +8,13 @@ export const Logo = (props: TextProps) => {
       fontWeight="900"
       letterSpacing="tight"
       lineHeight="1"
-      backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+      backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)"
       backgroundClip="text"
       color="transparent"
       userSelect="none"
       {...props}
     >
-      NI TAN MAL
+      YO INFLUENCER
     </Text>
   );
 };

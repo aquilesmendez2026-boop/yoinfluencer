@@ -1,42 +1,37 @@
 export const colors = {
-  // Acentos neón de marca
-  neon: {
-    cyan: { value: "#22d3ee" },
-    magenta: { value: "#d946ef" },
-    pink: { value: "#ec4899" },
-    amber: { value: "#f59e0b" },
+  // Verde de marca de Yo Influencer. Escala sobria (sin neón): el 500 es el
+  // color de acción y el 400 el de texto/acento sobre fondos oscuros.
+  brand: {
+    50: { value: "#ecfdf3" },
+    100: { value: "#d1fadf" },
+    200: { value: "#a6f4c5" },
+    300: { value: "#6ce9a6" },
+    400: { value: "#32d583" },
+    500: { value: "#12b76a" },
+    600: { value: "#039855" },
+    700: { value: "#027a48" },
+    800: { value: "#05603a" },
+    900: { value: "#054f31" },
   },
-  cyan: {
-    300: { value: "#67e8f9" },
-    400: { value: "#22d3ee" },
-    500: { value: "#06b6d4" },
-    600: { value: "#0891b2" },
+  // Acentos de apoyo, apagados a propósito para no competir con el verde.
+  accent: {
+    gold: { value: "#c9a227" },
+    clay: { value: "#c4614a" },
+    sage: { value: "#7f9c8b" },
   },
-  magenta: {
-    300: { value: "#f0abfc" },
-    400: { value: "#e879f9" },
-    500: { value: "#d946ef" },
-    600: { value: "#c026d3" },
-  },
-  amber: {
-    300: { value: "#fcd34d" },
-    400: { value: "#fbbf24" },
-    500: { value: "#f59e0b" },
-    600: { value: "#d97706" },
-  },
-  // Grises azulados muy oscuros para el fondo nocturno
+  // Negros con un tinte verde muy leve para el fondo.
   ink: {
-    50: { value: "#e7e7ef" },
-    100: { value: "#c4c4d4" },
-    200: { value: "#9a9ab0" },
-    300: { value: "#6f6f8a" },
-    400: { value: "#4a4a63" },
-    500: { value: "#33334a" },
-    600: { value: "#22223a" },
-    700: { value: "#161626" },
-    800: { value: "#0e0e1a" },
-    900: { value: "#0a0a12" },
-    950: { value: "#06060c" },
+    50: { value: "#e9ecea" },
+    100: { value: "#c7cdc9" },
+    200: { value: "#9aa39e" },
+    300: { value: "#6e7873" },
+    400: { value: "#4a534e" },
+    500: { value: "#333a36" },
+    600: { value: "#232823" },
+    700: { value: "#171b18" },
+    800: { value: "#0f1210" },
+    900: { value: "#0a0c0a" },
+    950: { value: "#050705" },
   },
 };
 

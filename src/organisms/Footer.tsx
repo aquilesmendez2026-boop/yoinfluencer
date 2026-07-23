@@ -39,7 +39,7 @@ export const Footer = () => {
         </HStack>
 
         <Text fontSize="sm" color="fg.subtle">
-          © 2026 Ni Tan Mal
+          © 2026 Yo Influencer
         </Text>
       </Flex>
     </Box>

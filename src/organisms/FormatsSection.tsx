@@ -9,9 +9,9 @@ export const FormatsSection = () => {
     <Section id="formats" bg="bg.muted">
       <VStack gap="12" w="full">
         <SectionTitle
-          eyebrow="Formatos"
-          title="Dos formas de meterse en problemas"
-          subtitle="Cada semana alternamos entre la consola y la copa. Mismo desorden, distinto escenario."
+          eyebrow="Cómo funciona"
+          title="Un medio hecho entre varias voces"
+          subtitle="Cada creador del staff participa en una o varias secciones y publica artículos, reseñas y experiencias. El equipo edita, tú lees."
         />
         <SimpleGrid columns={{ base: 1, md: 2 }} gap="6" w="full">
           {formats.map((format, index) => (

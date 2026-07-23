@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────
-// Contenido EXCLUSIVO para miembros de "Ni Tan Mal".
+// Contenido EXCLUSIVO para miembros de "Yo Influencer".
 // Solo visible tras iniciar sesión. Datos de ejemplo, editables.
 // ─────────────────────────────────────────────────────────────
 
@@ -12,7 +12,7 @@ export interface ExclusiveItem {
 
 export const exclusiveContent: ExclusiveItem[] = [
   {
-    title: "Episodio 12 — versión sin censura",
+    title: "Contenido 12 — versión sin censura",
     badge: "Extendido",
     duration: "1h 52m",
     description:
@@ -30,7 +30,7 @@ export const exclusiveContent: ExclusiveItem[] = [
     badge: "Solo miembros",
     duration: "18m",
     description:
-      "Todas las veces que perdimos el hilo, el trago o la dignidad. Compilado exclusivo.",
+      "Las tomas que no entraron al corte final: errores, risas y lo que pasa entre plano y plano.",
   },
 ];
 
@@ -46,19 +46,19 @@ export interface DownloadItem {
 
 export const downloads: DownloadItem[] = [
   {
-    title: "Episodio 12 (audio HD)",
+    title: "Contenido 12 (audio HD)",
     type: "audio",
     size: "82 MB",
     fileKey: "ep12-audio-hd.mp3",
   },
   {
-    title: "Pack de wallpapers Ni Tan Mal",
+    title: "Pack de wallpapers Yo Influencer",
     type: "wallpaper",
     size: "14 MB",
     fileKey: "wallpapers-ntm.zip",
   },
   {
-    title: "Guion anotado — especial invitados",
+    title: "Guion anotado — visita a restaurante",
     type: "pdf",
     size: "3 MB",
     fileKey: "guion-especial.pdf",

@@ -50,7 +50,7 @@ export const SectionTitle = ({
         h="3px"
         w="64px"
         borderRadius="full"
-        backgroundImage="linear-gradient(90deg, #22d3ee 0%, #d946ef 100%)"
+        backgroundImage="linear-gradient(90deg, #6ce9a6 0%, #12b76a 100%)"
         mt="1"
         alignSelf={align === "center" ? "center" : "start"}
       />

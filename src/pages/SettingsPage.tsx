@@ -30,13 +30,13 @@ export const SettingsPage = () => {
             <VStack align="stretch" gap="5">
               <SettingRow
                 title="Notificaciones por correo"
-                desc="Recibe avisos de nuevos episodios y shows en vivo."
+                desc="Recibe avisos de nuevos contenidos y shows en vivo."
                 defaultChecked
               />
               <Box h="1px" bg="border.subtle" />
               <SettingRow
                 title="Contenido para adultos"
-                desc="Mostrar episodios sin censura."
+                desc="Mostrar contenidos sin censura."
                 defaultChecked
               />
               <Box h="1px" bg="border.subtle" />

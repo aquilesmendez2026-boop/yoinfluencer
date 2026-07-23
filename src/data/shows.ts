@@ -1,10 +1,12 @@
 // ─────────────────────────────────────────────────────────────
-// DATOS DE EJEMPLO del podcast "Ni Tan Mal".
+// DATOS DE EJEMPLO de "Yo Influencer".
 // Edita estos arreglos para cambiar el contenido del sitio.
-// Más adelante se reemplazarán por datos reales / API.
+// Los lugares, las redes y los en vivos ya vienen del API
+// (services/lugares.ts, services/redes.ts, services/live.ts).
 // ─────────────────────────────────────────────────────────────
 
-export type ShowType = "stream" | "charla" | "especial";
+/** Tipos de actividad en la agenda. Debe coincidir con TYPES del backend. */
+export type ShowType = "en_vivo" | "grabacion" | "publicacion" | "colaboracion" | "evento";
 
 export interface ScheduleItem {
   day: string;
@@ -15,48 +17,50 @@ export interface ScheduleItem {
 }
 
 export const showTypeLabels: Record<ShowType, string> = {
-  stream: "Stream de juegos",
-  charla: "Charla con trago",
-  especial: "Especial",
+  en_vivo: "En vivo",
+  grabacion: "Grabación",
+  publicacion: "Publicación",
+  colaboracion: "Colaboración",
+  evento: "Evento",
 };
 
-// Horarios semanales de los shows
+// Rutina semanal de contenido
 export const schedule: ScheduleItem[] = [
   {
     day: "Lunes",
-    time: "21:00",
-    title: "Locuras en vivo",
-    type: "stream",
+    time: "20:00",
+    title: "Nuevos artículos",
+    type: "publicacion",
     description:
-      "Arrancamos la semana jugando en vivo, con reacciones, retos y todo lo que se nos cruce antes de pensar.",
+      "El staff publica los artículos de la semana en cada sección: vida swinger, shibari, BDSM y más.",
   },
   {
     day: "Miércoles",
-    time: "22:00",
-    title: "Modo Versus",
-    type: "stream",
+    time: "21:00",
+    title: "Taller en vivo",
+    type: "en_vivo",
     description:
-      "Partidas competitivas, apuestas tontas y la pregunta de siempre: ¿quién la hizo más grande?",
+      "Directo temático: técnica de shibari, seguridad en BDSM o conversación abierta con la comunidad.",
   },
   {
-    day: "Jueves",
-    time: "22:00",
-    title: "Tragos y verdades",
-    type: "charla",
+    day: "Viernes",
+    time: "23:00",
+    title: "Noche de club",
+    type: "evento",
     description:
-      "Noche de conversación con un trago en la mano. Anécdotas, debates y confesiones sin filtro.",
+      "Cobertura y reseñas de clubs, saunas y fiestas privadas del ambiente.",
   },
   {
-    day: "Sábado",
-    time: "20:00",
-    title: "Especial invitados",
-    type: "especial",
+    day: "Domingo",
+    time: "19:00",
+    title: "Colaboración",
+    type: "colaboracion",
     description:
-      "Cada sábado se suma alguien nuevo a la mesa para contar sus mejores locuras.",
+      "Contenido en conjunto entre creadores del staff o con invitados de la comunidad.",
   },
 ];
 
-// Formatos / pilares del show
+// Pilares de contenido
 export interface Format {
   title: string;
   description: string;
@@ -65,124 +69,56 @@ export interface Format {
 
 export const formats: Format[] = [
   {
-    title: "Streamers de juegos",
-    tag: "En vivo",
+    title: "Artículos por sección",
+    tag: "Editorial",
     description:
-      "Partidas en directo, reacciones honestas y retos que nadie en su sano juicio aceptaría. Los juegos son la excusa; el caos es el contenido.",
+      "Cada creador del staff escribe en las secciones que le asignaron: vida swinger, shibari, bondage, BDSM, spanking o arte erótico.",
   },
   {
-    title: "Noches de conversación con un trago",
-    tag: "Sin filtro",
+    title: "Reseñas de clubs y eventos",
+    tag: "Ambiente",
     description:
-      "Cuando bajan las luces y sube el trago, salen las mejores historias. Charlas relajadas sobre la vida, las decisiones impulsivas y todo lo que hacemos antes de pensar.",
+      "Clubs, saunas, hoteles y fiestas privadas contados en primera persona, con datos reales y sin adornos.",
+  },
+  {
+    title: "En vivos y talleres",
+    tag: "Directo",
+    description:
+      "Sesiones en directo sobre técnica, seguridad y cultura del ambiente, con preguntas de la comunidad.",
+  },
+  {
+    title: "Creadores",
+    tag: "Comunidad",
+    description:
+      "Cada creador tiene su página pública con su bio, sus secciones y todo lo que ha publicado.",
   },
 ];
 
-// Valores / vibra del podcast
+// Valores / vibra del proyecto
 export const values: string[] = [
-  "Sin filtro",
-  "Risas garantizadas",
-  "Anécdotas reales",
-  "Cero pretensiones",
+  "Consenso ante todo",
+  "Sin prejuicios",
+  "Comunidad real",
+  "Seguridad primero",
 ];
 
-// Episodios / clips destacados (placeholder)
-export interface Episode {
-  number: number;
-  title: string;
-  description: string;
-  duration: string;
-  /** Marca el episodio como exclusivo para miembros (se muestra con el vaso de whisky). */
-  premium?: boolean;
-}
-
-export const episodes: Episode[] = [
-  {
-    number: 12,
-    title: "La apuesta que terminó en urgencias",
-    description:
-      "Una partida normal, una apuesta nada normal y una noche que nadie va a olvidar.",
-    duration: "1h 14m",
-    premium: true,
-  },
-  {
-    number: 11,
-    title: "Ex, exes y otras malas ideas",
-    description:
-      "Noche de tragos donde revisamos las peores decisiones románticas de la mesa.",
-    duration: "58m",
-  },
-  {
-    number: 10,
-    title: "Speedrun a las 3 AM",
-    description:
-      "Intentamos batir un récord mundial sin dormir. Spoiler: no lo logramos, pero valió la pena.",
-    duration: "1h 02m",
-    premium: true,
-  },
-  {
-    number: 9,
-    title: "El día que casi nos echan del bar",
-    description:
-      "Una salida tranquila que se salió de control. Nombres cambiados para proteger a los culpables.",
-    duration: "1h 08m",
-  },
-  {
-    number: 8,
-    title: "Ranking de las peores citas",
-    description:
-      "Cada uno trae su peor historia romántica. El jurado no perdona.",
-    duration: "52m",
-    premium: true,
-  },
-  {
-    number: 7,
-    title: "Nadie en esta mesa sabe jugar póker",
-    description:
-      "Apostamos cosas que no deberíamos y aprendimos por qué el casino siempre gana.",
-    duration: "1h 05m",
-  },
-  {
-    number: 6,
-    title: "Confesiones a las 4 AM",
-    description:
-      "Cuando el trago suelta la lengua salen los secretos que nadie pidió escuchar.",
-    duration: "1h 21m",
-    premium: true,
-  },
-  {
-    number: 5,
-    title: "El torneo de FIFA que terminó mal",
-    description:
-      "Un campeonato amistoso entre amigos. Amistoso duró exactamente dos partidos.",
-    duration: "49m",
-  },
-  {
-    number: 4,
-    title: "Historias de trabajo que no creerías",
-    description:
-      "Renuncias épicas, jefes imposibles y la vez que uno durmió en la oficina.",
-    duration: "1h 11m",
-  },
-];
-
-// Plataformas donde escuchar / ver (enlaces placeholder)
+// Plataformas donde ver el contenido (enlaces placeholder)
 export interface Platform {
   name: string;
   url: string;
 }
 
 export const platforms: Platform[] = [
-  { name: "Spotify", url: "#" },
+  { name: "Instagram", url: "#" },
+  { name: "TikTok", url: "#" },
   { name: "YouTube", url: "#" },
   { name: "Twitch", url: "#" },
-  { name: "Apple Podcasts", url: "#" },
 ];
 
-// Redes sociales (enlaces placeholder)
+// Redes sociales (enlaces placeholder — el listado real llega de /redes)
 export const socials: Platform[] = [
   { name: "Instagram", url: "#" },
   { name: "TikTok", url: "#" },
-  { name: "X", url: "#" },
   { name: "YouTube", url: "#" },
+  { name: "X", url: "#" },
 ];

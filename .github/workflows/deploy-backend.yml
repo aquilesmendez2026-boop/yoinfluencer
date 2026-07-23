@@ -42,7 +42,7 @@ jobs:
         working-directory: backend
         run: >
           sam deploy
-          --stack-name nitalmal-backend
+          --stack-name yoinfluencer-backend
           --region us-east-2
           --resolve-s3
           --capabilities CAPABILITY_IAM

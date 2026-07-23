@@ -1,205 +1,394 @@
-# 🎙️ Ni Tan Mal — Plataforma del Podcast
+# 📰 Yo Influencer — Medio editorial del mundo swinger
 
-**Ni Tan Mal** es el sitio web oficial del podcast: un lugar donde la audiencia descubre el
-show, se hace miembro, ve las transmisiones en vivo y accede a contenido exclusivo — y donde
-el equipo detrás del podcast organiza todo su trabajo, desde la idea de un episodio hasta su
-publicación.
+**Yo Influencer** es un **periódico digital del ambiente swinger**: un medio editorial escrito por
+un **staff de creadores** (los *influencers*), organizado en **secciones temáticas** como cualquier
+publicación seria — Vida Swinger, Shibari, Bondage, BDSM, Spanking, Arte Erótico, Clubs y Eventos.
 
-En pocas palabras: **una cara pública para los fans y una trastienda de trabajo para el equipo**,
-todo en el mismo sitio.
+En pocas palabras: **cada creador publica artículos en su(s) sección(es), el público los lee, y
+detrás hay una redacción con roles, permisos y una trastienda de trabajo** — todo en el mismo sitio,
+detrás de un aviso de contenido para **mayores de 18 años**.
+
+> Este proyecto nació como la plataforma del podcast *Ni Tan Mal*, pasó por una etapa de "creador
+> de contenido" y hoy es un **medio editorial**. Quedan huellas de esa historia en el código, y
+> están documentadas a propósito (ver la nota sobre `/episodios` y la nota de despliegue sobre las
+> tablas `nitalmal-*`). No son bugs: son deuda técnica conocida.
+
+---
+
+## 🔞 Antes de entrar: el aviso +18
+
+El sitio trata sexualidad adulta, ambiente swinger y prácticas como BDSM, shibari y arte erótico,
+con fines informativos y de comunidad. Por eso **lo primero que ve cualquier visitante es un aviso
+de contenido para adultos** (`src/organisms/AgeGate.tsx`), incluso **antes del login**.
+
+- Al confirmar "Tengo +18", se guarda una marca en **`localStorage`** (`yi_age_ok`) para no volver
+  a preguntar en ese dispositivo. Quien elige "Soy menor / salir" es redirigido fuera del sitio.
+- El aviso vive **por fuera** del `AuthProvider`: bloquea todo el sitio antes de que exista sesión.
+
+> ⚠️ **No es una verificación de identidad real.** Es una declaración del usuario guardada en el
+> navegador; no comprueba edad ni identidad. Si en algún momento hace falta verificación real, es
+> una pieza aparte.
 
 ---
 
 ## 📌 ¿Qué resuelve?
 
-Un podcast no es solo grabar y subir. Hay que:
-- Atraer y fidelizar a la audiencia.
-- Monetizar (publicidad, membresías).
-- Coordinar a un equipo (guionistas, editores, invitados).
-- Planificar y no perder ideas ni oportunidades.
+Sostener un medio con varias plumas no es solo escribir. Hay que:
+- Organizar el contenido por **secciones** temáticas, como un periódico.
+- Coordinar a un **staff** de creadores con distintos niveles de responsabilidad.
+- Decidir **quién puede publicar y dónde** (no todo el mundo escribe en todas las secciones).
+- Dar a cada creador una **cara pública** (su página de autor) y al medio un **directorio** de firmas.
+- Monetizar (membresía Premium), recibir mensajes del público y avisar al equipo de lo que pasa.
 
 Esta app junta todo eso en una sola plataforma, sin depender de mil herramientas sueltas.
 
 ---
 
-## 👥 ¿Para quién es? (roles)
+## 👥 La redacción: roles y jerarquía
 
-El sitio se comporta distinto según quién entra:
+El sitio se comporta distinto según quién entra. Los roles forman una **jerarquía**: a mayor rango,
+más permisos, e **incluye** los del rango inferior.
+
+**`miembro` → `influencer` → `editor` → `admin` → `super_admin`**
 
 | Rol | Quién es | Qué puede hacer |
 |-----|----------|-----------------|
-| **Visitante / Miembro** | Cualquier persona con cuenta | Ver el show, episodios, horarios, en vivo, y hacerse **Premium** |
-| **Miembro Premium** | Quien paga la membresía | Todo lo anterior + contenido y descargas exclusivas, sin anuncios |
-| **Participante** | Integrante del equipo del podcast | Acceso a la **zona del equipo**: agenda, producción, notas, buzón |
-| **Administrador** | Dueños / gestores del sitio | Control total: contenido, en vivo, usuarios y roles |
+| **miembro** | Cualquier persona con cuenta | **Leer** artículos publicados, ver el directorio de creadores, lugares, agenda, hacerse **Premium** y escribir al **buzón** |
+| **influencer** | Creador del staff | Todo lo anterior + **publicar y editar sus propios artículos**, pero **solo en las secciones que un admin le asignó**. Tiene página pública de autor. Accede a la **trastienda** del equipo |
+| **editor** | Editor del medio | Publica/edita en **cualquier sección**, edita y borra artículos de otros (modera el contenido) |
+| **admin** | Gestión del medio | Gestiona **secciones**, **usuarios y roles**, asigna secciones a influencers, y controla lo del sitio (en vivo, redes, historial de lives, descargas, eventos) |
+| **super_admin** | Dueño del medio | **Control total. Es único** |
 
-> El acceso es **con cuenta** (Google o correo/contraseña). El sitio primero muestra una
-> pantalla de inicio de sesión; una vez dentro, cada quien ve lo que le corresponde.
+> El acceso es **con cuenta** (Google o correo/contraseña, vía Firebase). El sitio primero muestra
+> el aviso +18, después el login; una vez dentro, cada quien ve lo que le corresponde.
+
+La jerarquía vive en `backend/src/index.mjs` (`ROLES` + `rankOf`/`atLeast`) y se refleja en el
+frontend en `src/services/team.ts` y `src/providers/AuthProvider.tsx`. El frontend esconde botones,
+pero **quien manda es el servidor**: cada ruta valida el rango antes de responder.
+
+### 🛡️ Reglas de seguridad de los roles
+
+Están concentradas en `PUT /usuarios/{id}/role` y en el bootstrap de `GET /me`:
+
+- **`super_admin` no se asigna por API.** Se fija **una sola vez** en el arranque en frío: cuando un
+  usuario se crea (y solo al crearse, con `if_not_exists`), si su email coincide con la variable
+  **`ADMIN_EMAIL`**, su rol inicial es `super_admin`. Así se resuelve el problema del huevo y la
+  gallina (con la tabla de usuarios vacía, nadie podría promover a nadie). No sirve para reescalar
+  una cuenta que ya existe.
+- **Nadie puede degradar al `super_admin`.** Cambiar el rol de una cuenta `super_admin` está
+  bloqueado.
+- **Solo se otorgan roles de rango estrictamente menor al propio.** Un admin puede nombrar editores
+  e influencers, pero no otro admin ni un super_admin. Esto evita la escalada de privilegios.
+
+---
+
+## 🖋️ El modelo editorial (el corazón del producto)
+
+### Secciones
+
+Una **sección** es una temática del medio, como las secciones de un periódico. Tiene nombre, `slug`,
+descripción, color, orden y una marca **`activa`**. El público solo ve las activas; un admin ve todas.
+Las gestionan **admins** (`/secciones`, servicio `src/services/secciones.ts`).
+
+Secciones típicas del medio: **Vida Swinger, Shibari, Bondage, BDSM, Spanking, Arte Erótico,
+Clubs y Eventos** (se crean desde el panel; no están cableadas en el código).
+
+### Artículos
+
+Cada **artículo** pertenece a **una sección** y tiene **un autor** (un influencer del staff). Lleva
+título, resumen, cuerpo (texto largo), portada opcional (imagen en S3 con URL firmada) y enlaces a
+redes.
+
+**Estado `borrador` | `publicado` — publicación directa, sin flujo de aprobación.** Un influencer
+publica cuando quiere; no hay revisión previa por parte de un editor.
+
+**Visibilidad (la resuelve el backend en `GET /episodios`):**
+
+| Quién mira | Qué ve |
+|------------|--------|
+| Público / miembro | **Solo artículos publicados** |
+| El propio autor (influencer) | Los publicados + **sus propios borradores** |
+| `editor` y superiores | **Todo** (publicados y borradores de cualquiera) |
+
+**Permiso de publicación por sección** (`puedeEnSeccion` en el backend):
+
+- Un **influencer** solo puede crear/editar artículos en las secciones que un admin le asignó con
+  **`PUT /usuarios/{id}/secciones`** (servicio `setUsuarioSecciones`).
+- Un **editor o superior** puede publicar/editar en **cualquier** sección.
+- **Editar/borrar** un artículo lo puede hacer **su autor** o un **editor+**.
+
+Servicio del frontend: `src/services/contenidos.ts` (tipos `Contenido`, `ContenidoInput`).
+
+### Páginas de autor y directorio
+
+- **Directorio `/influencers`**: la lista de firmas del medio (todos los del staff, `influencer` o
+  superior), ordenada por rango.
+- **Página pública `/influencer/:id`**: la cara de cada creador — su alias, **bio**, **secciones** en
+  las que escribe y **sus artículos**.
+
+Ambas se sirven desde `/influencers` y `/influencers/{id}` en el backend (servicio
+`src/services/influencers.ts`). El perfil del creador (alias, bio, foto) se edita en su propia cuenta
+(`src/services/profile.ts`, campos `alias` y `bio`).
 
 ---
 
 ## 🌐 La experiencia del público
 
-Cuando alguien entra al sitio encuentra:
+Cuando alguien entra (ya con sesión y el +18 confirmado) encuentra:
 
-- **🔴 En vivo:** si el podcast está transmitiendo, aparece el reproductor de YouTube embebido
-  directamente en la página (con chat al lado). Si no hay transmisión, muestra una **cuenta
-  regresiva** al próximo show.
-- **🎧 El show y sus formatos:** de qué trata el podcast, sus secciones y estilo.
-- **📅 Horarios:** el calendario de próximos shows en vivo, con día, hora y tipo.
-- **🎬 Episodios:** los más recientes en la portada y una página con **todos los episodios**,
-  con enlaces directos a Spotify, YouTube y Apple Podcasts. Los episodios exclusivos van
-  marcados con un 🥃.
-- **📮 Buzón:** cualquiera puede enviar una **pregunta, idea o sugerencia de invitado** que el
-  equipo lee y puede convertir en un episodio.
-- **👤 Perfil:** cada usuario personaliza su cuenta con apodo, foto propia, país, región y teléfono.
+- **📰 Artículos** por sección, con portada, autor y resumen. Los premium van marcados.
+- **✍️ Creadores:** el directorio del staff y la página de cada autor.
+- **📍 Clubs y lugares del ambiente:** el catálogo de locales visitados/reseñados (ver más abajo).
+- **🔴 En vivo:** si el medio está transmitiendo, se enciende el reproductor embebido en la home.
+- **📅 Agenda:** el calendario de eventos.
+- **📮 Buzón:** cualquiera puede enviar una pregunta o sugerencia que el staff lee.
+- **👤 Perfil:** cada usuario personaliza su cuenta (apodo, foto, país, región, teléfono; y, si es
+  staff, su **alias** y **bio** de autor).
+
+Rutas del frontend: `/` (home), `/contenidos`, `/lugares`, `/agenda`, `/miembros`, `/premium`,
+`/checkout`, `/cuenta`, `/configuracion`, `/mi-trabajo`, `/admin`, `/login`. Las páginas públicas de
+autor y sección (`InfluencerPage`, `InfluencersPage`, `SeccionPage`, `ArticuloPage`, `MiPaginaPage`)
+ya existen como componentes.
+
+---
+
+## 📍 Clubs y lugares del ambiente
+
+Recontextualizado del pivote anterior: el catálogo de "lugares visitados" ahora describe **locales
+del ambiente**. Cada ficha tiene nombre, **categoría**, fotos (hasta 12, en S3 con URL firmada),
+rating de 1 a 5, rango de precio, reseña, dirección, ciudad, link a Maps, fecha de visita, marca de
+recomendado y un enlace al artículo relacionado.
+
+**Categorías** (`CATEGORIAS_LUGAR` en el backend; `src/services/lugares.ts`):
+
+`club` · `sauna` · `hotel` · `bar` · `evento` · `fiesta_privada` · `tienda` · `taller` · `otro`
+
+**Publicación controlada:** cada ficha tiene una marca `publicado`. El público solo ve las
+publicadas; el staff ve **todas**, incluidos los borradores (`GET /lugares` filtra según el rol). Se
+cargan y editan desde la trastienda (staff) y se ven en **`/lugares`**. Al borrar un lugar también se
+borran sus fotos en S3, para no dejar archivos huérfanos.
 
 ---
 
 ## ⭐ Membresía Premium
 
-El corazón de la monetización propia del sitio.
+La monetización propia del sitio.
 
-- Página **/premium** con el plan, precio y beneficios.
-- **Beneficios:** episodios exclusivos, todas las descargas premium (audios, packs, guiones),
-  sin anuncios, acceso anticipado e insignia de miembro.
-- **Pago:** checkout con la estética de **MercadoPago** (hoy en modo demostración/simulado,
-  listo para conectar el pago real).
-- Una vez Premium, el contenido y las **descargas exclusivas** se desbloquean automáticamente
-  (los que no son Premium ven un candado 🔒 con invitación a suscribirse).
+- Página **`/premium`** con el plan, precio y beneficios; checkout con la estética de **MercadoPago**.
+- **Pago simulado (mock).** Hoy `POST /suscripcion/pagar` marca la cuenta como premium al instante;
+  la estructura está lista para reemplazar el mock por el SDK real (la `preferencia` y el webhook de
+  confirmación). Ver el bloque de `SUSCRIPCIÓN` en `backend/src/index.mjs`.
+- Una vez Premium, el contenido y las **descargas exclusivas** se desbloquean automáticamente.
 
-> Además, el **en vivo se monetiza por YouTube** (anuncios, Super Chat, membresías del canal):
-> el sitio suma espectadores al mismo stream sin fragmentar la audiencia.
+> El staff (influencer o superior) cuenta como premium sin pagar (`isPremium` en `AuthProvider`).
 
 ---
 
 ## 🛠️ La trastienda: zona del equipo
 
-Aquí es donde el podcast se organiza. Solo la ven **participantes** y **administradores**.
+Solo la ven **influencer y superiores** (en el código, `canParticipate` = ser parte del staff).
 
-### 🎬 Pipeline de producción (lo más potente)
-Cada episodio es una **card** que muestra en qué etapa va. Al entrar, se ve su desarrollo
-completo a través de **6 etapas**:
-
-**Idea → Guion → Grabación → Edición → Programado → Publicado**
-
-En **cada etapa** se puede:
-- Asignar un **responsable** (elegido del equipo) y una **fecha límite**.
-- Definir su **estado**: Pendiente → En progreso → En revisión → **Aprobada** (aviso verde **LISTA**).
-- Completar una **planilla de entrega tipada**: cada etapa tiene un formulario con **campos
-  definidos** (texto, fecha, número, selección, enlace, casilla y **archivos**) — no texto libre —
-  pensado según lo que necesita **la etapa siguiente** para continuar.
-- Crear una **checklist de sub-tareas** (con plantillas típicas por etapa).
-- Ver un aviso **ATRASADA** si la fecha venció y la etapa no está lista.
-
-**Definición de Hecho (Definition of Done):** una etapa **no puede pasar a "Aprobada"** si le
-faltan campos obligatorios de su planilla. Esta regla se **valida en el servidor**, así que el
-contrato de entrega siempre se cumple. Además, cada **cambio de estado queda auditado** (quién,
-qué y cuándo) en un historial visible por etapa.
-
-Así cada encargado toma su etapa **viendo exactamente lo que dejó el anterior** en un formato
-estructurado, y el trabajo fluye sin perderse en chats.
-
-### 💼 Mi trabajo
-Una vista personal (**"Mi trabajo"** en el menú) que reúne **todas las etapas asignadas a ti**
-a través de **todos los episodios**, ordenadas por fecha límite y con aviso **ATRASADA** cuando
-corresponde. Cada fila enlaza directo al episodio en su etapa. Así cada integrante ve de un
-vistazo qué le toca, sin tener que abrir episodio por episodio.
-
-### 📆 Agenda de reuniones
-Calendario del mes con las reuniones del equipo: fecha, hora, lugar/enlace y notas.
-
-### 💡 Notas e ideas
-Un tablero para anotar ideas, invitados potenciales y temas, para que no se pierda ninguna
-oportunidad.
-
-### 📥 Buzón del público
-Las preguntas y sugerencias que envía la audiencia llegan aquí para que el equipo las revise,
-marque como respondidas o descarte.
+- **📥 Buzón del público:** las preguntas y sugerencias que llega el equipo revisa, marca como
+  respondidas o descarta.
+- **💡 Notas e ideas** y **📆 agenda de reuniones** del equipo.
+- **🎬 Pipeline de producción** (`/produccion`, vista personal en **`/mi-trabajo`**): un flujo de
+  trabajo con etapas tipadas (**Idea → Guion → Grabación → Edición → Programado → Publicado**),
+  planillas por etapa, responsables, fechas límite, checklist de sub-tareas, "Definición de Hecho"
+  validada en el servidor e historial auditado. Es la herramienta de producción del staff y convive
+  con la publicación editorial directa.
 
 ---
 
 ## 🔔 Notificaciones
 
-El equipo recibe **avisos in-app** (campanita en la barra superior):
-- Cuando **te asignan** una etapa de un episodio.
-- Cuando una etapa queda lista y **te toca la siguiente** (handoff automático).
-
-Las notificaciones y los contenidos se **actualizan solos** (sin recargar la página).
+El staff recibe **avisos in-app** (campanita en la barra superior): cuando **te asignan** una etapa
+de producción y cuando una etapa queda lista y **te toca la siguiente** (handoff automático). Las
+notificaciones se **actualizan solas**, sin recargar la página.
 
 ---
 
 ## 🧑‍💼 Panel de administración
 
-Solo para administradores. Organizado en pestañas:
+En `/admin`, organizado por pestañas. La columna "Quién puede" indica el rango mínimo.
 
-- **En vivo:** activar/desactivar la transmisión y pegar el enlace de YouTube (con vista previa).
-- **Shows:** crear los eventos/transmisiones y verlos en el calendario del mes (con opción premium).
-- **Episodios:** crear, editar y borrar episodios con sus enlaces a plataformas.
-- **Descargas:** subir archivos (de cualquier tipo) para la zona de miembros, marcarlos premium.
-- **Usuarios:** ver a todos los registrados y asignarles rol (miembro, participante, admin).
+| Pestaña | Para qué sirve | Rango mínimo |
+|---------|----------------|--------------|
+| **Secciones** | Crear/editar/ordenar/activar las secciones temáticas | admin |
+| **Usuarios** | Ver registrados, asignar **rol** y **secciones** a cada influencer | admin |
+| **En vivo** | Activar/desactivar la transmisión y pegar el enlace | admin |
+| **Eventos** | Crear los eventos de la agenda | admin |
+| **Redes** | Editar los perfiles sociales, handles, seguidores y orden | admin |
+| **En vivos** | Registrar el historial de directos realizados | admin |
+| **Descargas** | Subir archivos para la zona de miembros y marcarlos premium | admin |
+| **Clubs / Lugares** | Cargar y publicar locales del ambiente | influencer / staff |
+| **Artículos** | Escribir y publicar (cada quien en sus secciones) | influencer / staff |
+
+---
+
+## 🏷️ Trampas de nombres (lo que confunde al que retoma)
+
+Hay huellas del pasado en el **wire** (las rutas y claves del API) que **no coinciden con el dominio
+actual**. Están así a propósito; renombrarlas obliga a migrar datos y coordinar front + back.
+
+### "Artículo" en el producto, `/episodios` en el API
+
+**El dominio se llama "artículo"** en toda la app nueva (los tipos `Contenido`/`ContenidoInput`, el
+servicio `src/services/contenidos.ts`, la UI). **Pero las rutas HTTP siguen siendo `/episodios`** y
+las respuestas usan las claves `episodios` / `episodio`:
+
+```
+GET    /episodios        → listar artículos       (responde { episodios: [...] })
+POST   /episodios        → crear artículo          (responde { episodio: {...} })
+PUT    /episodios/{id}   → editar artículo
+DELETE /episodios/{id}   → borrar artículo
+POST   /episodios-upload → subir la portada a S3
+```
+
+La tabla en DynamoDB también se llama **`yoinfluencer-episodios`**. El servicio `contenidos.ts`
+traduce el nombre viejo al nuevo y lleva un comentario que lo advierte. **No renombres el wire sin
+migrar el backend y los datos.**
+
+### `/live` (singular) ≠ `/lives` (plural)
+
+Dos cosas distintas, fácil de confundir:
+
+- **`/live`** — el estado del sitio: ¿hay transmisión **ahora**? Un interruptor con el ID del video y
+  el título. Es lo que enciende el reproductor en la home. Solo admin lo cambia.
+- **`/lives`** — el **historial** de directos ya realizados (título, fecha, plataforma, duración,
+  espectadores, enlace, descripción). Solo admin lo administra.
+
+### Lugares → clubs del ambiente
+
+El módulo de "lugares" se **recontextualizó** a locales del ambiente swinger (categorías `club`,
+`sauna`, `hotel`, `bar`, `evento`, `fiesta_privada`, `tienda`, `taller`, `otro`), pero las rutas
+siguen siendo `/lugares`.
+
+---
+
+## 🎨 Identidad visual
+
+Diseño oscuro **verde y negro**, sobrio. La escala de marca va del `#ecfdf3` al `#054f31`, con
+`brand.500` (`#12b76a`) como color de acción y `brand.400` (`#32d583`) como acento sobre fondo
+oscuro. Los negros llevan un tinte verde muy leve para el fondo del canvas.
+
+> **No es un diseño "neón".** Las sombras de marca son halos contenidos, no glow. Si agregas
+> componentes, respeta esa sobriedad y usa los tokens semánticos (`bg.canvas`, `fg.muted`,
+> `border.subtle`, `brand.primary`) en vez de colores literales.
 
 ---
 
 ## 🧩 ¿Cómo está construido? (visión general)
 
-Sin entrar en tecnicismos, la app tiene dos partes:
+Dos partes:
 
-- **La página (frontend):** lo que ves y usas. Rápida, moderna y responsiva (funciona en
-  celular y computador), con un diseño oscuro "neón" propio del podcast.
-- **El cerebro (backend en la nube):** guarda la información (usuarios, episodios, eventos,
-  producción, etc.), maneja los archivos, valida los pagos y protege el contenido para que
-  solo entren quienes corresponde.
-
-Todo vive en la nube y se **actualiza solo** cada vez que se publica un cambio, sin
-mantenimiento manual de servidores.
+- **La página (frontend):** lo que ves y usas. Rápida, moderna y responsiva.
+- **El cerebro (backend en la nube):** guarda la información, maneja los archivos, valida los roles y
+  protege el contenido para que solo entre quien corresponde.
 
 <details>
 <summary>Detalle técnico (para quien le interese)</summary>
 
-- **Frontend:** React + TypeScript + Vite + Chakra UI. Desplegado en **AWS Amplify Hosting**.
-- **Autenticación:** Firebase Authentication (Google + correo/contraseña). El token del
-  usuario se usa como credencial segura hacia el backend.
-- **Backend:** AWS **API Gateway + Lambda** (Node.js) con validación del token por
-  **JWT Authorizer**, datos en **DynamoDB** y archivos en **Amazon S3** (con enlaces firmados).
-- **CI/CD:** el backend se despliega automáticamente con **GitHub Actions** (autenticación por
-  OIDC, sin llaves permanentes).
-- **Pagos:** integración con MercadoPago en modo simulado, preparada para el pago real.
+- **Frontend:** **React 19 + TypeScript + Vite + Chakra UI v3**. Autenticación con **Firebase Auth**
+  (Google + correo/contraseña); el ID token del usuario viaja como bearer hacia el backend.
+- **Backend:** **AWS SAM** (`backend/template.yaml`) define **API Gateway (HTTP API) + Lambda**
+  (Node.js 22, arm64) con **JWT Authorizer** de Firebase, datos en **DynamoDB** y archivos en **S3**
+  (con URLs firmadas). Todo el handler vive en `backend/src/index.mjs`.
+- **Pagos:** MercadoPago en modo simulado, preparado para el real.
+
+**Tablas DynamoDB** — todas con prefijo **`yoinfluencer-`**: `usuarios`, `secciones` *(nueva)*,
+`episodios` *(los artículos)*, `eventos`, `reuniones`, `notas`, `descargas`, `preguntas`,
+`produccion`, `notificaciones`, `lugares`, `redes`, `lives`, `config`.
+
+**Buckets S3:** `yoinfluencer-avatars-<cuenta>` (fotos de perfil) y
+`yoinfluencer-archivos-<cuenta>` (descargas, portadas de artículos, fotos de lugares, adjuntos de
+producción).
 
 </details>
 
 ---
 
-## ▶️ Cómo ejecutarlo (para desarrollo)
+## ▶️ Cómo ejecutarlo en local
+
+Son **dos procesos**: el frontend (Vite) y el backend (un servidor local que corre el handler real
+contra las tablas reales de AWS).
+
+### 1. Backend (API local)
 
 ```bash
-# 1. Instalar dependencias
+cd backend
 npm install
-
-# 2. Levantar el sitio en local
-npm run dev        # abre http://localhost:5173
-
-# 3. Compilar para producción
-npm run build
+npm run dev        # levanta http://localhost:8787
 ```
 
-> La configuración pública (Firebase, URL del backend) va en el archivo `.env`.
-> El backend (infraestructura en AWS) está en la carpeta `backend/`.
+Esto corre **`backend/local-server.mjs`**: un servidor de desarrollo que **reemplaza a API Gateway** y
+ejecuta el handler real (`src/index.mjs`) contra las **tablas y buckets reales** de DynamoDB/S3 en
+**`us-east-2`**, cuenta **`970335222766`**. Necesita **credenciales de AWS** en el entorno (las del
+usuario IAM **`nitamal-deployer`**).
+
+> ⚠️ **Diferencia con producción:** el servidor local **decodifica** el ID token de Firebase pero
+> **no verifica su firma** (en producción eso lo hace el JWT Authorizer de API Gateway). Es solo para
+> desarrollo; **nunca lo expongas a internet**. Puedes definir `ADMIN_EMAIL` para el bootstrap del
+> super admin.
+
+### 2. Frontend
+
+```bash
+npm install
+npm run dev        # abre http://localhost:5173
+```
+
+Configura el `.env` (copia `.env.example`): la config pública de **Firebase** y la URL del backend
+**`VITE_API_URL=http://localhost:8787`**.
+
+```bash
+npm run build      # compilar para producción
+```
+
+---
+
+## 🚀 Infraestructura y despliegue
+
+`backend/template.yaml` (AWS SAM) es la definición del **API Gateway + Lambda** y de las tablas y
+buckets. En la práctica, **las tablas `yoinfluencer-*` de esta cuenta se crearon directamente por
+CLI** (con el IAM de **`nitamal-deployer`**), no necesariamente a través del stack. La región es
+**`us-east-2`** y la cuenta **`970335222766`**. La tabla **`yoinfluencer-secciones`** es la más
+reciente (llegó con el modelo editorial).
+
+Para desplegar el API con SAM:
+
+```bash
+cd backend
+sam build
+sam deploy
+```
+
+Tras un despliegue nuevo, toma el output **`ApiUrl`** del stack y actualízalo en **`VITE_API_URL`**
+(entorno del frontend), luego reconstruye el frontend.
+
+### ⚠️ Las tablas `nitalmal-*` NO se usan
+
+Del pasado del proyecto quedan tablas con prefijo **`nitalmal-*`** en la cuenta. **Ningún código las
+lee ni las escribe** — todo apunta a `yoinfluencer-*`. Si ves datos "que faltan" en la app, no es un
+bug del código: probablemente estén en las tablas viejas y **nunca se migraron**. No las borres a la
+ligera sin exportarlas antes.
 
 ---
 
 ## 🗺️ Estado y próximos pasos
 
-**Ya funciona:** login, perfiles, episodios, horarios, en vivo, membresía premium (demo),
-descargas exclusivas, buzón, zona del equipo (producción, agenda, notas), notificaciones,
-panel admin y despliegue automático.
+**Ya funciona:** aviso +18, login, perfiles y páginas de autor, jerarquía de 5 roles con reglas de
+seguridad, secciones editoriales, artículos con publicación directa y visibilidad por rol, asignación
+de secciones a influencers, directorio de creadores, clubs/lugares, en vivo e historial de lives,
+agenda, membresía premium (mock), descargas exclusivas, buzón, trastienda del equipo (producción,
+notas, reuniones), notificaciones y panel admin.
 
 **En la hoja de ruta:**
+- Renombrar el wire `/episodios` → `/articulos` (con migración de datos).
 - Conectar el **pago real** de MercadoPago.
-- **Notificaciones por correo** (además de las in-app).
-- **CRM de invitados** y **biblioteca de assets** reutilizables.
-- **Métricas** de audiencia y de la comunidad.
+- **Notificaciones por correo** además de las in-app.
+- Verificación de edad más robusta que el aviso en `localStorage`.
+- Migrar o dar de baja lo que quede en las tablas `nitalmal-*`.
 
 ---
 
-*Ni Tan Mal — el podcast de los hombres y las locuras que hacen antes de pensar.* 🥃
+*Yo Influencer — un medio del ambiente, escrito por quienes lo viven. Solo +18.* 🔞

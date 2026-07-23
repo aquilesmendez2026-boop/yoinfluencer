@@ -1,6 +1,6 @@
 import { Box, Button, Image, Menu, Portal, Text } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock, Crown, Briefcase } from "lucide-react";
+import { LogIn, LogOut, Settings, User as UserIcon, ChevronDown, Star, LayoutDashboard, CalendarClock, Crown, Briefcase, PenLine, UserRound, Store } from "lucide-react";
 import { useAuth } from "../providers/AuthProvider";
 
 /**
@@ -9,7 +9,7 @@ import { useAuth } from "../providers/AuthProvider";
  * - Con sesión → chip con menú desplegable (Perfil, Configuración, Cerrar sesión).
  */
 export const AuthButton = ({ full = false }: { full?: boolean }) => {
-  const { user, loading, login, logout, isAdmin, isParticipant, profile } = useAuth();
+  const { user, loading, login, logout, isAdmin, isParticipant, ownsLocal, profile } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return null;
@@ -25,7 +25,7 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
         color="fg.default"
         bg="bg.surface"
         w={full ? "full" : undefined}
-        _hover={{ borderColor: "border.neon" }}
+        _hover={{ borderColor: "border.brand" }}
         transition="all 0.3s"
       >
         <LogIn size={16} style={{ marginRight: "6px" }} />
@@ -55,14 +55,14 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
           size="sm"
           variant="outline"
           borderRadius="full"
-          borderColor="border.neon"
+          borderColor="border.brand"
           bg="bg.surface"
           color="fg.default"
           pl="2"
           pr="3"
           w={full ? "full" : undefined}
           justifyContent={full ? "start" : undefined}
-          _hover={{ boxShadow: "neon", transform: "translateY(-1px)" }}
+          _hover={{ boxShadow: "brand", transform: "translateY(-1px)" }}
           transition="all 0.3s"
         >
           {photo ? (
@@ -122,6 +122,27 @@ export const AuthButton = ({ full = false }: { full?: boolean }) => {
               <Settings size={16} />
               Configuración
             </Menu.Item>
+
+            {ownsLocal && (
+              <Menu.Item value="mi-local" onClick={() => navigate("/mi-local")} {...itemStyle} color="brand.primary">
+                <Store size={16} />
+                Mi local
+              </Menu.Item>
+            )}
+
+            {isParticipant && (
+              <Menu.Item value="escribir" onClick={() => navigate("/escribir")} {...itemStyle} color="brand.primary">
+                <PenLine size={16} />
+                Escribir
+              </Menu.Item>
+            )}
+
+            {isParticipant && (
+              <Menu.Item value="mi-pagina" onClick={() => navigate("/mi-pagina")} {...itemStyle} color="brand.primary">
+                <UserRound size={16} />
+                Mi página
+              </Menu.Item>
+            )}
 
             {isParticipant && (
               <Menu.Item value="mi-trabajo" onClick={() => navigate("/mi-trabajo")} {...itemStyle} color="brand.primary">

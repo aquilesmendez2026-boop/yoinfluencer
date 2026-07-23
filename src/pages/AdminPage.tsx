@@ -22,9 +22,14 @@ import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { AppHeader } from "../organisms/AppHeader";
 import { EventForm } from "../organisms/EventForm";
 import { LiveManager } from "../organisms/LiveManager";
-import { EpisodesManager } from "../organisms/EpisodesManager";
+import { ContenidosManager } from "../organisms/ContenidosManager";
+import { LugaresManager } from "../organisms/LugaresManager";
+import { RedesManager } from "../organisms/RedesManager";
+import { LivesManager } from "../organisms/LivesManager";
 import { DownloadsManager } from "../organisms/DownloadsManager";
 import { UsersManager } from "../organisms/UsersManager";
+import { SeccionesManager } from "../organisms/SeccionesManager";
+import { LocalesAdmin } from "../organisms/LocalesAdmin";
 import { MonthCalendar, typeColor } from "../organisms/MonthCalendar";
 import { useAuth } from "../providers/AuthProvider";
 import { showTypeLabels } from "../data/shows";
@@ -88,7 +93,7 @@ export const AdminPage = () => {
         <AppHeader />
         <Center minH="60vh">
           <VStack gap="4" textAlign="center" px="6">
-            <ShieldAlert size={48} color="#f59e0b" />
+            <ShieldAlert size={48} color="#c9a227" />
             <Heading size="lg">Acceso restringido</Heading>
             <Text color="fg.muted" maxW="md">
               Esta sección es solo para administradores del sitio.
@@ -116,13 +121,14 @@ export const AdminPage = () => {
               </Text>
             </HStack>
             <Heading as="h1" size={{ base: "2xl", md: "3xl" }} fontWeight="900" letterSpacing="tighter">
-              Gestión del podcast
+              Gestión del canal
             </Heading>
           </VStack>
 
           <Tabs.Root defaultValue="shows" variant="line">
             <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
-              {["en vivo", "shows", "episodios", "descargas", ...(isSuperAdmin ? ["usuarios"] : [])].map((v) => (
+              {/* La pestaña "usuarios" (roles) es exclusiva del super admin. */}
+              {["en vivo", "secciones", "artículos", "locales", "clubs", "shows", "redes", "en vivos", "descargas", ...(isSuperAdmin ? ["usuarios"] : [])].map((v) => (
                 <Tabs.Trigger key={v} value={v} color="fg.muted" fontWeight="600" textTransform="capitalize" _selected={{ color: "brand.primary" }}>
                   {v}
                 </Tabs.Trigger>
@@ -237,8 +243,23 @@ export const AdminPage = () => {
               </Grid>
             </Tabs.Content>
 
-            <Tabs.Content value="episodios" pt="8">
-              <EpisodesManager />
+            <Tabs.Content value="secciones" pt="8">
+              <SeccionesManager />
+            </Tabs.Content>
+            <Tabs.Content value="artículos" pt="8">
+              <ContenidosManager />
+            </Tabs.Content>
+            <Tabs.Content value="locales" pt="8">
+              <LocalesAdmin />
+            </Tabs.Content>
+            <Tabs.Content value="clubs" pt="8">
+              <LugaresManager />
+            </Tabs.Content>
+            <Tabs.Content value="redes" pt="8">
+              <RedesManager />
+            </Tabs.Content>
+            <Tabs.Content value="en vivos" pt="8">
+              <LivesManager />
             </Tabs.Content>
             <Tabs.Content value="descargas" pt="8">
               <DownloadsManager />

@@ -12,9 +12,11 @@ const MONTHS = [
 ];
 
 export const typeColor: Record<ShowType, string> = {
-  stream: "neon.cyan",
-  charla: "neon.magenta",
-  especial: "neon.amber",
+  en_vivo: "brand.400",
+  grabacion: "brand.300",
+  publicacion: "brand.600",
+  colaboracion: "accent.sage",
+  evento: "accent.gold",
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -95,7 +97,7 @@ export const MonthCalendar = ({ events, selected, onSelect, showLegend = true }:
               onClick={() => onSelect(ds)}
               bg={isSelected ? "brand.primary" : "transparent"}
               border="1px solid"
-              borderColor={isSelected ? "brand.primary" : isToday ? "border.neon" : "transparent"}
+              borderColor={isSelected ? "brand.primary" : isToday ? "border.brand" : "transparent"}
               _hover={{ bg: isSelected ? "brand.primary" : "bg.muted" }}
               transition="all 0.15s"
             >

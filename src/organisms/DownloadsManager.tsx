@@ -19,8 +19,8 @@ const humanSize = (bytes: number) => {
 const fp = {
   bg: "bg.muted", border: "1px solid", borderColor: "border.subtle", borderRadius: "lg",
   color: "fg.default", size: "md" as const, px: "3",
-  _hover: { borderColor: "border.neon" },
-  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #22d3ee", outline: "none" },
+  _hover: { borderColor: "border.brand" },
+  _focusVisible: { borderColor: "brand.primary", boxShadow: "0 0 0 1px #12b76a", outline: "none" },
 };
 
 export const DownloadsManager = () => {
@@ -63,7 +63,7 @@ export const DownloadsManager = () => {
         <GlassPanel p={{ base: "5", md: "6" }}>
           <Heading size="sm" mb="4">Subir archivo</Heading>
           <VStack as="form" onSubmit={submit} align="stretch" gap="3">
-            <Button type="button" onClick={() => fileRef.current?.click()} variant="outline" borderColor="border.subtle" borderRadius="lg" justifyContent="start" color="fg.default" _hover={{ borderColor: "border.neon" }}>
+            <Button type="button" onClick={() => fileRef.current?.click()} variant="outline" borderColor="border.subtle" borderRadius="lg" justifyContent="start" color="fg.default" _hover={{ borderColor: "border.brand" }}>
               <FileUp size={16} style={{ marginRight: "8px" }} />
               {file ? `${file.name} (${humanSize(file.size)})` : "Elegir archivo…"}
             </Button>
@@ -82,7 +82,7 @@ export const DownloadsManager = () => {
               </Switch.Root>
             </Flex>
             {error && <Text color="red.400" fontSize="sm">{error}</Text>}
-            <Button type="submit" loading={uploading} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" _hover={{ opacity: 0.92 }}>
+            <Button type="submit" loading={uploading} borderRadius="lg" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)" _hover={{ opacity: 0.92 }}>
               <Upload size={16} style={{ marginRight: "6px" }} /> Subir
             </Button>
           </VStack>

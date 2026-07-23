@@ -1,14 +1,21 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Backend de nitalmal — API protegida con Firebase (Google login) como bearer token.
+  Backend de Yo Influencer — API protegida con Firebase (Google login) como bearer token.
   API Gateway HTTP API + JWT Authorizer + Lambda + DynamoDB.
 
 Parameters:
   FirebaseProjectId:
     Type: String
     Default: nitanmal-a75de
-    Description: Project ID del Firebase de nitalmal (issuer/audience del JWT).
+    Description: Project ID del Firebase del proyecto (issuer/audience del JWT).
+  AdminEmail:
+    Type: String
+    Default: "aquiles@umine.com"
+    Description: >
+      Email que recibe rol admin la primera vez que inicia sesion. Resuelve el
+      arranque en frio: con la tabla de usuarios vacia nadie puede promover a nadie.
+      Solo aplica al crear el usuario, no reescala cuentas existentes.
 
 Globals:
   Function:
@@ -48,8 +55,10 @@ Resources:
   # ── Tabla de usuarios / miembros ──
   UsersTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-usuarios
+      TableName: yoinfluencer-usuarios
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: userId
@@ -61,8 +70,10 @@ Resources:
   # ── Bucket para las fotos de perfil (privado; se sirven con URL firmada) ──
   AvatarsBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub "nitalmal-avatars-${AWS::AccountId}"
+      BucketName: !Sub "yoinfluencer-avatars-${AWS::AccountId}"
       CorsConfiguration:
         CorsRules:
           - AllowedMethods: [PUT, GET, HEAD]
@@ -72,8 +83,10 @@ Resources:
   # ── Tabla de eventos / shows programados ──
   EventsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-eventos
+      TableName: yoinfluencer-eventos
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -85,8 +98,10 @@ Resources:
   # ── Agenda de reuniones del equipo (participantes) ──
   ReunionesTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-reuniones
+      TableName: yoinfluencer-reuniones
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -98,8 +113,10 @@ Resources:
   # ── Notas / ideas del equipo ──
   NotasTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-notas
+      TableName: yoinfluencer-notas
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -111,8 +128,10 @@ Resources:
   # ── Episodios (gestionados desde el panel) ──
   EpisodiosTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-episodios
+      TableName: yoinfluencer-episodios
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -124,8 +143,10 @@ Resources:
   # ── Descargas (metadatos; archivos en S3) ──
   DescargasTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-descargas
+      TableName: yoinfluencer-descargas
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -137,8 +158,10 @@ Resources:
   # ── Preguntas / buzón del público ──
   PreguntasTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-preguntas
+      TableName: yoinfluencer-preguntas
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -150,8 +173,10 @@ Resources:
   # ── Pipeline de producción de episodios ──
   ProduccionTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-produccion
+      TableName: yoinfluencer-produccion
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -163,8 +188,10 @@ Resources:
   # ── Notificaciones in-app (por usuario) ──
   NotificacionesTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-notificaciones
+      TableName: yoinfluencer-notificaciones
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: userId
@@ -177,11 +204,73 @@ Resources:
         - AttributeName: sk
           KeyType: RANGE
 
+  # ── Catálogo de lugares visitados (restaurantes, cines, panoramas…) ──
+  LugaresTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: yoinfluencer-lugares
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Perfiles de redes sociales del creador ──
+  RedesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: yoinfluencer-redes
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Secciones editoriales (temáticas del medio) ──
+  SeccionesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: yoinfluencer-secciones
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  # ── Historial de en vivos ya realizados ──
+  LivesTable:
+    Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      TableName: yoinfluencer-lives
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
   # ── Config del sitio (estado "en vivo", etc.) ──
   ConfigTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      TableName: nitalmal-config
+      TableName: yoinfluencer-config
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -193,8 +282,10 @@ Resources:
   # ── Bucket privado para las descargas de la zona miembros ──
   FilesBucket:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
-      BucketName: !Sub "nitalmal-archivos-${AWS::AccountId}"
+      BucketName: !Sub "yoinfluencer-archivos-${AWS::AccountId}"
       CorsConfiguration:
         CorsRules:
           - AllowedMethods: [PUT, GET, HEAD]
@@ -205,7 +296,7 @@ Resources:
   ApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: nitalmal-api
+      FunctionName: yoinfluencer-api
       Handler: index.handler
       CodeUri: src/
       Environment:
@@ -220,6 +311,11 @@ Resources:
           TABLE_CONFIG: !Ref ConfigTable
           TABLE_PRODUCCION: !Ref ProduccionTable
           TABLE_NOTIFICACIONES: !Ref NotificacionesTable
+          TABLE_LUGARES: !Ref LugaresTable
+          TABLE_REDES: !Ref RedesTable
+          TABLE_LIVES: !Ref LivesTable
+          TABLE_SECCIONES: !Ref SeccionesTable
+          ADMIN_EMAIL: !Ref AdminEmail
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
           SUPERADMIN_EMAIL: aquiles@umine.com
@@ -244,6 +340,14 @@ Resources:
             TableName: !Ref ProduccionTable
         - DynamoDBCrudPolicy:
             TableName: !Ref NotificacionesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LugaresTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref RedesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LivesTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref SeccionesTable
         - S3CrudPolicy:
             BucketName: !Ref AvatarsBucket
         - S3CrudPolicy:
@@ -489,6 +593,135 @@ Resources:
             ApiId: !Ref HttpApi
             Path: /notificaciones/leer
             Method: POST
+        ListLugares:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares
+            Method: GET
+        CreateLugar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares
+            Method: POST
+        UpdateLugar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares/{id}
+            Method: PUT
+        DeleteLugar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares/{id}
+            Method: DELETE
+        UploadLugarFoto:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares-upload
+            Method: POST
+        ListRedes:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /redes
+            Method: GET
+        UpdateRedes:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /redes
+            Method: PUT
+        ListLives:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lives
+            Method: GET
+        CreateLive:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lives
+            Method: POST
+        DeleteLive:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lives/{id}
+            Method: DELETE
+
+        ListSecciones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /secciones
+            Method: GET
+        CreateSeccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /secciones
+            Method: POST
+        UpdateSeccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /secciones/{id}
+            Method: PUT
+        DeleteSeccion:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /secciones/{id}
+            Method: DELETE
+        ListInfluencers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /influencers
+            Method: GET
+        GetInfluencer:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /influencers/{id}
+            Method: GET
+        SetUsuarioSecciones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /usuarios/{id}/secciones
+            Method: PUT
+        UploadArticuloPortada:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /episodios-upload
+            Method: POST
+
+        GetMiLocal:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /mi-local
+            Method: GET
+        AprobarLugar:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares/{id}/aprobar
+            Method: PUT
+
+        AsignarDuenoLocal:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /lugares/{id}/owner
+            Method: PUT
 
 Outputs:
   ApiUrl:

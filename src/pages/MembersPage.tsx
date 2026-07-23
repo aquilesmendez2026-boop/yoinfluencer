@@ -50,7 +50,7 @@ export const MembersPage = () => {
             </HStack>
             <Heading as="h1" size={{ base: "3xl", md: "5xl" }} fontWeight="900" letterSpacing="tighter">
               Hola,{" "}
-              <Box as="span" backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)" backgroundClip="text" color="transparent">
+              <Box as="span" backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)" backgroundClip="text" color="transparent">
                 {firstName}
               </Box>
             </Heading>
@@ -59,7 +59,7 @@ export const MembersPage = () => {
             </Text>
             <HStack gap="3">
               {role && (
-                <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.neon" borderRadius="full" px="3" py="1" textTransform="capitalize">
+                <Badge bg="bg.surface" color="brand.primary" border="1px solid" borderColor="border.brand" borderRadius="full" px="3" py="1" textTransform="capitalize">
                   Rol: {role}
                 </Badge>
               )}
@@ -77,10 +77,10 @@ export const MembersPage = () => {
                 <Crown size={26} />
                 <Box>
                   <Text fontWeight="700" color="fg.default">Desbloquea todo con Premium</Text>
-                  <Text fontSize="sm" color="fg.muted">Descargas premium, episodios exclusivos y sin anuncios.</Text>
+                  <Text fontSize="sm" color="fg.muted">Descargas premium, contenidos exclusivos y sin anuncios.</Text>
                 </Box>
               </HStack>
-              <Button onClick={() => navigate("/premium")} borderRadius="full" px="6" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #f59e0b, #d946ef)" _hover={{ opacity: 0.92 }}>
+              <Button onClick={() => navigate("/premium")} borderRadius="full" px="6" border="none" color="fg.inverted" fontWeight="700" backgroundImage="linear-gradient(135deg, #c9a227, #12b76a)" _hover={{ opacity: 0.92 }}>
                 Hazte Premium
               </Button>
             </Flex>
@@ -163,7 +163,7 @@ export const MembersPage = () => {
                             color="fg.inverted"
                             fontWeight="700"
                             fontSize="sm"
-                            backgroundImage="linear-gradient(135deg, #22d3ee 0%, #d946ef 100%)"
+                            backgroundImage="linear-gradient(135deg, #12b76a 0%, #054f31 100%)"
                             _hover={{ opacity: 0.9, transform: "translateY(-1px)", textDecoration: "none" }}
                             transition="all 0.3s"
                           >

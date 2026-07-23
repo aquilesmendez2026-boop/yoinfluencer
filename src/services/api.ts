@@ -1,4 +1,5 @@
 import { auth } from "./firebase";
+import { isDemo, demoGet } from "../demo/demo";
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 
@@ -22,6 +23,17 @@ export async function apiFetch<T = unknown>(
   path: string,
   options: RequestInit = {}
 ): Promise<T> {
+  // Modo demo (invitado, solo lectura): las lecturas devuelven datos de ejemplo
+  // y CUALQUIER escritura se bloquea aquí. Es el único punto de acceso a la API,
+  // así que en demo es imposible modificar datos reales.
+  if (isDemo()) {
+    const method = (options.method ?? "GET").toUpperCase();
+    if (method !== "GET") {
+      throw new ApiError(403, { error: "demo" }, "Estás en modo demo (solo lectura). Inicia sesión para hacer cambios.");
+    }
+    return demoGet<T>(path);
+  }
+
   if (!API_URL) {
     throw new Error("VITE_API_URL no está configurada todavía.");
   }

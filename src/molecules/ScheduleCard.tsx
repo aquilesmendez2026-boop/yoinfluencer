@@ -1,5 +1,5 @@
 import { Badge, Flex, Heading, HStack, Text, VStack } from "@chakra-ui/react";
-import { Clock, Gamepad2, Wine, Sparkles } from "lucide-react";
+import { Clock, Radio, Camera, Send, Users, Sparkles } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { WhiskyGlass } from "../atoms/WhiskyGlass";
 import { showTypeLabels, type ShowType } from "../data/shows";
@@ -8,10 +8,12 @@ import type { Evento } from "../services/events";
 const MONTHS = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC"];
 const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-const typeMeta: Record<ShowType, { color: string; icon: typeof Gamepad2 }> = {
-  stream: { color: "neon.cyan", icon: Gamepad2 },
-  charla: { color: "neon.magenta", icon: Wine },
-  especial: { color: "neon.amber", icon: Sparkles },
+const typeMeta: Record<ShowType, { color: string; icon: typeof Radio }> = {
+  en_vivo: { color: "brand.400", icon: Radio },
+  grabacion: { color: "brand.300", icon: Camera },
+  publicacion: { color: "brand.600", icon: Send },
+  colaboracion: { color: "accent.sage", icon: Users },
+  evento: { color: "accent.gold", icon: Sparkles },
 };
 
 export const ScheduleCard = ({ evento }: { evento: Evento }) => {
