@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType } from "react";
-import { Box, Center, Flex, Grid, HStack, Spinner, Text, VStack } from "@chakra-ui/react";
-import { ExternalLink, Facebook, Instagram, Music, Music2, Radio, Star, Twitch, Twitter, Users, Youtube } from "lucide-react";
+import { Box, Center, Flex, HStack, SimpleGrid, Spinner, Text, VStack } from "@chakra-ui/react";
+import { ExternalLink, Facebook, Instagram, Music, Music2, Radio, Twitch, Twitter, Users, Youtube } from "lucide-react";
 import { Section } from "../atoms/Section";
 import { SectionTitle } from "../atoms/SectionTitle";
 import { GlassPanel } from "../atoms/GlassPanel";
@@ -21,10 +21,10 @@ const ICONOS: Record<Plataforma, IconoRed> = {
 
 const colorPlataforma = (p: Plataforma) => PLATAFORMAS.find((x) => x.key === p)?.color ?? "#32d583";
 
+// Card uniforme (mismo tamaño para todas); la destacada solo lleva un badge.
 const RedCard = ({ red }: { red: Red }) => {
   const Icono = ICONOS[red.plataforma] ?? Radio;
   const color = colorPlataforma(red.plataforma);
-  const grande = red.destacada;
 
   return (
     <GlassPanel
@@ -34,18 +34,19 @@ const RedCard = ({ red }: { red: Red }) => {
       target="_blank"
       rel="noopener noreferrer"
       interactive
-      display="block"
-      p={grande ? { base: "6", md: "7" } : { base: "5", md: "5" }}
-      borderColor={grande ? "border.brand" : "border.subtle"}
-      boxShadow={grande ? "brand" : "glass"}
+      display="flex"
+      flexDirection="column"
+      h="full"
+      p={{ base: "5", md: "6" }}
+      borderColor={red.destacada ? "border.brand" : "border.subtle"}
       textDecoration="none"
     >
-      <VStack align="start" gap={grande ? "4" : "3"}>
-        <Flex justify="space-between" align="center" w="full">
+      <VStack align="start" gap="4" h="full" w="full">
+        <Flex justify="space-between" align="start" w="full" gap="2">
           <HStack gap="3" minW="0">
             <Center
-              w={grande ? "48px" : "38px"}
-              h={grande ? "48px" : "38px"}
+              w="42px"
+              h="42px"
               borderRadius="xl"
               bg="bg.muted"
               border="1px solid"
@@ -53,16 +54,10 @@ const RedCard = ({ red }: { red: Red }) => {
               color={color}
               flexShrink="0"
             >
-              <Icono size={grande ? 24 : 19} />
+              <Icono size={20} />
             </Center>
             <VStack align="start" gap="0" minW="0">
-              <Text
-                fontFamily="heading"
-                fontWeight="800"
-                fontSize={grande ? { base: "lg", md: "xl" } : "md"}
-                color="fg.default"
-                lineClamp={1}
-              >
+              <Text fontFamily="heading" fontWeight="800" fontSize="md" color="fg.default" lineClamp={1}>
                 {plataformaLabel(red.plataforma)}
               </Text>
               <Text fontSize="sm" color="fg.subtle" lineClamp={1}>
@@ -70,24 +65,28 @@ const RedCard = ({ red }: { red: Red }) => {
               </Text>
             </VStack>
           </HStack>
-          {grande && (
-            <HStack gap="1" color="accent.gold" flexShrink="0">
-              <Star size={14} />
-              <Text fontSize="xs" fontWeight="700" textTransform="uppercase" letterSpacing="wide">
-                Destacada
-              </Text>
-            </HStack>
+          {red.destacada && (
+            <Text
+              flexShrink="0"
+              bg="rgba(201,162,39,0.15)"
+              color="accent.gold"
+              border="1px solid"
+              borderColor="accent.gold"
+              borderRadius="full"
+              px="2.5"
+              py="1"
+              fontSize="0.55rem"
+              fontWeight="700"
+              textTransform="uppercase"
+              letterSpacing="wide"
+            >
+              Destacada
+            </Text>
           )}
         </Flex>
 
         <VStack align="start" gap="0">
-          <Text
-            fontFamily="heading"
-            fontWeight="900"
-            fontSize={grande ? { base: "3xl", md: "4xl" } : "2xl"}
-            color="fg.accent"
-            lineHeight="1.1"
-          >
+          <Text fontFamily="heading" fontWeight="900" fontSize="3xl" color="fg.accent" lineHeight="1.1">
             {formatSeguidores(red.seguidores)}
           </Text>
           <Text fontSize="xs" color="fg.subtle" textTransform="uppercase" letterSpacing="wide">
@@ -99,6 +98,7 @@ const RedCard = ({ red }: { red: Red }) => {
           gap="2"
           px="4"
           py="2"
+          mt="auto"
           borderRadius="full"
           w="full"
           justify="center"
@@ -195,17 +195,11 @@ export const RedesSection = () => {
               </GlassPanel>
             )}
 
-            <Grid
-              w="full"
-              gap="5"
-              templateColumns={{ base: "1fr", sm: "repeat(2, 1fr)", lg: "repeat(3, 1fr)" }}
-            >
+            <SimpleGrid w="full" gap="5" columns={{ base: 1, sm: 2, lg: 3 }}>
               {ordenadas.map((r) => (
-                <Box key={r.id} gridColumn={r.destacada ? { base: "auto", sm: "span 2", lg: "span 2" } : "auto"}>
-                  <RedCard red={r} />
-                </Box>
+                <RedCard key={r.id} red={r} />
               ))}
-            </Grid>
+            </SimpleGrid>
           </VStack>
         )}
       </VStack>
