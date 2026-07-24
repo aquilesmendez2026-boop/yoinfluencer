@@ -15,12 +15,14 @@ const typeMeta: Record<ShowType, { color: string; icon: typeof Radio }> = {
   colaboracion: { color: "accent.sage", icon: Users },
   evento: { color: "accent.gold", icon: Sparkles },
 };
+// Fallback para tipos desconocidos (p. ej. datos viejos): nunca debe crashear.
+const DEFAULT_META = { color: "fg.subtle", icon: Sparkles };
 
 export const ScheduleCard = ({ evento }: { evento: Evento }) => {
   const [y, m, d] = evento.date.split("-").map(Number);
   const dateObj = new Date(y, m - 1, d);
   const weekday = WEEKDAYS[dateObj.getDay()];
-  const meta = typeMeta[evento.type];
+  const meta = typeMeta[evento.type] ?? DEFAULT_META;
   const Icon = meta.icon;
 
   return (
