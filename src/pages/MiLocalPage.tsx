@@ -302,11 +302,11 @@ export const MiLocalPage = () => {
                       onPick={(r) => setF({ ...f, direccion: r.direccion || r.label, ciudad: r.ciudad || f.ciudad, pais: r.pais || f.pais, lat: r.lat, lng: r.lng })}
                       fieldProps={fp}
                     />
-                    <Text fontSize="xs" color="fg.subtle" mt="1">Escribe y elige de la lista: se completan ciudad, país y la ubicación en el mapa.</Text>
+                    <Text fontSize="xs" color="fg.subtle" mt="1">Escribe la dirección y <b>elegí una opción de la lista</b>: se completan comuna, país y la ubicación.</Text>
                   </Box>
                   <Box>
-                    <Lbl>Ciudad</Lbl>
-                    <Input value={f.ciudad} onChange={(e) => setF({ ...f, ciudad: e.target.value })} {...fp} />
+                    <Lbl>Comuna</Lbl>
+                    <Input placeholder="Se completa al elegir la dirección" value={f.ciudad} onChange={(e) => setF({ ...f, ciudad: e.target.value })} {...fp} />
                   </Box>
                   <Box>
                     <Lbl>Link de Google Maps</Lbl>

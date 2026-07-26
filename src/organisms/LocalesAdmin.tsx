@@ -258,9 +258,9 @@ export const LocalesAdmin = () => {
               </Flex>
 
               <Flex gap="3" wrap="wrap">
-                <Box flex="1" minW="180px"><Lbl>Ciudad</Lbl><Input value={f.ciudad} onChange={(e) => setF({ ...f, ciudad: e.target.value })} {...fp} /></Box>
+                <Box flex="1" minW="180px"><Lbl>Comuna</Lbl><Input placeholder="Se completa al elegir la dirección" value={f.ciudad} onChange={(e) => setF({ ...f, ciudad: e.target.value })} {...fp} /></Box>
                 <Box flex="1" minW="220px">
-                  <Lbl>Dirección</Lbl>
+                  <Lbl>Dirección (busca y elige)</Lbl>
                   <AddressAutocomplete
                     value={f.direccion}
                     onChange={(v) => setF({ ...f, direccion: v })}
