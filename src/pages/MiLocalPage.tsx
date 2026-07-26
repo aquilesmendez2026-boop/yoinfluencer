@@ -6,6 +6,7 @@ import {
 import { CalendarPlus, ImagePlus, Save, Trash2, X } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
 import { AppHeader } from "../organisms/AppHeader";
+import { AddressAutocomplete } from "../molecules/AddressAutocomplete";
 import { useAuth } from "../providers/AuthProvider";
 import {
   CATEGORIAS, createLugar, getMiLocal, updateLugar, uploadFotoLugar,
@@ -32,7 +33,8 @@ type FotoEnForm = FotoLugar & { previewUrl?: string };
 type EventoEnLista = EventoLocal & { _localId: string };
 
 const empty = {
-  nombre: "", categoria: "bar" as CategoriaLugar, direccion: "", ciudad: "", mapsUrl: "",
+  nombre: "", categoria: "bar" as CategoriaLugar, direccion: "", ciudad: "", pais: "",
+  lat: null as number | null, lng: null as number | null, mapsUrl: "",
   horario: "", telefono: "", web: "", descripcion: "", precio: "$$",
 };
 
@@ -73,7 +75,8 @@ export const MiLocalPage = () => {
     setLugar(l);
     setF({
       nombre: l.nombre ?? "", categoria: l.categoria ?? "bar", direccion: l.direccion ?? "",
-      ciudad: l.ciudad ?? "", mapsUrl: l.mapsUrl ?? "", horario: l.horario ?? "",
+      ciudad: l.ciudad ?? "", pais: l.pais ?? "", lat: l.lat ?? null, lng: l.lng ?? null,
+      mapsUrl: l.mapsUrl ?? "", horario: l.horario ?? "",
       telefono: l.telefono ?? "", web: l.web ?? "", descripcion: l.descripcion ?? "",
       precio: l.precio || "$$",
     });
@@ -155,6 +158,9 @@ export const MiLocalPage = () => {
       categoria: f.categoria,
       direccion: f.direccion,
       ciudad: f.ciudad,
+      pais: f.pais,
+      lat: f.lat,
+      lng: f.lng,
       mapsUrl: f.mapsUrl,
       horario: f.horario,
       telefono: f.telefono,
@@ -290,7 +296,13 @@ export const MiLocalPage = () => {
 
                   <Box>
                     <Lbl>Dirección</Lbl>
-                    <Input value={f.direccion} onChange={(e) => setF({ ...f, direccion: e.target.value })} {...fp} />
+                    <AddressAutocomplete
+                      value={f.direccion}
+                      onChange={(v) => setF({ ...f, direccion: v })}
+                      onPick={(r) => setF({ ...f, direccion: r.direccion || r.label, ciudad: r.ciudad || f.ciudad, pais: r.pais || f.pais, lat: r.lat, lng: r.lng })}
+                      fieldProps={fp}
+                    />
+                    <Text fontSize="xs" color="fg.subtle" mt="1">Escribe y elige de la lista: se completan ciudad, país y la ubicación en el mapa.</Text>
                   </Box>
                   <Box>
                     <Lbl>Ciudad</Lbl>

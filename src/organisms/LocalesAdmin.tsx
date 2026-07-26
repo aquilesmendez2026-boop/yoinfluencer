@@ -7,6 +7,7 @@ import {
   Check, Clock, Globe, MapPin, Phone, Plus, Store, Trash2, UserMinus, UserPlus, X, CalendarDays,
 } from "lucide-react";
 import { GlassPanel } from "../atoms/GlassPanel";
+import { AddressAutocomplete } from "../molecules/AddressAutocomplete";
 import { useAuth } from "../providers/AuthProvider";
 import {
   listLugares, aprobarLugar, deleteLugar, crearLocal, asignarDueno, categoriaLabel, CATEGORIAS,
@@ -32,7 +33,8 @@ const Lbl = ({ children }: { children: string }) => (
 );
 
 const emptyForm = {
-  nombre: "", categoria: "club" as CategoriaLugar, ciudad: "", direccion: "",
+  nombre: "", categoria: "club" as CategoriaLugar, ciudad: "", direccion: "", pais: "",
+  lat: null as number | null, lng: null as number | null,
   horario: "", telefono: "", web: "", descripcion: "", precio: "$$",
   ownerEmail: "", aprobado: false,
 };
@@ -118,6 +120,9 @@ export const LocalesAdmin = () => {
         categoria: f.categoria,
         ciudad: f.ciudad,
         direccion: f.direccion,
+        pais: f.pais,
+        lat: f.lat,
+        lng: f.lng,
         horario: f.horario,
         telefono: f.telefono,
         web: f.web,
@@ -254,7 +259,15 @@ export const LocalesAdmin = () => {
 
               <Flex gap="3" wrap="wrap">
                 <Box flex="1" minW="180px"><Lbl>Ciudad</Lbl><Input value={f.ciudad} onChange={(e) => setF({ ...f, ciudad: e.target.value })} {...fp} /></Box>
-                <Box flex="1" minW="180px"><Lbl>Dirección</Lbl><Input value={f.direccion} onChange={(e) => setF({ ...f, direccion: e.target.value })} {...fp} /></Box>
+                <Box flex="1" minW="220px">
+                  <Lbl>Dirección</Lbl>
+                  <AddressAutocomplete
+                    value={f.direccion}
+                    onChange={(v) => setF({ ...f, direccion: v })}
+                    onPick={(r) => setF({ ...f, direccion: r.direccion || r.label, ciudad: r.ciudad || f.ciudad, pais: r.pais || f.pais, lat: r.lat, lng: r.lng })}
+                    fieldProps={fp}
+                  />
+                </Box>
               </Flex>
 
               <Box><Lbl>Horario</Lbl><Textarea placeholder="Vie y sáb, 22:00–04:00" value={f.horario} onChange={(e) => setF({ ...f, horario: e.target.value })} rows={2} {...fp} py="2" /></Box>
