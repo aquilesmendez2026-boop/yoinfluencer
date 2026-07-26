@@ -56,9 +56,9 @@ const articulos = [
 ];
 
 const influencers = [
-  { userId: "inf-1", alias: "Valentina", bio: "Escribe sobre vida swinger y BDSM. Comunidad y consenso ante todo.", role: "editor", secciones: ["sec-1", "sec-4"], pais: "Chile", instagram: "@valentina.demo", photoURL: "" },
-  { userId: "inf-2", alias: "Mateo", bio: "Rigger y reseñador de clubs. Técnica, estética y seguridad.", role: "influencer", secciones: ["sec-2", "sec-6"], pais: "Chile", instagram: "@mateo.demo", photoURL: "" },
-  { userId: "inf-3", alias: "Renata", bio: "Fotógrafa de arte erótico.", role: "influencer", secciones: ["sec-5"], pais: "Argentina", instagram: "@renata.demo", photoURL: "" },
+  { userId: "inf-1", alias: "Valentina", bio: "Escribe sobre vida swinger y BDSM. Comunidad y consenso ante todo.", role: "editor", secciones: ["sec-1", "sec-4"], pais: "Chile", instagram: "@valentina.demo", seguidores: 48200, photoURL: "" },
+  { userId: "inf-2", alias: "Mateo", bio: "Rigger y reseñador de clubs. Técnica, estética y seguridad.", role: "influencer", secciones: ["sec-2", "sec-6"], pais: "Chile", instagram: "@mateo.demo", seguidores: 15700, photoURL: "" },
+  { userId: "inf-3", alias: "Renata", bio: "Fotógrafa de arte erótico.", role: "influencer", secciones: ["sec-5"], pais: "Argentina", instagram: "@renata.demo", seguidores: 9300, photoURL: "" },
 ];
 
 const evento = (id: string, fecha: string, hora: string, titulo: string, descripcion: string) => ({ id, fecha, hora, titulo, descripcion });

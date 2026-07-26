@@ -50,6 +50,7 @@ export const MiPaginaPage = () => {
   const [bio, setBio] = useState("");
   const [pais, setPais] = useState("");
   const [instagram, setInstagram] = useState("");
+  const [seguidores, setSeguidores] = useState("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -60,6 +61,7 @@ export const MiPaginaPage = () => {
     setBio(profile?.bio ?? "");
     setPais(profile?.pais ?? "");
     setInstagram(profile?.instagram ?? "");
+    setSeguidores(profile?.seguidores != null ? String(profile.seguidores) : "");
   }, [profile]);
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export const MiPaginaPage = () => {
     setMsg(null);
     setSaving(true);
     try {
-      await updateProfile({ alias, bio, pais, instagram });
+      await updateProfile({ alias, bio, pais, instagram, seguidores: seguidores === "" ? 0 : Number(seguidores) });
       await refreshProfile();
       setMsg("✓ Página actualizada");
     } catch {
@@ -231,6 +233,11 @@ export const MiPaginaPage = () => {
               <Box>
                 <Label>Instagram</Label>
                 <Input placeholder="@tu_usuario o link a tu perfil" value={instagram} onChange={(e) => setInstagram(e.target.value)} {...fieldProps} />
+              </Box>
+              <Box>
+                <Label>Seguidores de Instagram</Label>
+                <Input type="number" min={0} placeholder="Ej. 12500" value={seguidores} onChange={(e) => setSeguidores(e.target.value)} {...fieldProps} />
+                <Text fontSize="xs" color="fg.subtle" mt="1.5">Se muestra en tu card. Lo cargas a mano (Instagram ya no permite leerlo automáticamente).</Text>
               </Box>
               <Box>
                 <Label>País</Label>

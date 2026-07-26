@@ -3,6 +3,7 @@ import { Link as RouterLink, useParams } from "react-router-dom";
 import {
   Badge,
   Box,
+  Button,
   Center,
   Container,
   Flex,
@@ -14,10 +15,10 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { MapPin } from "lucide-react";
+import { MapPin, Users, Instagram } from "lucide-react";
 import { AppHeader } from "../organisms/AppHeader";
 import { GlassPanel } from "../atoms/GlassPanel";
-import { getInfluencer, type Influencer } from "../services/influencers";
+import { getInfluencer, instagramUrl, instagramHandle, formatSeguidores, type Influencer } from "../services/influencers";
 import { listContenidos, type Contenido } from "../services/contenidos";
 import { listSecciones, seccionMap, type Seccion } from "../services/secciones";
 import { ROLE_LABELS, type Role } from "../services/team";
@@ -162,12 +163,38 @@ export const InfluencerPage = () => {
                           <Text fontSize="sm">{inf.pais}</Text>
                         </HStack>
                       )}
+                      {formatSeguidores(inf.seguidores) && (
+                        <HStack gap="1.5" color="fg.subtle">
+                          <Users size={14} />
+                          <Text fontSize="sm">
+                            <Text as="span" color="fg.default" fontWeight="700">{formatSeguidores(inf.seguidores)}</Text> seguidores
+                          </Text>
+                        </HStack>
+                      )}
                     </HStack>
                   </VStack>
                   {inf.bio && (
                     <Text color="fg.muted" lineHeight="tall" whiteSpace="pre-wrap">
                       {inf.bio}
                     </Text>
+                  )}
+                  {instagramUrl(inf.instagram) && (
+                    <Button
+                      asChild
+                      alignSelf="start"
+                      size="sm"
+                      borderRadius="full"
+                      variant="outline"
+                      borderColor="border.brand"
+                      color="fg.default"
+                      bg="bg.surface"
+                      _hover={{ boxShadow: "brand", color: "brand.300" }}
+                    >
+                      <a href={instagramUrl(inf.instagram)} target="_blank" rel="noopener noreferrer">
+                        <Instagram size={16} style={{ marginRight: "8px" }} />
+                        {instagramHandle(inf.instagram) || "Ver en Instagram"}
+                      </a>
+                    </Button>
                   )}
                 </VStack>
               </Flex>

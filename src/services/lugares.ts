@@ -50,6 +50,11 @@ export interface Lugar {
   categoria: CategoriaLugar;
   direccion: string;
   ciudad: string;
+  /** País (lo llena el autocompletado de direcciones). */
+  pais: string;
+  /** Coordenadas (del autocompletado); null si no se geocodificó. */
+  lat: number | null;
+  lng: number | null;
   mapsUrl: string;
   /** Datos que carga el propio local. */
   horario: string;
@@ -81,6 +86,23 @@ export type LugarInput = Omit<Lugar, "id" | "createdByName" | "createdAt" | "own
 
 export const listLugares = () =>
   apiFetch<{ lugares: Lugar[] }>("/lugares").then((r) => r.lugares);
+
+/** Un resultado de geocodificación (autocompletado de direcciones). */
+export interface GeoResultado {
+  label: string;
+  direccion: string;
+  ciudad: string;
+  region: string;
+  pais: string;
+  lat: number | null;
+  lng: number | null;
+}
+
+/** Busca direcciones (autocompletado). Devuelve candidatos con coordenadas. */
+export const geocode = (q: string) =>
+  apiFetch<{ resultados: GeoResultado[] }>(`/geocode?q=${encodeURIComponent(q)}`).then(
+    (r) => r.resultados
+  );
 
 /** Ficha del local del usuario actual (rol "local"), o null si no tiene. */
 export const getMiLocal = () =>

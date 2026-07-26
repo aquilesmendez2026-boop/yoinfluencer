@@ -15,6 +15,8 @@ export interface Profile {
   bio?: string;
   /** Perfil de Instagram (handle o URL). */
   instagram?: string;
+  /** Seguidores de Instagram (cargados a mano). */
+  seguidores?: number;
   /** Ids de las secciones en las que puede publicar (las asigna el admin). */
   secciones?: string[];
   /** Id del local que administra este usuario (si es dueño de uno). */
@@ -35,6 +37,7 @@ export interface ProfileInput {
   alias?: string;
   bio?: string;
   instagram?: string;
+  seguidores?: number;
   avatarKey?: string;
 }
 

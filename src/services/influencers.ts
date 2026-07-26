@@ -11,9 +11,20 @@ export interface Influencer {
   pais: string;
   /** Perfil de Instagram (handle o URL). */
   instagram?: string;
+  /** Seguidores de Instagram (cargados a mano). */
+  seguidores?: number;
   /** URL firmada de la foto de perfil, si tiene. */
   photoURL?: string;
   avatarKey?: string;
+}
+
+/** Formatea 12500 → "12,5 K" para mostrar los seguidores. */
+export function formatSeguidores(n?: number): string {
+  const v = Number(n) || 0;
+  if (v <= 0) return "";
+  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(".0", "").replace(".", ",")} M`;
+  if (v >= 1_000) return `${(v / 1_000).toFixed(1).replace(".0", "").replace(".", ",")} K`;
+  return String(v);
 }
 
 export const listInfluencers = () =>

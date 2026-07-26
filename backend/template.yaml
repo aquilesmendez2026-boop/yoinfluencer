@@ -55,8 +55,6 @@ Resources:
   # ── Tabla de usuarios / miembros ──
   UsersTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-usuarios
       BillingMode: PAY_PER_REQUEST
@@ -70,8 +68,6 @@ Resources:
   # ── Bucket para las fotos de perfil (privado; se sirven con URL firmada) ──
   AvatarsBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub "yoinfluencer-avatars-${AWS::AccountId}"
       CorsConfiguration:
@@ -83,8 +79,6 @@ Resources:
   # ── Tabla de eventos / shows programados ──
   EventsTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-eventos
       BillingMode: PAY_PER_REQUEST
@@ -98,8 +92,6 @@ Resources:
   # ── Agenda de reuniones del equipo (participantes) ──
   ReunionesTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-reuniones
       BillingMode: PAY_PER_REQUEST
@@ -113,8 +105,6 @@ Resources:
   # ── Notas / ideas del equipo ──
   NotasTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-notas
       BillingMode: PAY_PER_REQUEST
@@ -128,8 +118,6 @@ Resources:
   # ── Episodios (gestionados desde el panel) ──
   EpisodiosTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-episodios
       BillingMode: PAY_PER_REQUEST
@@ -143,8 +131,6 @@ Resources:
   # ── Descargas (metadatos; archivos en S3) ──
   DescargasTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-descargas
       BillingMode: PAY_PER_REQUEST
@@ -158,8 +144,6 @@ Resources:
   # ── Preguntas / buzón del público ──
   PreguntasTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-preguntas
       BillingMode: PAY_PER_REQUEST
@@ -173,8 +157,6 @@ Resources:
   # ── Pipeline de producción de episodios ──
   ProduccionTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-produccion
       BillingMode: PAY_PER_REQUEST
@@ -188,8 +170,6 @@ Resources:
   # ── Notificaciones in-app (por usuario) ──
   NotificacionesTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-notificaciones
       BillingMode: PAY_PER_REQUEST
@@ -207,8 +187,6 @@ Resources:
   # ── Catálogo de lugares visitados (restaurantes, cines, panoramas…) ──
   LugaresTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-lugares
       BillingMode: PAY_PER_REQUEST
@@ -222,8 +200,6 @@ Resources:
   # ── Perfiles de redes sociales del creador ──
   RedesTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-redes
       BillingMode: PAY_PER_REQUEST
@@ -237,8 +213,6 @@ Resources:
   # ── Secciones editoriales (temáticas del medio) ──
   SeccionesTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-secciones
       BillingMode: PAY_PER_REQUEST
@@ -252,8 +226,6 @@ Resources:
   # ── Historial de en vivos ya realizados ──
   LivesTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-lives
       BillingMode: PAY_PER_REQUEST
@@ -267,8 +239,6 @@ Resources:
   # ── Config del sitio (estado "en vivo", etc.) ──
   ConfigTable:
     Type: AWS::DynamoDB::Table
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       TableName: yoinfluencer-config
       BillingMode: PAY_PER_REQUEST
@@ -282,8 +252,6 @@ Resources:
   # ── Bucket privado para las descargas de la zona miembros ──
   FilesBucket:
     Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub "yoinfluencer-archivos-${AWS::AccountId}"
       CorsConfiguration:
@@ -291,6 +259,37 @@ Resources:
           - AllowedMethods: [PUT, GET, HEAD]
             AllowedOrigins: ["*"]
             AllowedHeaders: ["*"]
+
+  # ── Amazon Location: geocoding, mapa y llave para el navegador ──
+  # Place Index (geocoding/autocompletado) — lo consulta la Lambda (server-side).
+  PlacesIndex:
+    Type: AWS::Location::PlaceIndex
+    Properties:
+      IndexName: yoinfluencer-places
+      DataSource: Esri
+      DataSourceConfiguration:
+        IntendedUse: Storage
+  # Mapa (tiles) — lo renderiza el navegador con MapLibre + la API key.
+  LocationMap:
+    Type: AWS::Location::Map
+    Properties:
+      MapName: yoinfluencer-map
+      Configuration:
+        Style: VectorEsriDarkGrayCanvas
+  # API key para el navegador: solo lee tiles del mapa, restringida por dominio.
+  LocationApiKey:
+    Type: AWS::Location::APIKey
+    Properties:
+      KeyName: yoinfluencer-map-key
+      NoExpiry: true
+      Restrictions:
+        AllowActions:
+          - geo:GetMap*
+        AllowResources:
+          - !GetAtt LocationMap.Arn
+        AllowReferers:
+          - https://main.d4mydnmdld2ms.amplifyapp.com/*
+          - http://localhost:*/*
 
   # ── Lambda del API ──
   ApiFunction:
@@ -319,6 +318,7 @@ Resources:
           AVATARS_BUCKET: !Ref AvatarsBucket
           FILES_BUCKET: !Ref FilesBucket
           SUPERADMIN_EMAIL: aquiles@umine.com
+          PLACE_INDEX: !Ref PlacesIndex
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersTable
@@ -352,376 +352,41 @@ Resources:
             BucketName: !Ref AvatarsBucket
         - S3CrudPolicy:
             BucketName: !Ref FilesBucket
+        # Geocoding server-side (endpoint /geocode).
+        - Statement:
+            - Effect: Allow
+              Action:
+                - geo:SearchPlaceIndexForText
+                - geo:SearchPlaceIndexForSuggestions
+                - geo:GetPlace
+              Resource: !GetAtt PlacesIndex.Arn
+      # Un evento por método (no ANY) para que OPTIONS quede fuera del authorizer
+      # y CORS responda la preflight solo. Son 4 permisos, muy por debajo del límite.
       Events:
-        Me:
+        ProxyGet:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
-            Path: /me
+            Path: /{proxy+}
             Method: GET
-        UpdateMe:
+        ProxyPost:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
-            Path: /me
+            Path: /{proxy+}
+            Method: POST
+        ProxyPut:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
             Method: PUT
-        AvatarUpload:
+        ProxyDelete:
           Type: HttpApi
           Properties:
             ApiId: !Ref HttpApi
-            Path: /avatar-upload
-            Method: POST
-        ListEventos:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /eventos
-            Method: GET
-        CreateEvento:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /eventos
-            Method: POST
-        DeleteEvento:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /eventos/{id}
+            Path: /{proxy+}
             Method: DELETE
-        ListReuniones:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /reuniones
-            Method: GET
-        CreateReunion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /reuniones
-            Method: POST
-        DeleteReunion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /reuniones/{id}
-            Method: DELETE
-        ListNotas:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /notas
-            Method: GET
-        CreateNota:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /notas
-            Method: POST
-        DeleteNota:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /notas/{id}
-            Method: DELETE
-        ListUsuarios:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /usuarios
-            Method: GET
-        SetUsuarioRole:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /usuarios/{id}/role
-            Method: PUT
-        ListEpisodios:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /episodios
-            Method: GET
-        CreateEpisodio:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /episodios
-            Method: POST
-        UpdateEpisodio:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /episodios/{id}
-            Method: PUT
-        DeleteEpisodio:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /episodios/{id}
-            Method: DELETE
-        ListDescargas:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /descargas
-            Method: GET
-        DescargaUpload:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /descargas-upload
-            Method: POST
-        CreateDescarga:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /descargas
-            Method: POST
-        DeleteDescarga:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /descargas/{id}
-            Method: DELETE
-        CreatePregunta:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /preguntas
-            Method: POST
-        ListPreguntas:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /preguntas
-            Method: GET
-        UpdatePregunta:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /preguntas/{id}
-            Method: PUT
-        DeletePregunta:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /preguntas/{id}
-            Method: DELETE
-        GetLive:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /live
-            Method: GET
-        SetLive:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /live
-            Method: PUT
-        SuscripcionPreferencia:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /suscripcion/preferencia
-            Method: POST
-        SuscripcionPagar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /suscripcion/pagar
-            Method: POST
-        SuscripcionCancelar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /suscripcion/cancelar
-            Method: POST
-        ListPlantillas:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /plantillas
-            Method: GET
-        ListProduccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /produccion
-            Method: GET
-        CreateProduccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /produccion
-            Method: POST
-        ProduccionUpload:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /produccion-upload
-            Method: POST
-        UpdateProduccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /produccion/{id}
-            Method: PUT
-        DeleteProduccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /produccion/{id}
-            Method: DELETE
-        GetEquipo:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /equipo
-            Method: GET
-        ListNotificaciones:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /notificaciones
-            Method: GET
-        LeerNotificaciones:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /notificaciones/leer
-            Method: POST
-        ListLugares:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares
-            Method: GET
-        CreateLugar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares
-            Method: POST
-        UpdateLugar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares/{id}
-            Method: PUT
-        DeleteLugar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares/{id}
-            Method: DELETE
-        UploadLugarFoto:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares-upload
-            Method: POST
-        ListRedes:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /redes
-            Method: GET
-        UpdateRedes:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /redes
-            Method: PUT
-        ListLives:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lives
-            Method: GET
-        CreateLive:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lives
-            Method: POST
-        DeleteLive:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lives/{id}
-            Method: DELETE
-
-        ListSecciones:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /secciones
-            Method: GET
-        CreateSeccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /secciones
-            Method: POST
-        UpdateSeccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /secciones/{id}
-            Method: PUT
-        DeleteSeccion:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /secciones/{id}
-            Method: DELETE
-        ListInfluencers:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /influencers
-            Method: GET
-        GetInfluencer:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /influencers/{id}
-            Method: GET
-        SetUsuarioSecciones:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /usuarios/{id}/secciones
-            Method: PUT
-        UploadArticuloPortada:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /episodios-upload
-            Method: POST
-
-        GetMiLocal:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /mi-local
-            Method: GET
-        AprobarLugar:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares/{id}/aprobar
-            Method: PUT
-
-        AsignarDuenoLocal:
-          Type: HttpApi
-          Properties:
-            ApiId: !Ref HttpApi
-            Path: /lugares/{id}/owner
-            Method: PUT
 
 Outputs:
   ApiUrl:
@@ -729,3 +394,12 @@ Outputs:
     Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
   UsersTableName:
     Value: !Ref UsersTable
+  LocationMapName:
+    Description: Nombre del mapa de Amazon Location (VITE_LOCATION_MAP)
+    Value: !Ref LocationMap
+  LocationRegion:
+    Description: Región de Amazon Location (VITE_LOCATION_REGION)
+    Value: !Ref AWS::Region
+  LocationApiKeyName:
+    Description: Nombre de la API key (el valor se saca con describe-key)
+    Value: !Ref LocationApiKey

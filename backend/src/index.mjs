@@ -10,10 +10,13 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { LocationClient, SearchPlaceIndexForTextCommand } from "@aws-sdk/client-location";
 import { randomUUID } from "crypto";
 
 const ddb = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const s3 = new S3Client({});
+const location = new LocationClient({});
+const PLACE_INDEX = process.env.PLACE_INDEX;
 const USERS = process.env.TABLE_USERS;
 const EVENTS = process.env.TABLE_EVENTS;
 const REUNIONES = process.env.TABLE_REUNIONES;
@@ -252,6 +255,9 @@ function lugarFields(b) {
     categoria: b.categoria,
     direccion: String(b.direccion ?? "").slice(0, 300),
     ciudad: String(b.ciudad ?? "").slice(0, 120),
+    pais: String(b.pais ?? "").slice(0, 80),
+    lat: Number.isFinite(Number(b.lat)) && b.lat !== "" && b.lat != null ? Number(b.lat) : null,
+    lng: Number.isFinite(Number(b.lng)) && b.lng !== "" && b.lng != null ? Number(b.lng) : null,
     mapsUrl: String(b.mapsUrl ?? "").slice(0, 400),
     // Datos que carga el propio local.
     horario: String(b.horario ?? "").slice(0, 600),
@@ -339,8 +345,34 @@ function puedeEnSeccion(user, seccionId) {
   return Array.isArray(user.secciones) && user.secciones.includes(seccionId);
 }
 
+// Rutas con parámetro de path. La API usa una sola ruta catch-all /{proxy+}
+// (para no crear un permiso Lambda por ruta y no reventar el límite de tamaño
+// de la política), así que reconstruimos el routeKey y los pathParameters acá.
+const CON_PARAM = [
+  "/eventos", "/episodios", "/descargas", "/preguntas", "/produccion",
+  "/lugares", "/lives", "/notas", "/reuniones", "/secciones", "/influencers",
+];
+function resolverRuta(method, pathname) {
+  let m;
+  if ((m = pathname.match(/^\/usuarios\/([^/]+)\/(role|secciones)$/)))
+    return { routeKey: `${method} /usuarios/{id}/${m[2]}`, params: { id: m[1] } };
+  if ((m = pathname.match(/^\/lugares\/([^/]+)\/(aprobar|owner)$/)))
+    return { routeKey: `${method} /lugares/{id}/${m[2]}`, params: { id: m[1] } };
+  for (const base of CON_PARAM) {
+    if ((m = pathname.match(new RegExp(`^${base}/([^/]+)$`))))
+      return { routeKey: `${method} ${base}/{id}`, params: { id: decodeURIComponent(m[1]) } };
+  }
+  return { routeKey: `${method} ${pathname}`, params: undefined };
+}
+
 export const handler = async (event) => {
-  const route = event.routeKey;
+  // Deriva método y path del evento (funciona con la ruta catch-all de API
+  // Gateway y también con el servidor local, que ya arma routeKey/rawPath).
+  const method = event.requestContext?.http?.method ?? String(event.routeKey ?? "GET ").split(" ")[0];
+  const rawPath = event.rawPath ?? "/";
+  const resuelto = resolverRuta(method, rawPath);
+  const route = resuelto.routeKey;
+  event.pathParameters = resuelto.params;
   const claims = claimsOf(event);
   const userId = claims.sub || claims.user_id;
   const email = claims.email || "";
@@ -392,6 +424,13 @@ export const handler = async (event) => {
       names["#ak"] = "avatarKey";
       values[":ak"] = body.avatarKey;
       sets.push("#ak = :ak");
+    }
+    // Seguidores de Instagram (número que el influencer carga a mano).
+    if (body.seguidores != null) {
+      const n = Number(body.seguidores);
+      names["#seg"] = "seguidores";
+      values[":seg"] = Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+      sets.push("#seg = :seg");
     }
     if (sets.length === 0) return json(400, { error: "Nada que actualizar" });
     await ddb.send(
@@ -1044,6 +1083,37 @@ export const handler = async (event) => {
     return json(200, { ok: true });
   }
 
+  // ══════════ GEOCODING (autocompletado de direcciones) ══════════
+  // Lo usa el form del local para autocompletar dirección + coordenadas.
+  if (route === "GET /geocode") {
+    const rol = await getRole(userId);
+    if (!isLocal(rol) && !canParticipate(rol)) return json(403, { error: "No autorizado" });
+    if (!PLACE_INDEX) return json(500, { error: "Geocoding no configurado" });
+    const q = String(event.queryStringParameters?.q ?? "").trim();
+    if (q.length < 3) return json(200, { resultados: [] });
+    try {
+      const out = await location.send(new SearchPlaceIndexForTextCommand({
+        IndexName: PLACE_INDEX, Text: q, MaxResults: 6, Language: "es",
+      }));
+      const resultados = (out.Results ?? []).map((r) => {
+        const p = r.Place ?? {};
+        const [lng, lat] = p.Geometry?.Point ?? [];
+        return {
+          label: p.Label ?? "",
+          direccion: [p.AddressNumber, p.Street].filter(Boolean).join(" ") || p.Label || "",
+          ciudad: p.Municipality || p.SubRegion || "",
+          region: p.Region || "",
+          pais: p.Country || "",
+          lat: Number.isFinite(lat) ? lat : null,
+          lng: Number.isFinite(lng) ? lng : null,
+        };
+      });
+      return json(200, { resultados });
+    } catch (e) {
+      return json(502, { error: "No se pudo geocodificar", detalle: e.message });
+    }
+  }
+
   // ══════════ LUGARES (catálogo público de sitios visitados) ══════════
   // Los miembros ven solo los publicados; el equipo ve también los borradores.
   if (route === "GET /lugares") {
@@ -1345,6 +1415,7 @@ export const handler = async (event) => {
           secciones: Array.isArray(u.secciones) ? u.secciones : [],
           pais: u.pais ?? "",
           instagram: u.instagram ?? "",
+          seguidores: Number(u.seguidores) || 0,
           avatarKey: u.avatarKey,
         }))
     );
@@ -1362,6 +1433,7 @@ export const handler = async (event) => {
       secciones: Array.isArray(Item.secciones) ? Item.secciones : [],
       pais: Item.pais ?? "",
       instagram: Item.instagram ?? "",
+      seguidores: Number(Item.seguidores) || 0,
       avatarKey: Item.avatarKey,
     });
     return json(200, { influencer: perfil });

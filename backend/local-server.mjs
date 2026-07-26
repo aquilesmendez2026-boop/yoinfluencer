@@ -32,6 +32,7 @@ Object.assign(process.env, {
   TABLE_REDES: "yoinfluencer-redes",
   TABLE_LIVES: "yoinfluencer-lives",
   TABLE_SECCIONES: "yoinfluencer-secciones",
+  PLACE_INDEX: "yoinfluencer-places",
   AVATARS_BUCKET: `yoinfluencer-avatars-${ACCOUNT}`,
   FILES_BUCKET: `yoinfluencer-archivos-${ACCOUNT}`,
   // Super admin del proyecto: recibe el rol al primer login (bootstrap en GET /me).
