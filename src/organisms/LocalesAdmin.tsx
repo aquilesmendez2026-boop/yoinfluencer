@@ -265,6 +265,7 @@ export const LocalesAdmin = () => {
                     value={f.direccion}
                     onChange={(v) => setF({ ...f, direccion: v })}
                     onPick={(r) => setF({ ...f, direccion: r.direccion || r.label, ciudad: r.ciudad || f.ciudad, pais: r.pais || f.pais, lat: r.lat, lng: r.lng })}
+                    contexto={f.ciudad}
                     fieldProps={fp}
                   />
                 </Box>

@@ -300,6 +300,7 @@ export const MiLocalPage = () => {
                       value={f.direccion}
                       onChange={(v) => setF({ ...f, direccion: v })}
                       onPick={(r) => setF({ ...f, direccion: r.direccion || r.label, ciudad: r.ciudad || f.ciudad, pais: r.pais || f.pais, lat: r.lat, lng: r.lng })}
+                      contexto={f.ciudad}
                       fieldProps={fp}
                     />
                     <Text fontSize="xs" color="fg.subtle" mt="1">Escribe la dirección y <b>elegí una opción de la lista</b>: se completan comuna, país y la ubicación.</Text>

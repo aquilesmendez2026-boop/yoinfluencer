@@ -10,6 +10,8 @@ interface Props {
   onChange: (v: string) => void;
   /** Se dispara al elegir una sugerencia (con calle, ciudad, país y coordenadas). */
   onPick: (r: GeoResultado) => void;
+  /** Comuna/ciudad escrita: sesga la búsqueda a esa zona (evita otras regiones). */
+  contexto?: string;
   placeholder?: string;
   /** Estilos del input (mismos `fp`/`fieldProps` del form). */
   fieldProps?: Record<string, unknown>;
@@ -19,7 +21,7 @@ interface Props {
  * Input de dirección con autocompletado vía /geocode (Amazon Location).
  * Al elegir una sugerencia, entrega dirección + ciudad + país + coordenadas.
  */
-export const AddressAutocomplete = ({ value, onChange, onPick, placeholder, fieldProps }: Props) => {
+export const AddressAutocomplete = ({ value, onChange, onPick, contexto, placeholder, fieldProps }: Props) => {
   const [sugerencias, setSugerencias] = useState<GeoResultado[]>([]);
   const [abierto, setAbierto] = useState(false);
   const [cargando, setCargando] = useState(false);
@@ -51,9 +53,12 @@ export const AddressAutocomplete = ({ value, onChange, onPick, placeholder, fiel
       return;
     }
     setCargando(true);
+    // Anteponer la comuna al texto sesga la búsqueda a esa zona (ej. "…, Santiago").
+    const zona = contexto?.trim();
+    const consulta = zona ? `${q}, ${zona}` : q;
     timer.current = window.setTimeout(async () => {
       try {
-        const rs = await geocode(q);
+        const rs = await geocode(consulta);
         setSugerencias(rs);
         setAbierto(rs.length > 0);
       } catch {
@@ -64,7 +69,7 @@ export const AddressAutocomplete = ({ value, onChange, onPick, placeholder, fiel
       }
     }, 350);
     return () => window.clearTimeout(timer.current);
-  }, [value]);
+  }, [value, contexto]);
 
   const elegir = (r: GeoResultado) => {
     supprimirBusqueda.current = true;
