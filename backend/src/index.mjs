@@ -1093,7 +1093,10 @@ export const handler = async (event) => {
     if (q.length < 3) return json(200, { resultados: [] });
     try {
       const out = await location.send(new SearchPlaceIndexForTextCommand({
-        IndexName: PLACE_INDEX, Text: q, MaxResults: 6, Language: "es",
+        IndexName: PLACE_INDEX, Text: q, MaxResults: 8, Language: "es",
+        // Sesga a Chile: mejores resultados de direcciones y comunas.
+        FilterCountries: ["CHL"],
+        BiasPosition: [-70.6693, -33.4489],
       }));
       const resultados = (out.Results ?? []).map((r) => {
         const p = r.Place ?? {};
