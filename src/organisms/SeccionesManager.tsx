@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  Box, Button, Center, Checkbox, Flex, Grid, Heading, HStack, IconButton, Input,
+  Box, Button, Center, chakra, Checkbox, Flex, Grid, Heading, HStack, IconButton, Input,
   Spinner, Text, Textarea, VStack,
 } from "@chakra-ui/react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
@@ -26,6 +26,30 @@ const empty = { nombre: "", descripcion: "", color: "#12b76a", orden: "0", activ
 
 /** Devuelve un color válido para pintar el acento, con fallback al verde de marca. */
 const acento = (color?: string) => (color && color.trim() ? color : "#12b76a");
+
+/** Normaliza a un #rrggbb válido para el selector nativo (expande #rgb, agrega #). */
+const paraPicker = (c?: string) => {
+  const v = (c ?? "").trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) return v.toLowerCase();
+  if (/^[0-9a-fA-F]{6}$/.test(v)) return "#" + v.toLowerCase();
+  if (/^#?[0-9a-fA-F]{3}$/.test(v)) {
+    const h = v.replace("#", "");
+    return "#" + h.split("").map((x) => x + x).join("").toLowerCase();
+  }
+  return "#12b76a";
+};
+
+/** Selector de color nativo con aspecto de swatch (sin padding del navegador). */
+const ColorInput = chakra("input", {
+  base: {
+    w: "9", h: "9", flexShrink: 0, p: "0", cursor: "pointer",
+    border: "1px solid", borderColor: "border.subtle", borderRadius: "lg",
+    bg: "transparent",
+    "&::-webkit-color-swatch-wrapper": { padding: 0 },
+    "&::-webkit-color-swatch": { border: "none", borderRadius: "7px" },
+    "&::-moz-color-swatch": { border: "none", borderRadius: "7px" },
+  },
+});
 
 export const SeccionesManager = () => {
   const { isAdmin } = useAuth();
@@ -133,14 +157,11 @@ export const SeccionesManager = () => {
               <Box flex="1">
                 <Lbl>Color (hex)</Lbl>
                 <HStack gap="2">
-                  <Box
-                    w="9"
-                    h="9"
-                    flexShrink="0"
-                    borderRadius="lg"
-                    border="1px solid"
-                    borderColor="border.subtle"
-                    bg={acento(f.color)}
+                  <ColorInput
+                    type="color"
+                    aria-label="Elegir color"
+                    value={paraPicker(f.color)}
+                    onChange={(e) => setF({ ...f, color: e.target.value })}
                   />
                   <Input placeholder="#12b76a" value={f.color} onChange={(e) => setF({ ...f, color: e.target.value })} {...fp} />
                 </HStack>
