@@ -15,6 +15,10 @@ const PORT = Number(process.env.PORT ?? 8787);
 const REGION = process.env.AWS_REGION ?? "us-east-2";
 const ACCOUNT = process.env.AWS_ACCOUNT ?? "970335222766";
 
+// Perfil AWS para leer/escribir las tablas reales en desarrollo. Debe fijarse
+// ANTES de importar el handler (ahí se crean los clientes del SDK).
+process.env.AWS_PROFILE = process.env.AWS_PROFILE ?? "nitalmal";
+
 // Mismas variables que inyecta template.yaml en la Lambda.
 Object.assign(process.env, {
   AWS_REGION: REGION,
