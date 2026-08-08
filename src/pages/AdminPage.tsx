@@ -126,7 +126,7 @@ export const AdminPage = () => {
           </VStack>
 
           <Tabs.Root defaultValue="shows" variant="line">
-            <Tabs.List borderColor="border.subtle" gap="1" overflowX="auto">
+            <Tabs.List borderColor="border.subtle" gap="1" flexWrap="wrap" rowGap="1">
               {/* La pestaña "usuarios" (roles) es exclusiva del super admin. */}
               {["en vivo", "secciones", "artículos", "locales", "clubs", "shows", "redes", "en vivos", "descargas", ...(isSuperAdmin ? ["usuarios"] : [])].map((v) => (
                 <Tabs.Trigger key={v} value={v} color="fg.muted" fontWeight="600" textTransform="capitalize" _selected={{ color: "brand.primary" }}>
