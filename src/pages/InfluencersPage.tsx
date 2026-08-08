@@ -125,7 +125,7 @@ export const InfluencersPage = () => {
               </Text>
             </HStack>
             <Heading as="h1" size={{ base: "3xl", md: "5xl" }} fontWeight="900" letterSpacing="tighter">
-              Las plumas de modopiña
+              Las plumas de modo piña
             </Heading>
             <Text color="fg.muted" maxW="2xl">
               El staff que da vida a cada sección. Conocé a quienes escriben, editan y cuentan las

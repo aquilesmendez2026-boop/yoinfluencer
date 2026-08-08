@@ -3,23 +3,36 @@ import { PinaLogo } from "./Pina";
 
 interface LogoProps extends Omit<StackProps, "fontSize"> {
   fontSize?: StackProps["fontSize"];
-  /** Oculta la piña y deja solo el texto. */
+  /** Oculta la piña y deja solo el wordmark. */
   soloTexto?: boolean;
 }
 
+const wordSx = {
+  fontFamily: "heading",
+  fontWeight: "900",
+  letterSpacing: "0.06em",
+  lineHeight: "1",
+} as const;
+
 export const Logo = ({ fontSize = "xl", soloTexto, ...props }: LogoProps) => {
   return (
-    <HStack gap="0.4em" fontSize={fontSize} userSelect="none" {...props}>
-      {!soloTexto && <PinaLogo size="1.15em" />}
+    <HStack gap="0.35em" fontSize={fontSize} userSelect="none" {...props}>
       <Text
         as="span"
-        fontFamily="heading"
-        fontWeight="900"
-        letterSpacing="tight"
-        lineHeight="1"
+        {...wordSx}
+        color="brand.400"
+        textShadow="0 0 8px rgba(59, 224, 129, 0.55)"
       >
-        <Text as="span" color="brand.400">modo</Text>
-        <Text as="span" color="accent.gold">piña</Text>
+        MODO
+      </Text>
+      {!soloTexto && <PinaLogo size="1.7em" neon />}
+      <Text
+        as="span"
+        {...wordSx}
+        color="accent.gold"
+        textShadow="0 0 8px rgba(245, 197, 24, 0.5)"
+      >
+        PIÑA
       </Text>
     </HStack>
   );

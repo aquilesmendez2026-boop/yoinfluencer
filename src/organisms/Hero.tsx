@@ -41,13 +41,17 @@ export const Hero = () => {
           as="h1"
           fontFamily="heading"
           fontWeight="900"
-          letterSpacing="tighter"
+          letterSpacing="0.06em"
           lineHeight="0.95"
           fontSize={{ base: "5xl", md: "7xl", lg: "8xl" }}
           animation="nameReveal 0.7s ease-out 1.5s both"
         >
-          <Box as="span" color="brand.400">modo</Box>
-          <Box as="span" color="accent.gold">piña</Box>
+          <Box as="span" color="brand.400" textShadow="0 0 18px rgba(59, 224, 129, 0.5)">
+            MODO{" "}
+          </Box>
+          <Box as="span" color="accent.gold" textShadow="0 0 18px rgba(245, 197, 24, 0.45)">
+            PIÑA
+          </Box>
         </Box>
 
         <Text

@@ -14,7 +14,7 @@ const PASOS: Paso[] = [
     ruta: "/",
     titulo: "Bienvenido a la demo",
     texto:
-      "Estás recorriendo modopiña con datos de ejemplo. Nada de lo que veas acá es real y no se guarda ningún cambio. Te muestro lo que se puede hacer.",
+      "Estás recorriendo modo piña con datos de ejemplo. Nada de lo que veas acá es real y no se guarda ningún cambio. Te muestro lo que se puede hacer.",
   },
   {
     ruta: "/",

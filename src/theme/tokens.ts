@@ -1,5 +1,5 @@
 export const colors = {
-  // Verde de marca de modopiña (hoja de piña). El 500 es el color de acción
+  // Verde de marca de modo piña (hoja de piña). El 500 es el color de acción
   // y el 400 el de texto/acento sobre fondos oscuros.
   brand: {
     50: { value: "#ecfdf3" },

@@ -39,7 +39,7 @@ export const Footer = () => {
         </HStack>
 
         <Text fontSize="sm" color="fg.subtle">
-          © 2026 modopiña
+          © 2026 modo piña
         </Text>
       </Flex>
     </Box>
