@@ -34,6 +34,22 @@ const config = defineConfig({
         "0%, 100%": { opacity: "0.6" },
         "50%": { opacity: "1" },
       },
+      // La piña entra girando y aterriza al revés (media vuelta neta: 540°).
+      pinaFlip: {
+        "0%": { transform: "rotate(0deg) scale(0.55)", opacity: "0" },
+        "18%": { opacity: "1" },
+        "100%": { transform: "rotate(540deg) scale(1)", opacity: "1" },
+      },
+      // El nombre aparece cuando la piña ya quedó al revés.
+      nameReveal: {
+        "0%": { opacity: "0", transform: "translateY(18px) scale(0.92)", filter: "blur(6px)" },
+        "100%": { opacity: "1", transform: "translateY(0) scale(1)", filter: "blur(0)" },
+      },
+      // Balanceo suave del neón una vez posado.
+      sway: {
+        "0%, 100%": { transform: "translateY(0)" },
+        "50%": { transform: "translateY(-10px)" },
+      },
     },
   },
 });

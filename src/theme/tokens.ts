@@ -1,6 +1,6 @@
 export const colors = {
-  // Verde de marca de Yo Influencer. Escala sobria (sin neón): el 500 es el
-  // color de acción y el 400 el de texto/acento sobre fondos oscuros.
+  // Verde de marca de modopiña (hoja de piña). El 500 es el color de acción
+  // y el 400 el de texto/acento sobre fondos oscuros.
   brand: {
     50: { value: "#ecfdf3" },
     100: { value: "#d1fadf" },
@@ -13,9 +13,9 @@ export const colors = {
     800: { value: "#05603a" },
     900: { value: "#054f31" },
   },
-  // Acentos de apoyo, apagados a propósito para no competir con el verde.
+  // Amarillo piña: acento cálido de marca (cuerpo de la piña).
   accent: {
-    gold: { value: "#c9a227" },
+    gold: { value: "#f5c518" },
     clay: { value: "#c4614a" },
     sage: { value: "#7f9c8b" },
   },

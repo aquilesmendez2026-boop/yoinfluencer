@@ -1,6 +1,7 @@
-import { Box, Button, Flex, Heading, HStack, Text, VStack } from "@chakra-ui/react";
+import { Box, Button, Flex, HStack, Text, VStack } from "@chakra-ui/react";
 import { Play, ChevronDown } from "lucide-react";
 import { BackgroundBlobs } from "../atoms/BackgroundBlobs";
+import { PinaLogo } from "../atoms/Pina";
 
 export const Hero = () => {
   return (
@@ -25,35 +26,29 @@ export const Hero = () => {
         maxW="4xl"
         animation="fadeIn 0.8s ease-out"
       >
-        <Text
-          fontSize="sm"
-          fontWeight="700"
-          letterSpacing="widest"
-          textTransform="uppercase"
-          color="brand.primary"
-        >
-          Un medio hecho por la comunidad
-        </Text>
+        {/* Piña que entra girando y aterriza al revés (guiño swinger 🍍). */}
+        <Box animation="sway 4s ease-in-out infinite" mb="-2">
+          <Box
+            animation="pinaFlip 1.7s cubic-bezier(0.22, 1, 0.36, 1) both"
+            filter="drop-shadow(0 0 14px rgba(50, 213, 131, 0.55)) drop-shadow(0 0 22px rgba(245, 197, 24, 0.45))"
+          >
+            <PinaLogo size={{ base: "132px", md: "180px" }} />
+          </Box>
+        </Box>
 
-        <Heading
+        {/* El nombre aparece cuando la piña ya quedó al revés. */}
+        <Box
           as="h1"
-          fontSize={{ base: "5xl", md: "7xl", lg: "8xl" }}
+          fontFamily="heading"
           fontWeight="900"
           letterSpacing="tighter"
           lineHeight="0.95"
+          fontSize={{ base: "5xl", md: "7xl", lg: "8xl" }}
+          animation="nameReveal 0.7s ease-out 1.5s both"
         >
-          <Box as="span" color="fg.default">
-            SE BUSCA{" "}
-          </Box>
-          <Box
-            as="span"
-            backgroundImage="linear-gradient(135deg, #6ce9a6 0%, #12b76a 100%)"
-            backgroundClip="text"
-            color="transparent"
-          >
-            NOMBRE!!!
-          </Box>
-        </Heading>
+          <Box as="span" color="brand.400">modo</Box>
+          <Box as="span" color="accent.gold">piña</Box>
+        </Box>
 
         <Text
           fontSize={{ base: "lg", md: "2xl" }}

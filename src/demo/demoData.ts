@@ -8,7 +8,7 @@ import type { Profile } from "../services/profile";
 /** Usuario sintético de la demo (sin Firebase). */
 export const DEMO_USER = {
   uid: "demo-user",
-  email: "demo@yoinfluencer.cl",
+  email: "demo@modopina.cl",
   displayName: "Invitado Demo",
   photoURL: null as string | null,
 };
@@ -16,7 +16,7 @@ export const DEMO_USER = {
 /** Perfil de la demo: super admin + dueño de un local, para poder recorrer todo. */
 export const DEMO_PROFILE: Profile = {
   userId: "demo-user",
-  email: "demo@yoinfluencer.cl",
+  email: "demo@modopina.cl",
   name: "Invitado Demo",
   role: "super_admin",
   alias: "Invitado Demo",
@@ -95,7 +95,7 @@ const eventosAgenda = [
 ];
 
 const usuarios = [
-  { userId: "demo-user", email: "demo@yoinfluencer.cl", name: "Invitado Demo", alias: "Invitado Demo", role: "super_admin", secciones: [] },
+  { userId: "demo-user", email: "demo@modopina.cl", name: "Invitado Demo", alias: "Invitado Demo", role: "super_admin", secciones: [] },
   { userId: "inf-1", email: "valentina@demo.cl", name: "Valentina", alias: "Valentina", role: "editor", secciones: ["sec-1", "sec-4"] },
   { userId: "inf-2", email: "mateo@demo.cl", name: "Mateo", alias: "Mateo", role: "influencer", secciones: ["sec-2", "sec-6"] },
   { userId: "inf-3", email: "renata@demo.cl", name: "Renata", alias: "Renata", role: "influencer", secciones: ["sec-5"] },
@@ -103,9 +103,9 @@ const usuarios = [
 ];
 
 const redes = [
-  { id: "instagram", plataforma: "instagram", handle: "@yoinfluencer", url: "https://instagram.com/yoinfluencer", seguidores: 48200, destacada: true, orden: 0 },
-  { id: "tiktok", plataforma: "tiktok", handle: "@yoinfluencer", url: "https://tiktok.com/@yoinfluencer", seguidores: 31500, destacada: true, orden: 1 },
-  { id: "x", plataforma: "x", handle: "@yoinfluencer", url: "https://x.com/yoinfluencer", seguidores: 9800, destacada: false, orden: 2 },
+  { id: "instagram", plataforma: "instagram", handle: "@modopina", url: "https://instagram.com/modopina", seguidores: 48200, destacada: true, orden: 0 },
+  { id: "tiktok", plataforma: "tiktok", handle: "@modopina", url: "https://tiktok.com/@modopina", seguidores: 31500, destacada: true, orden: 1 },
+  { id: "x", plataforma: "x", handle: "@modopina", url: "https://x.com/modopina", seguidores: 9800, destacada: false, orden: 2 },
 ];
 
 const lives = [

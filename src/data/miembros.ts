@@ -52,7 +52,7 @@ export const downloads: DownloadItem[] = [
     fileKey: "ep12-audio-hd.mp3",
   },
   {
-    title: "Pack de wallpapers se busca nombre!!!",
+    title: "Pack de wallpapers modopiña",
     type: "wallpaper",
     size: "14 MB",
     fileKey: "wallpapers-ntm.zip",
